@@ -124,7 +124,7 @@ Le estensioni previste includono:
 
 ---
 
-**Autore:** Marco — *Sound / Data Design Project*  
+**Autore:** Marco Musto — *e la sua bici*  
 **Titolo:** *Desnivel*  
 **Versione:** 0.3  
 **Data:** Novembre 2025  
