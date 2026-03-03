@@ -9,11 +9,11 @@ Un cos en moviment mesura el món.
 Cada metre de desnivell és un batec, cada corba una respiració.  
 El traçat esdevé partitura, el paisatge es fa so, i la fatiga troba la seva pròpia harmonia en la vibració de l’aire.  
 
-**Desnivel** és un projecte de traducció sensorial: un viatge real — de **Torí a Castel del Monte** — es transforma en una experiència audiovisual generativa.  
+**Desnivel** és un projecte de traducció sensorial: un viatge real — de **Torí a Castel del Monte** — es transforma en una experiència audiovisual generativa.
 
 El GPS registra, però el so interpreta.  
 La trajectòria geogràfica esdevé gest sonor; la durada, matèria de composició.  
-No es tracta de representar un recorregut, sinó d’**escoltar-ne la forma**.
+No es tracta de representar un recorregut, sinó d’**escoltar-ne la forma i veure’n la respiració**.
 
 ---
 
@@ -26,8 +26,7 @@ Desnivel neix d’una experiència física i prolongada: **vuit hores de pedalad
 No és un projecte sobre la velocitat, sinó sobre la **durada** — sobre la capacitat del cos d’habitar el temps a través de la repetició i la resistència.
 
 La lentitud no és monotonia: és **estratificació**.  
-Cada respiració, cada variació de llum, cada petita corba esdevé una micro-modulació sonora.  
-Un temps tan llarg no s’accelera: s’escolta en profunditat.
+Cada respiració, cada variació de llum, cada petita corba esdevé una micro-modulació sonora i visual.  
 
 Desnivel construeix la seva arquitectura sobre la **diferència interna de la lentitud**:
 
@@ -38,7 +37,7 @@ Desnivel construeix la seva arquitectura sobre la **diferència interna de la le
 
 Cada nivell evoluciona en una escala diferent: el batec en segons, el terreny en metres, el dia en hores.  
 
-La música neix així com una **lent d’augment del temps**, una manera de transformar la fatiga en presència i la durada en forma.
+La música i la imatge neixen com una **lent d’augment del temps**, una manera de transformar la fatiga en presència i la durada en forma perceptiva.
 
 ---
 
@@ -54,86 +53,118 @@ La música neix així com una **lent d’augment del temps**, una manera de tran
 - Anàlisi numèrica → pendent, curvatura, variació altimètrica, entropia del terreny  
 - Càlcul d’índexs semàntics → flow, dificultat, esforç, terreny, hora del dia  
 - Conversió temporal mitjançant *time-warp* dinàmic basat en el pes narratiu dels punts  
+- Normalització de dades per a mapeig audiovisual coherent  
 
 ### Sortida
 
 - **Ableton Live** → traducció de les dades en paràmetres sonors (pitch, BPM, drive, reverberació, volum)  
-- **TouchDesigner** → visualització paramètrica (geometries, llum, densitat, matèria visual)  
+- **TouchDesigner** → traducció de les mateixes dades en paràmetres visuals (geometria, llum, moviment, densitat, matèria)
 
-El sistema actua com **un organisme relacional**, on cada variació geogràfica produeix una resposta sensorial coherent entre so i imatge.
+El sistema actua com **un organisme relacional**, on cada variació geogràfica produeix una resposta coherent entre so i imatge en temps real.
 
 ---
 
 ## IV. Traducció sonora
 
-Desnivel no genera música “a partir de les dades”, sinó que **reconeix música dins de les dades**.  
-
-Cada paràmetre geogràfic és reinterpretat com a gest musical, seguint una gramàtica sensorial:
+Desnivel no genera música “a partir de les dades”, sinó que **reconeix música dins de les dades**.
 
 | Dada            | Paràmetre sonor                       | Efecte perceptiu                           |
 |-----------------|----------------------------------------|--------------------------------------------|
-| Altitud        | Alçada de les notes / obertura filtre | Com més s’ascendeix → més brillantor       |
+| Altitud        | Alçada de les notes / obertura filtre | Més alçada → més brillantor i tensió       |
 | Curvatura      | Densitat rítmica / groove              | Corbes = microbeats, inestabilitat         |
 | Velocitat      | BPM / pulsació                         | Ritme natural del cos                      |
 | Dificultat     | Volum / saturació                      | Fatiga = presència sonora                  |
 | Flow Index     | Reverberació / delay                   | Continuïtat = espai obert                  |
 | Hora del dia   | Timbre / tonalitat                     | Llum = tonalitat harmònica                 |
-| Esdeveniments  | Trigger / cues visuals                 | Clímax, drop, silencis                     |
-
-El resultat no és una banda sonora, sinó una **transducció sensorial**:  
-la topografia esdevé harmonia, la direcció es converteix en ritme, la fatiga es transforma en freqüència.
+| Esdeveniments  | Trigger / automatitzacions             | Clímax, drop, silencis                     |
 
 ---
 
-## V. Intervenció humana i performance
+## V. Traducció visual amb TouchDesigner
 
-El sistema està concebut per funcionar de manera autònoma, però preveu un **nivell d’interacció poètica**.  
+La visualització no il·lustra el paisatge: **en construeix una morfologia abstracta**.
 
-El performer no “toca” el viatge: l’**escolta i el modula**.
+TouchDesigner rep dades via OSC/MIDI i les converteix en sistemes visuals generatius.
+
+| Dada            | Paràmetre visual                        | Comportament visual                          |
+|-----------------|-------------------------------------------|-----------------------------------------------|
+| Altitud        | Escala vertical / deformació geomètrica  | Més alçada → estructures més allargades      |
+| Pendent        | Intensitat lumínica / contrast            | Pujades = augment de brillantor              |
+| Curvatura      | Distorsió / fragmentació                  | Corbes = torsions i micro-fractures visuals  |
+| Velocitat      | Velocitat de moviment / partícules       | Acceleració → major flux de matèria          |
+| Flow Index     | Fluïdesa de shaders / suavitat transició | Continuïtat = superfícies orgàniques         |
+| Hora del dia   | Paleta cromàtica                          | Matí fred → migdia neutre → capvespre càlid  |
+| Dificultat     | Densitat de volum / gra                   | Fatiga = augment de matèria visual           |
+
+### Sistemes visuals utilitzats
+
+- **SOP networks** → deformació de malles segons altitud i pendent  
+- **Particle systems** → representació del flux i moviment corporal  
+- **Noise shaders** → textura del terreny i irregularitat  
+- **Feedback loops** → persistència del paisatge en el temps  
+- **Instancing** → multiplicació de punts GPS com a arquitectura abstracta  
+
+El paisatge es converteix en una **escultura dinàmica**, que respira amb el ritme del cos.
+
+---
+
+## VI. Sincronització so–imatge
+
+El sistema utilitza:
+
+- OSC bidireccional per sincronització de paràmetres  
+- Clock compartit per coherència temporal  
+- Trigger visuals associats a esdeveniments sonors  
+- Mòdul de “macro-states” per definir escenes narratives (ascens, plana, descens)
+
+So i imatge no són paral·lels: són **interdependents**.  
+Un canvi en la intensitat sonora pot reconfigurar la llum; una variació cromàtica pot influir en la densitat sonora.
+
+---
+
+## VII. Intervenció humana i performance
+
+El performer actua com a **mediador sensible** entre sistema i públic.
 
 Pot intervenir sobre:
 
-- Factors globals (color tímbric, densitat, lluminositat sonora)  
-- Transicions entre estats del paisatge  
-- Decisions narratives (emergència o dissolució d’un layer)  
+- Macro-densitat visual  
+- Saturació sonora  
+- Velocitat global del time-warp  
+- Transicions cromàtiques  
+- Emergència o dissolució de capes  
 
-La intervenció humana no corregeix, sinó que **dialoga** amb el procés generatiu.  
-És un gest d’escolta activa, una manera d’amplificar la sensibilitat del sistema i introduir la presència viva del cos dins la màquina.
-
----
-
-## VI. Dimensió estètica i narrativa
-
-Desnivel explora el límit entre dada i percepció, natura i síntesi.  
-
-La música i la imatge no il·lustren el viatge: **el reviuen com a experiència sensorial**.  
-
-El paisatge esdevé una forma de consciència:
-
-- Cada pujada → un crescendo  
-- Cada plana → un drone  
-- Cada baixada → una dissolució  
-
-En el pla visual, TouchDesigner construeix morfologies que reaccionen a pendents, velocitat i curvatures, transformant la geografia en matèria lluminosa.  
-
-So i llum avancen plegats com dos fluids que es persegueixen, generant una narració abstracta però emocional:  
-
-**una coreografia entre cos, territori i freqüència.**
+La performance és un acte d’escolta expandida:  
+no es tracta de controlar, sinó d’**acompanyar el viatge mentre es revela**.
 
 ---
 
-## VII. Full de ruta
+## VIII. Dimensió espacial
+
+Desnivel pot presentar-se en:
+
+- Format escènic audiovisual (pantalla frontal)  
+- Instal·lació immersiva amb projecció envoltant  
+- Mapping arquitectònic adaptat a l’espai  
+- Versió multicanal amb so espacialitzat  
+
+La visualització pot adaptar-se a superfícies irregulars, convertint l’espai físic en extensió del relleu geogràfic.
+
+---
+
+## IX. Full de ruta
 
 | Fase   | Descripció                                                     | Estat        |
 |--------|----------------------------------------------------------------|-------------|
 | Fase 1 | Disseny conceptual i definició de mapeigs                      | ✅ Completada |
 | Fase 2 | Implementació Ableton ↔ TouchDesigner via OSC/MIDI             | 🔄 En curs    |
-| Fase 3 | Composició audiovisual (Torí → Castel del Monte)               | ⏳ Planificada |
-| Fase 4 | Instal·lació / performance en directe interactiva              | 🌀 Expansió futura |
+| Fase 3 | Desenvolupament sistema visual paramètric complet              | 🔄 En curs    |
+| Fase 4 | Composició audiovisual (Torí → Castel del Monte)               | ⏳ Planificada |
+| Fase 5 | Instal·lació / performance immersiva                           | 🌀 Expansió futura |
 
 ---
 
-## VIII. Apèndix tècnic
+## X. Apèndix tècnic
 
 Document de referència:  
 `GPX_to_Sound_Design_Map_v0.1.md`
@@ -141,14 +172,15 @@ Document de referència:
 Extensions previstes:
 
 - Diccionari JSON de mapeigs paramètrics  
-- Mòdul OSC bidireccional per sincronització Ableton ↔ TouchDesigner  
-- Capes audiovisuals adaptatives basades en llum solar, altitud i context territorial  
+- Sistema modular TouchDesigner amb components reutilitzables  
+- Shader personalitzat basat en altitud i pendent  
+- Motor de narrativa temporal (macro-escenes)  
 - Sincronització amb vídeo enregistrat per correlació imatge-so  
 
 ---
 
 **Autor:** Marco Musto — i la seva bici  
 **Títol:** Desnivel  
-**Versió:** 0.3  
+**Versió:** 0.4  
 **Data:** Novembre 2025  
 **Llocs:** Torí → Castel del Monte  
