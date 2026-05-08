@@ -18,6 +18,9 @@ __pycache__/
 # Note di sviluppo locali
 DEV_NOTES.md
 
+# Cartella di staging per copia su altro PC
+/_share/
+
 # OS / editor
 .DS_Store
 Thumbs.db
