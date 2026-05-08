@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DESNIVEL — Uso in TouchDesigner</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <span class="nav-label">DOC</span>
+  <a href="index.html">Overview</a>
+  <a href="data_gpx.html">Dati GPX</a>
+  <a href="data_weather.html">Dati Meteo</a>
+  <a href="data_gopro.html">GoPro &amp; POI</a>
+  <a href="pipeline.html">Pipeline</a>
+  <a href="touchdesigner.html" class="active">Uso in TD</a>
+</nav>
+
+<div class="container">
+
+<h2>Uso in TouchDesigner</h2>
+<p class="lead">
+  Come caricare i dati, come accedere ai valori frame-per-frame, e idee di mappatura 
+  audiovisiva basate sui parametri disponibili.
+</p>
+
+<h2>Caricamento Dati</h2>
+
+<h3>Setup base: due Table DAT paralleli</h3>
+<pre><code># Per ogni tappa, servono due Table DAT:
+
+table_tappa   = op('table_tappa')    # carica output/tappa_XX.csv
+table_weather = op('table_weather')  # carica output/weather_tappa_XX.csv
+
+# Entrambi hanno lo stesso numero di righe.
+# Per leggere il frame corrente:
+
+frame = absTime.frame  # o il tuo contatore custom
+row = frame % table_tappa.numRows
+
+# Dati posizione/cinematica
+lat      = float(table_tappa[row, 'lat_norm'])
+ele      = float(table_tappa[row, 'ele_norm'])
+speed    = float(table_tappa[row, 'speed_kmh'])
+slope    = float(table_tappa[row, 'slope'])
+terrain  = float(table_tappa[row, 'terrain_type'])
+
+# Dati meteo (stessa riga!)
+temp     = float(table_weather[row, 'temperature_norm'])
+cloud    = float(table_weather[row, 'cloud_norm'])
+wind     = float(table_weather[row, 'wind_norm'])
+rain     = float(table_weather[row, 'precip_norm'])
+vis      = float(table_weather[row, 'visibility_norm'])
+weather  = str(table_weather[row, 'weather_desc'])</code></pre>
+
+<h3>Cambio tappa automatico</h3>
+<pre><code># In un Execute DAT o Script CHOP:
+import json
+
+# Carica il sommario per sapere quanti frame ha ogni tappa
+with open('output/desnivel_summary.json') as f:
+    summary = json.load(f)
+
+# Per passare alla tappa successiva quando i frame finiscono:
+stage_frames = [s['n_output_frames'] for s in summary['stages']]
+
+def load_stage(tappa_num):
+    nn = f"{tappa_num:02d}"
+    op('table_tappa').par.file = f'output/tappa_{nn}.csv'
+    op('table_weather').par.file = f'output/weather_tappa_{nn}.csv'
+    op('table_tappa').par.loadonstartalisonreloadpulse.pulse()
+    op('table_weather').par.loadonstartalisonreloadpulse.pulse()</code></pre>
+
+<h2>Mapping Audiovisivo: Dati GPX</h2>
+
+<p>Ogni canale GPX può guidare un parametro visivo o sonoro. Ecco una mappa di idee:</p>
+
+<table>
+  <tr><th>Dato GPX</th><th>Range</th><th>Mapping Visivo</th><th>Mapping Sonoro</th></tr>
+  <tr>
+    <td><code>ele_norm</code></td><td>0→1</td>
+    <td>Altezza Y della geometria, luminosità sfondo, apertura camera</td>
+    <td>Pitch delle note, apertura filtro LP</td>
+  </tr>
+  <tr>
+    <td><code>speed_kmh</code></td><td>0→~120</td>
+    <td>Dimensione punti, lunghezza trail, blur motion</td>
+    <td>BPM / pulsazione, densità ritmica</td>
+  </tr>
+  <tr>
+    <td><code>slope</code></td><td>-1→1</td>
+    <td>Palette colore: blu (discesa) → verde (piano) → rosso (salita)</td>
+    <td>Volume, saturazione/drive</td>
+  </tr>
+  <tr>
+    <td><code>curvature</code></td><td>-1→1</td>
+    <td>Tinta viola per curve strette, deformazione mesh</td>
+    <td>Groove, inestabilità ritmica, pan L/R</td>
+  </tr>
+  <tr>
+    <td><code>difficulty</code></td><td>0→1</td>
+    <td>Intensità visiva globale, vignette</td>
+    <td>Volume master, saturazione globale</td>
+  </tr>
+  <tr>
+    <td><code>flow_index</code></td><td>0→1</td>
+    <td>Smoothness, ampiezza ondulazione, calma visiva</td>
+    <td>Reverb send, delay time, spazio sonoro</td>
+  </tr>
+  <tr>
+    <td><code>effort</code></td><td>0→1</td>
+    <td>Vignette rossa (fatica), screen shake</td>
+    <td>Compressione, distorsione, presenza</td>
+  </tr>
+  <tr>
+    <td><code>terrain_type</code></td><td>0→1</td>
+    <td>Texture di fondo: acqua/sabbia/erba/roccia</td>
+    <td>Timbro base: pad→strings→brass→percussion</td>
+  </tr>
+  <tr>
+    <td><code>bearing_deg</code></td><td>0→360</td>
+    <td>Rotazione di una bussola/rosa dei venti</td>
+    <td>Posizione stereo, angolo spaziale</td>
+  </tr>
+</table>
+
+<h2>Mapping Audiovisivo: Dati Meteo</h2>
+
+<p>Il meteo aggiunge un layer atmosferico che cambia lentamente — perfetto per modulare l'ambiente:</p>
+
+<div class="grid">
+  <div class="card">
+    <h4>☁️ Nuvole → Opacità / Densità</h4>
+    <p><code>cloud_norm</code> (0→1): controlla la densità dello sfondo, nebbia volumetrica, 
+    opacità dei layer. Le 3 sotto-bande (<code>cloud_low/mid/high_norm</code>) possono 
+    guidare 3 layer di nebbia a profondità diverse.</p>
+  </div>
+  <div class="card">
+    <h4>🌡️ Temperatura → Palette Colore</h4>
+    <p><code>temperature_norm</code>: modula il colore globale. Freddo (basso) → blu/violetto. 
+    Caldo (alto) → arancio/rosso. <code>apparent_temperature</code> è più espressivo 
+    perché include il wind chill percepito in bici.</p>
+  </div>
+  <div class="card">
+    <h4>💨 Vento → Movimento / Turbolenza</h4>
+    <p><code>wind_norm</code> → velocità del noise/particelle. <code>wind_gust_norm</code> → 
+    impulsi di turbolenza. <code>wind_dir_norm</code> → direzione del flusso di particelle.</p>
+  </div>
+  <div class="card">
+    <h4>🌧️ Pioggia → Disturbo / Texture</h4>
+    <p><code>precip_norm</code>: aggiunge gocce, distorsione, rumore visivo. 
+    Triggerabile come evento: quando <code>precip_norm &gt; 0</code> → attiva un layer "pioggia".</p>
+  </div>
+  <div class="card">
+    <h4>🌫️ Visibilità → Profondità</h4>
+    <p><code>visibility_norm</code>: controlla la distanza di rendering, fade del background, 
+    densità della foschia. Valori bassi = atmosfera chiusa, misteriosa.</p>
+  </div>
+  <div class="card">
+    <h4>📊 Pressione → Drone / Tensione</h4>
+    <p><code>pressure_norm</code>: cambiamento lento, ideale per un drone di fondo che sale/scende 
+    impercettibilmente. Pressione bassa = temporale in arrivo → crescendo drammatico.</p>
+  </div>
+</div>
+
+<h2>Idee di Composizione per Layer</h2>
+
+<div class="idea">
+  <h4>Layer 1: Terreno (lento, costante)</h4>
+  <p>Guidato da <code>terrain_type</code> + <code>ele_norm</code>. Cambia nell'ordine dei minuti. 
+  Definisce il "colore" di base della scena: morfologia, materiale visivo, timbro sonoro di fondo.</p>
+</div>
+
+<div class="idea idea-weather">
+  <h4>Layer 2: Atmosfera (lento, modulazione)</h4>
+  <p>Guidato dai dati meteo: <code>cloud_norm</code>, <code>temperature_norm</code>, <code>visibility_norm</code>. 
+  Cambia gradualmente. Modula l'ambiente: luce, foschia, calore cromatico.</p>
+</div>
+
+<div class="idea">
+  <h4>Layer 3: Cinematica (medio, ritmo)</h4>
+  <p>Guidato da <code>speed_kmh</code>, <code>slope</code>, <code>difficulty</code>. 
+  Segue il ritmo della pedalata. Controlla energia, pulsazione, intensità.</p>
+</div>
+
+<div class="idea">
+  <h4>Layer 4: Gesto (veloce, micro-modulazione)</h4>
+  <p>Guidato da <code>curvature</code>, <code>effort</code>, <code>bearing_deg</code>. 
+  Variazioni rapide, curve, sforzi. Controlla glitch, deformazioni, accenti ritmici.</p>
+</div>
+
+<div class="idea idea-weather">
+  <h4>Layer 5: Eventi (trigger discreti)</h4>
+  <p>Guidato da <code>weather_code</code> (cambi di condizione), POI (passaggio monumenti), 
+  <code>precip_norm</code> che passa da 0 a > 0. Trigger per cambi scena, flash, drop sonori.</p>
+</div>
+
+<h2>Esempio: GLSL Shader con Dati Meteo</h2>
+<pre><code>// Fragment shader — esempio di composizione atmosferica
+// I valori arrivano come uniform da TD
+
+uniform float cloud_norm;      // 0→1
+uniform float temperature_norm; // 0→1
+uniform float wind_norm;        // 0→1
+uniform float precip_norm;      // 0→1
+uniform float visibility_norm;  // 0→1
+uniform float ele_norm;         // 0→1
+
+void main() {
+    vec2 uv = vUV.st;
+    
+    // Colore base: temperatura → palette freddo/caldo
+    vec3 cold = vec3(0.15, 0.2, 0.4);
+    vec3 warm = vec3(0.5, 0.25, 0.1);
+    vec3 baseColor = mix(cold, warm, temperature_norm);
+    
+    // Luminosità: elevazione
+    baseColor *= 0.5 + ele_norm * 0.5;
+    
+    // Nebbia: nuvole + visibilità
+    float fogDensity = cloud_norm * (1.0 - visibility_norm);
+    vec3 fogColor = vec3(0.6, 0.6, 0.65);
+    baseColor = mix(baseColor, fogColor, fogDensity * 0.6);
+    
+    // Turbolenza: vento
+    float turbulence = wind_norm * 0.15;
+    uv += turbulence * sin(uv.yx * 10.0 + iTime);
+    
+    // Rumore pioggia
+    if (precip_norm > 0.01) {
+        float rain = fract(sin(dot(uv * 100.0, vec2(12.9898, 78.233))) * 43758.5453);
+        baseColor += vec3(rain * precip_norm * 0.1);
+    }
+    
+    fragColor = vec4(baseColor, 1.0);
+}</code></pre>
+
+<h2>Riepilogo Canali Disponibili</h2>
+
+<table>
+  <tr><th>File</th><th>Canali</th><th>Velocità di cambiamento</th></tr>
+  <tr>
+    <td><code>tappa_XX.csv</code></td>
+    <td>
+      frame, td_time, td_time_norm,<br>
+      lat_norm, lon_norm, ele_norm,<br>
+      cum_dist_m, speed_kmh, slope,<br>
+      bearing_deg, curvature, ele_delta,<br>
+      cum_ele_gain_norm, cum_ele_loss_norm,<br>
+      difficulty, flow_index, effort,<br>
+      terrain_type
+    </td>
+    <td>Da veloce (curvature) a lento (terrain)</td>
+  </tr>
+  <tr>
+    <td><code>weather_tappa_XX.csv</code></td>
+    <td>
+      frame, td_time, td_time_norm,<br>
+      temperature_2m, apparent_temperature,<br>
+      relative_humidity_2m, precipitation, rain,<br>
+      weather_code, weather_desc,<br>
+      cloud_cover + low/mid/high,<br>
+      wind_speed_10m, wind_direction_10m, wind_gusts_10m,<br>
+      pressure_msl, visibility, is_day,<br>
+      + 12 campi normalizzati _norm
+    </td>
+    <td>Lento (cambia ogni ~15 min reali, interpolato smooth)</td>
+  </tr>
+</table>
+
+<p style="margin-top:20px;text-align:center;color:var(--dim);">
+  <strong>Totale: 48 canali sincronizzati per frame</strong> — 18 cinematici + 30 atmosferici
+</p>
+
+<div class="page-nav">
+  <a href="pipeline.html">← Pipeline</a>
+  <span></span>
+</div>
+
+</div>
+
+<footer>
+  DESNIVEL — Marco Musto — 2025/2026<br>
+  <span style="opacity:0.6">del viatge al so, del terreny al gest audiovisual</span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,126 @@
+DESNIVEL
+del viatge al so, del terreny al gest audiovisual
+I. Declaració
+
+Un cos en moviment mesura el món.
+Cada metre de desnivell és un batec, cada corba una respiració.
+El traçat esdevé partitura, el paisatge es fa so, i la fatiga troba la seva pròpia harmonia en la vibració de l’aire.
+
+Desnivel és un projecte de traducció sensorial: un viatge real — de Torí a Castel del Monte — es transforma en una experiència audiovisual generativa.
+El GPS registra, però el so interpreta.
+La trajectòria geogràfica esdevé gest sonor; la durada, matèria de composició.
+No es tracta de representar un recorregut, sinó d’escoltar-ne la forma.
+
+II. Poètica del temps
+1. Vuit hores de lentitud
+
+Desnivel neix d’una experiència física i prolongada: vuit hores de pedalada al dia, un temps que flueix d’una manera densa, gairebé mineral.
+No és un projecte sobre la velocitat, sinó sobre la durada — sobre la capacitat del cos d’habitar el temps a través de la repetició i la resistència.
+
+La lentitud no és monotonia: és estratificació.
+Cada respiració, cada variació de llum, cada petita corba esdevé una micro-modulació sonora.
+Un temps tan llarg no s’accelera: s’escolta en profunditat.
+
+Desnivel construeix la seva arquitectura sobre la diferència interna de la lentitud:
+
+el cos genera ritme,
+
+el terreny genera harmonia,
+
+el paisatge genera textura,
+
+la llum genera color.
+
+Cada nivell evoluciona en una escala diferent: el batec en segons, el terreny en metres, el dia en hores.
+
+La música neix així com una lent d’augment del temps, una manera de transformar la fatiga en presència i la durada en forma.
+
+III. Arquitectura del sistema
+Entrada
+
+Traça GPX: latitud, longitud, altitud, velocitat, temps.
+
+Capes addicionals: vídeo (GoPro), dades meteorològiques, posició solar, mapes OSM.
+
+Processament
+
+Anàlisi numèrica → pendent, curvatura, variació altimètrica, entropia del terreny.
+
+Càlcul d’índexs semàntics → flow, dificultat, esforç, terreny, hora del dia.
+
+Conversió temporal mitjançant time-warp dinàmic basat en el pes narratiu dels punts.
+
+Sortida
+
+Ableton Live → traducció de les dades en paràmetres sonors (pitch, BPM, drive, reverberació, volum).
+
+TouchDesigner → visualització paramètrica (geometries, llum, densitat, matèria visual).
+
+El sistema actua com un organisme relacional, on cada variació geogràfica produeix una resposta sensorial coherent entre so i imatge.
+
+IV. Traducció sonora
+
+Desnivel no genera música “a partir de les dades”, sinó que reconeix música dins de les dades.
+Cada paràmetre geogràfic és reinterpretat com a gest musical, seguint una gramàtica sensorial:
+
+Dada	Paràmetre sonor	Efecte perceptiu
+Altitud	Alçada de les notes / obertura del filtre	com més s’ascendeix → més brillantor, tensió
+Curvatura	Densitat rítmica / groove	corbes = microbeats, inestabilitat
+Velocitat	BPM / pulsació	ritme natural del cos
+Dificultat	Volum / saturació	fatiga = presència sonora
+Flow Index	Reverberació / delay	continuïtat = espai obert
+Hora del dia	Timbre / tonalitat	llum = tonalitat harmònica
+Esdeveniments	Trigger / cues visuals	clímax, drop, silencis
+
+El resultat no és una banda sonora, sinó una transducció sensorial: la topografia esdevé harmonia, la direcció es converteix en ritme, la fatiga es transforma en freqüència.
+
+V. Intervenció humana i performance
+
+El sistema està concebut per funcionar de manera autònoma, però preveu un nivell d’interacció poètica.
+El performer no “toca” el viatge: l’escolta i el modula.
+
+Pot intervenir sobre:
+
+factors globals (color tímbric, densitat, lluminositat sonora),
+
+transicions entre estats del paisatge,
+
+decisions narratives (emergència o dissolució d’un layer).
+
+La intervenció humana no corregeix, sinó que dialoga amb el procés generatiu.
+És un gest d’escolta activa, una manera d’amplificar la sensibilitat del sistema i introduir la presència viva del cos dins la màquina.
+
+VI. Dimensió estètica i narrativa
+
+Desnivel explora el límit entre dada i percepció, natura i síntesi.
+La música i la imatge no il·lustren el viatge: el reviuen com a experiència sensorial.
+El paisatge esdevé una forma de consciència: cada pujada un crescendo, cada plana un drone, cada baixada una dissolució.
+
+En el pla visual, TouchDesigner construeix morfologies que reaccionen a pendents, velocitat i curvatures, transformant la geografia en matèria lluminosa.
+So i llum avancen plegats com dos fluids que es persegueixen, generant una narració abstracta però emocional: una coreografia entre cos, territori i freqüència.
+
+VII. Full de ruta
+Fase	Descripció	Estat
+Fase 1	Disseny conceptual i definició de mapeigs	✅ completada
+Fase 2	Implementació Ableton ↔ TouchDesigner via OSC/MIDI	🔄 en curs
+Fase 3	Composició audiovisual (Torí → Castel del Monte)	⏳ planificada
+Fase 4	Instal·lació / performance en directe interactiva	🌀 expansió futura
+VIII. Apèndix tècnic
+
+El document tècnic de referència és GPX_to_Sound_Design_Map_v0.1.md, que defineix els nivells d’interpretació i les fórmules de derivació dels paràmetres musicals.
+
+Les extensions previstes inclouen:
+
+Diccionari JSON de mapeigs paramètrics.
+
+Mòdul OSC bidireccional per a la sincronització Ableton ↔ TouchDesigner.
+
+Capes audiovisuals adaptatives basades en la llum solar, l’altitud i el context territorial.
+
+Sincronització amb vídeo enregistrat per a la correlació imatge-so.
+
+Autor: Marco Musto — i la seva bici
+Títol: Desnivel
+Versió: 0.3
+Data: Novembre 2025
+Llocs: Torí → Castel del Monte

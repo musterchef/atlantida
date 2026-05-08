@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DESNIVEL — Pipeline Tecnica</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <span class="nav-label">DOC</span>
+  <a href="index.html">Overview</a>
+  <a href="data_gpx.html">Dati GPX</a>
+  <a href="data_weather.html">Dati Meteo</a>
+  <a href="data_gopro.html">GoPro &amp; POI</a>
+  <a href="pipeline.html" class="active">Pipeline</a>
+  <a href="touchdesigner.html">Uso in TD</a>
+</nav>
+
+<div class="container">
+
+<h2>Pipeline Tecnica</h2>
+<p class="lead">
+  Overview completa di tutti gli script, le dipendenze, la struttura dei file e l'ordine di esecuzione.
+</p>
+
+<h2>Struttura del Progetto</h2>
+<pre><code>Desnivel/
+├── gpx/                          # GPX sorgenti (Strava)
+│   ├── tappa01_Torino_...gpx     # 12 file, uno per tappa
+│   └── gopro/                    # GPX estratti da video GoPro
+│       ├── tappa01/
+│       └── tappa02/
+├── gopro/                        # Video GoPro sorgenti (non in git)
+├── data/
+│   └── coastline/                # Shapefile Natural Earth 10m
+├── src/
+│   ├── desnivel_gpx_to_td.py     # Pipeline principale GPX → CSV
+│   ├── terrain_classify.py       # Classificazione terreno (3 metodi)
+│   ├── weather_fetch.py          # Meteo: fetch + interpolazione
+│   ├── gopro_mapper.py           # Associa video → tappa
+│   ├── gopro_tracks.py           # Estrae tracce GPS da video
+│   ├── gpmf_extract.py           # Parser binario GPMF
+│   └── poi_discovery.py          # POI da Wikipedia + OSM
+├── output/
+│   ├── tappa_01.csv ... _12.csv  # Dati GPX per TD (30fps)
+│   ├── weather_tappa_01.csv ...  # Meteo interpolato (30fps)
+│   ├── desnivel_summary.json     # Sommario tappe
+│   ├── weather_summary.json      # Sommario meteo
+│   ├── gopro_map.json            # Mappa video↔tappa
+│   ├── gopro_tracks.json         # Tracce GPS video
+│   └── poi_discovery.json        # Punti di interesse
+├── td/                           # TouchDesigner project files
+│   ├── primordiale.toe
+│   ├── desnivel_loader.py        # Script loader per TD
+│   ├── terrain_pixel.glsl        # Shader terreno
+│   └── trail_pixel.glsl          # Shader tracciato
+├── doc/                          # Documentazione
+└── requirements.txt</code></pre>
+
+<h2>Script e Ordine di Esecuzione</h2>
+
+<table>
+  <tr><th>#</th><th>Script</th><th>Input</th><th>Output</th><th>Dipendenze esterne</th></tr>
+  <tr>
+    <td>1</td>
+    <td><code>desnivel_gpx_to_td.py</code></td>
+    <td>GPX + coastline shapefile</td>
+    <td>tappa_01–12.csv<br>desnivel_summary.json</td>
+    <td>shapely, pyshp</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><code>weather_fetch.py</code></td>
+    <td>GPX + tappa CSV (per n_frames)</td>
+    <td>weather_tappa_01–12.csv<br>weather_summary.json</td>
+    <td>requests</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><code>gopro_mapper.py</code></td>
+    <td>Video GoPro + GPX</td>
+    <td>gopro_map.json</td>
+    <td>ffprobe (esterno)</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><code>gopro_tracks.py</code></td>
+    <td>Video GoPro</td>
+    <td>gopro_tracks.json<br>gpx/gopro/*.gpx</td>
+    <td>gpmf_extract.py</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td><code>poi_discovery.py</code></td>
+    <td>GPX</td>
+    <td>poi_discovery.json</td>
+    <td>requests (API Wikipedia + Overpass)</td>
+  </tr>
+</table>
+
+<p><strong>Ordine critico:</strong> Lo script 1 deve girare prima di 2 (perché weather_fetch legge il numero di frame dal CSV della tappa).</p>
+
+<h2>Dipendenze Python</h2>
+
+<div class="dep-grid">
+  <div class="dep-card">
+    <div class="name">requests</div>
+    <div class="desc">HTTP client per API meteo, Wikipedia, Overpass</div>
+  </div>
+  <div class="dep-card">
+    <div class="name">shapely</div>
+    <div class="desc">Geometrie per distanza dalla costa</div>
+  </div>
+  <div class="dep-card">
+    <div class="name">pyshp</div>
+    <div class="desc">Lettura shapefile coastline</div>
+  </div>
+  <div class="dep-card">
+    <div class="name">numpy</div>
+    <div class="desc">Calcoli numerici (usato da shapely)</div>
+  </div>
+  <div class="dep-card">
+    <div class="name">SRTM.py</div>
+    <div class="desc">Dati elevazione SRTM (metodo alternativo terreno)</div>
+  </div>
+  <div class="dep-card">
+    <div class="name">stdlib only</div>
+    <div class="desc">xml.etree, math, json, csv, os, glob — il core pipeline usa solo stdlib</div>
+  </div>
+</div>
+
+<pre><code># requirements.txt
+certifi==2026.2.25
+charset-normalizer==3.4.5
+idna==3.11
+numpy==2.4.2
+pyshp==3.0.3
+requests==2.32.5
+shapely==2.1.2
+SRTM.py==0.3.7
+urllib3==2.6.3</code></pre>
+
+<h2>Dati Esterni</h2>
+
+<table>
+  <tr><th>Dato</th><th>Sorgente</th><th>Formato</th><th>Nota</th></tr>
+  <tr>
+    <td>Coastline</td>
+    <td>Natural Earth 10m</td>
+    <td>Shapefile (.shp/.dbf/.prj)</td>
+    <td>In <code>data/coastline/</code>, usato per terrain_classify</td>
+  </tr>
+  <tr>
+    <td>Meteo storico</td>
+    <td>Open-Meteo Historical Forecast API</td>
+    <td>JSON (HTTP GET)</td>
+    <td>Gratuito, no API key, 15-min risoluzione</td>
+  </tr>
+  <tr>
+    <td>POI</td>
+    <td>Wikipedia Geosearch + Overpass API</td>
+    <td>JSON (HTTP GET)</td>
+    <td>Gratuito, rate-limited</td>
+  </tr>
+  <tr>
+    <td>SRTM DEM</td>
+    <td>NASA SRTM 90m</td>
+    <td>.hgt (binary)</td>
+    <td>Opzionale, per metodo terrain "srtm"</td>
+  </tr>
+</table>
+
+<h2>Formule Chiave</h2>
+
+<div class="card">
+  <h4>Haversine (distanza tra due coordinate)</h4>
+<pre><code>R = 6,371,000 m
+a = sin²(Δlat/2) + cos(lat1) · cos(lat2) · sin²(Δlon/2)
+d = R · 2 · atan2(√a, √(1-a))</code></pre>
+</div>
+
+<div class="card">
+  <h4>Bearing (direzione di marcia)</h4>
+<pre><code>x = sin(Δlon) · cos(lat2)
+y = cos(lat1) · sin(lat2) - sin(lat1) · cos(lat2) · cos(Δlon)
+bearing = atan2(x, y)  →  normalizzato 0–360°</code></pre>
+</div>
+
+<div class="card">
+  <h4>Time Warp</h4>
+<pre><code>durata_reale_max = max(tutte le tappe)  // es. 40292s (Tappa 3)
+scale = 600.0 / durata_reale_max
+
+Per ogni tappa:
+  target_duration = durata_reale × scale
+  td_time[i] = elapsed[i] × (target_duration / durata_reale)</code></pre>
+</div>
+
+<div class="card">
+  <h4>Interpolazione meteo (lineare fra campioni 15-min)</h4>
+<pre><code>Per ogni frame:
+  progress = frame_i / (n_frames - 1)
+  real_timestamp = start_ts + progress × real_duration
+  
+  // Trova i due campioni meteo che racchiudono real_timestamp
+  frac = (real_ts - meteo[j].ts) / (meteo[j+1].ts - meteo[j].ts)
+  
+  // Campi continui: lerp
+  temperature = meteo[j].temp + (meteo[j+1].temp - meteo[j].temp) × frac
+  
+  // Campi discreti: nearest
+  weather_code = meteo[j].code  if frac &lt; 0.5  else  meteo[j+1].code</code></pre>
+</div>
+
+<h2>Esecuzione Completa</h2>
+<pre><code># 1. Attiva virtual environment
+.venv\Scripts\Activate.ps1
+
+# 2. Pipeline principale (GPX → CSV per TD)
+python src/desnivel_gpx_to_td.py
+
+# 3. Meteo (richiede output del passo 2)
+python src/weather_fetch.py
+
+# 4. GoPro mapping (richiede ffprobe installato)
+python src/gopro_mapper.py
+
+# 5. GoPro tracce GPS
+python src/gopro_tracks.py
+
+# 6. POI discovery (lungo, usa API Wikipedia)
+python src/poi_discovery.py</code></pre>
+
+<div class="page-nav">
+  <a href="data_gopro.html">← GoPro &amp; POI</a>
+  <a href="touchdesigner.html">Uso in TD →</a>
+</div>
+
+</div>
+
+<footer>DESNIVEL — Marco Musto — 2025/2026</footer>
+</body>
+</html>

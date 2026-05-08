@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Desnivel GoPro Track Extractor"
+     xmlns="http://www.topografix.com/GPX/1/1">
+  <trk><name>GX013646.MP4</name><trkseg>
+    <trkpt lat="44.3217512" lon="8.3944024"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217364" lon="8.3943908"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217428" lon="8.3943949"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217509" lon="8.3944166"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217471" lon="8.3944210"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217144" lon="8.3944300"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217165" lon="8.3944357"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217188" lon="8.3944542"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217151" lon="8.3944752"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217073" lon="8.3944803"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217155" lon="8.3944896"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217316" lon="8.3945141"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217263" lon="8.3944741"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217085" lon="8.3944529"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3216940" lon="8.3944133"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3216929" lon="8.3944073"><ele>343.1</ele></trkpt>
+    <trkpt lat="44.3217091" lon="8.3944176"><ele>343.1</ele></trkpt>
+  </trkseg></trk>
+</gpx>

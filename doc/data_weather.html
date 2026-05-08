@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DESNIVEL — Dati Meteo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <span class="nav-label">DOC</span>
+  <a href="index.html">Overview</a>
+  <a href="data_gpx.html">Dati GPX</a>
+  <a href="data_weather.html" class="active">Dati Meteo</a>
+  <a href="data_gopro.html">GoPro &amp; POI</a>
+  <a href="pipeline.html">Pipeline</a>
+  <a href="touchdesigner.html">Uso in TD</a>
+</nav>
+
+<div class="container">
+
+<h2>Dati Meteorologici</h2>
+<p class="lead">
+  Per ogni tappa recuperiamo dati meteo storici a risoluzione 15 minuti, poi li interpoliamo 
+  frame-per-frame sulla stessa timeline del CSV principale. Così ogni riga del weather CSV 
+  corrisponde esattamente alla stessa riga del tappa CSV.
+</p>
+
+<h2>Sorgente: Open-Meteo Historical Forecast API</h2>
+
+<div class="card">
+  <h4>Perché Open-Meteo?</h4>
+  <p>Gratuità completa, nessuna API key, risoluzione fino a 15 minuti, copertura globale. 
+  I dati derivano da modelli meteorologici ad alta risoluzione (ECMWF IFS, DWD ICON) archiviati retroattivamente.</p>
+  <p style="margin-top:8px;"><strong>Endpoint:</strong> <code>https://historical-forecast-api.open-meteo.com/v1/forecast</code></p>
+  <p><strong>Risoluzione:</strong> 96 campioni/giorno (ogni 15 minuti)</p>
+  <p><strong>Coordinate:</strong> punto medio di ogni tappa (dal GPX)</p>
+</div>
+
+<h3>Alternative considerate</h3>
+<table>
+  <tr><th>Provider</th><th>Risoluzione</th><th>Costo</th><th>Note</th></tr>
+  <tr><td>Open-Meteo Archive</td><td>1 ora</td><td>Gratuito</td><td>Usato nella v1, risoluzione troppo bassa</td></tr>
+  <tr><td>Visual Crossing</td><td>15 min</td><td>Free tier limitato</td><td>Buona qualità, serve API key</td></tr>
+  <tr><td>Meteostat</td><td>Variabile</td><td>Gratuito</td><td>Dati da stazioni reali, buchi in zone rurali</td></tr>
+  <tr><td>ERA5 (Copernicus)</td><td>1 ora / 30km</td><td>Gratuito</td><td>Massima qualità scientifica, setup complesso</td></tr>
+</table>
+
+<h2>Pipeline di Elaborazione</h2>
+
+<div class="flow">
+  <span class="node">GPX tappa</span>
+  <span class="arrow">&nbsp;→ estrai data, coord centro →&nbsp;</span>
+  <span class="node">Open-Meteo API</span>
+  <span class="arrow">&nbsp;→ 96 campioni a 15-min →&nbsp;</span>
+  <span class="node">Interpolazione</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">weather_tappa_XX.csv</span>
+  <br><br>
+  <span class="node">tappa_XX.csv</span>
+  <span class="arrow">&nbsp;→ legge n_frames →&nbsp;</span>
+  <span class="node">Allineamento frame</span>
+</div>
+
+<h3>Passaggi nel dettaglio</h3>
+<ol style="margin:12px 0 12px 20px; line-height:2;">
+  <li><strong>Parsing GPX:</strong> estrae il timestamp del primo e ultimo punto, e le coordinate del punto medio</li>
+  <li><strong>Fetch API:</strong> chiede i dati meteo per la data della tappa, usando lat/lon del punto medio</li>
+  <li><strong>Ricezione:</strong> 96 campioni a 15 minuti (00:00, 00:15, 00:30, ... 23:45) per 16 variabili meteorologiche</li>
+  <li><strong>Lettura CSV tappa:</strong> determina il numero esatto di frame (<code>n_frames</code>)</li>
+  <li><strong>Interpolazione:</strong> per ogni frame, calcola il suo timestamp reale nel viaggio e interpola i valori meteo:
+    <ul style="margin-top:4px;">
+      <li>Campi continui (temperatura, vento, nuvole...) → <strong>interpolazione lineare</strong></li>
+      <li>Campi discreti (weather_code, is_day) → <strong>nearest-neighbor</strong></li>
+    </ul>
+  </li>
+  <li><strong>Normalizzazione:</strong> aggiunge valori 0→1 per ogni campo rilevante</li>
+  <li><strong>Export:</strong> salva CSV con esattamente <code>n_frames</code> righe</li>
+</ol>
+
+<h2>Campi nel Weather CSV</h2>
+
+<h3>Campi di allineamento</h3>
+<table>
+  <tr><th>Campo</th><th>Range</th><th>Identico a tappa CSV?</th><th>Descrizione</th></tr>
+  <tr><td><code>frame</code></td><td>0→N</td><td>✅ Sì</td><td>Indice del frame, uguale al CSV principale</td></tr>
+  <tr><td><code>td_time</code></td><td>0→durata</td><td>✅ Sì</td><td>Tempo TD in secondi</td></tr>
+  <tr><td><code>td_time_norm</code></td><td>0→1</td><td>✅ Sì</td><td>Progresso normalizzato</td></tr>
+</table>
+
+<h3>Dati meteo raw</h3>
+<table>
+  <tr><th>Campo</th><th>Unità</th><th>Interpolazione</th><th>Descrizione</th></tr>
+  <tr><td><code>temperature_2m</code></td><td>°C</td><td>lineare</td><td>Temperatura a 2m dal suolo</td></tr>
+  <tr><td><code>apparent_temperature</code></td><td>°C</td><td>lineare</td><td>Temperatura percepita (wind chill + umidità)</td></tr>
+  <tr><td><code>relative_humidity_2m</code></td><td>%</td><td>lineare</td><td>Umidità relativa</td></tr>
+  <tr><td><code>precipitation</code></td><td>mm</td><td>lineare</td><td>Precipitazione nel quarto d'ora</td></tr>
+  <tr><td><code>rain</code></td><td>mm</td><td>lineare</td><td>Solo pioggia (esclude neve)</td></tr>
+  <tr><td><code>weather_code</code></td><td>WMO code</td><td>nearest</td><td>Codice condizioni meteo (vedi tabella sotto)</td></tr>
+  <tr><td><code>weather_desc</code></td><td>testo</td><td>—</td><td>Descrizione in inglese del weather_code</td></tr>
+  <tr><td><code>cloud_cover</code></td><td>%</td><td>lineare</td><td>Copertura nuvolosa totale</td></tr>
+  <tr><td><code>cloud_cover_low</code></td><td>%</td><td>lineare</td><td>Nuvole basse (&lt;2km)</td></tr>
+  <tr><td><code>cloud_cover_mid</code></td><td>%</td><td>lineare</td><td>Nuvole medie (2-6km)</td></tr>
+  <tr><td><code>cloud_cover_high</code></td><td>%</td><td>lineare</td><td>Nuvole alte (&gt;6km)</td></tr>
+  <tr><td><code>wind_speed_10m</code></td><td>km/h</td><td>lineare</td><td>Velocità vento a 10m</td></tr>
+  <tr><td><code>wind_direction_10m</code></td><td>°</td><td>nearest</td><td>Direzione del vento (0=N, 90=E)</td></tr>
+  <tr><td><code>wind_gusts_10m</code></td><td>km/h</td><td>lineare</td><td>Raffiche di vento</td></tr>
+  <tr><td><code>pressure_msl</code></td><td>hPa</td><td>lineare</td><td>Pressione al livello del mare</td></tr>
+  <tr><td><code>visibility</code></td><td>m</td><td>lineare</td><td>Visibilità orizzontale</td></tr>
+  <tr><td><code>is_day</code></td><td>0/1</td><td>nearest</td><td>Giorno (1) o notte (0)</td></tr>
+</table>
+
+<h3>Valori normalizzati 0→1 per TouchDesigner</h3>
+<table>
+  <tr><th>Campo norm</th><th>Derivato da</th><th>Normalizzazione</th></tr>
+  <tr><td><code>temperature_norm</code></td><td>temperature_2m</td><td>(-10°C → 0, +45°C → 1)</td></tr>
+  <tr><td><code>humidity_norm</code></td><td>relative_humidity_2m</td><td>0% → 0, 100% → 1</td></tr>
+  <tr><td><code>cloud_norm</code></td><td>cloud_cover</td><td>0% → 0, 100% → 1</td></tr>
+  <tr><td><code>cloud_low_norm</code></td><td>cloud_cover_low</td><td>0% → 0, 100% → 1</td></tr>
+  <tr><td><code>cloud_mid_norm</code></td><td>cloud_cover_mid</td><td>0% → 0, 100% → 1</td></tr>
+  <tr><td><code>cloud_high_norm</code></td><td>cloud_cover_high</td><td>0% → 0, 100% → 1</td></tr>
+  <tr><td><code>wind_norm</code></td><td>wind_speed_10m</td><td>0 → 0, 100 km/h → 1</td></tr>
+  <tr><td><code>wind_dir_norm</code></td><td>wind_direction_10m</td><td>0° → 0, 360° → 1</td></tr>
+  <tr><td><code>wind_gust_norm</code></td><td>wind_gusts_10m</td><td>0 → 0, 120 km/h → 1</td></tr>
+  <tr><td><code>precip_norm</code></td><td>precipitation</td><td>0 → 0, 50 mm → 1</td></tr>
+  <tr><td><code>pressure_norm</code></td><td>pressure_msl</td><td>970 hPa → 0, 1050 hPa → 1</td></tr>
+  <tr><td><code>visibility_norm</code></td><td>visibility</td><td>0 → 0, 50 km → 1</td></tr>
+</table>
+
+<h2>Codici Meteo WMO</h2>
+<table>
+  <tr><th>Code</th><th>Descrizione</th><th>Intensità</th></tr>
+  <tr><td>0</td><td>Clear sky</td><td style="color:var(--accent2)">☀️ sereno</td></tr>
+  <tr><td>1</td><td>Mainly clear</td><td style="color:var(--accent2)">☀️</td></tr>
+  <tr><td>2</td><td>Partly cloudy</td><td>⛅</td></tr>
+  <tr><td>3</td><td>Overcast</td><td>☁️ coperto</td></tr>
+  <tr><td>45, 48</td><td>Fog / rime fog</td><td>🌫️ nebbia</td></tr>
+  <tr><td>51, 53, 55</td><td>Drizzle (light→dense)</td><td style="color:var(--rain)">🌧️ pioviggine</td></tr>
+  <tr><td>61, 63, 65</td><td>Rain (slight→heavy)</td><td style="color:var(--rain)">🌧️ pioggia</td></tr>
+  <tr><td>80, 81, 82</td><td>Rain showers (slight→violent)</td><td style="color:var(--rain)">🌦️ rovesci</td></tr>
+  <tr><td>95</td><td>Thunderstorm</td><td style="color:#d46b6b">⛈️ temporale</td></tr>
+  <tr><td>96, 99</td><td>Thunderstorm with hail</td><td style="color:#d46b6b">⛈️🧊 grandine</td></tr>
+</table>
+
+<h2>Il Momento Peggiore: Quando Ha Piovuto?</h2>
+
+<div class="card">
+  <h4>🌧️ Tappa 7: Roma → Sabaudia (23 settembre)</h4>
+  <p>La tappa più bagnata del viaggio. Pioggia leggera durante la pedalata, cielo completamente coperto per tutta la giornata. 
+  Visibilità ridotta a 15 km. Il momento di pioggia massima a metà percorso (~48% del tracciato) con 0.1 mm/15min 
+  accompagnato da vento a 14.6 km/h con raffiche a 31 km/h. Temperatura percepita: 24.4°C.</p>
+  <p><strong>Condizioni:</strong> <span class="tag rain-tag">Slight rain showers</span> <span class="tag">Overcast 100%</span></p>
+</div>
+
+<div class="card">
+  <h4>⛈️ Tappa 8: Sabaudia → Formia (24 settembre)</h4>
+  <p>Temporale! Il picco di pioggia arriva al 54% del percorso con 0.3 mm/15min, 
+  nuvole al 59%, vento a 8.5 km/h con raffiche a 20 km/h. 
+  Ma la temperatura percepita resta calda: 26.5°C. Visibilità scesa a 21 km.</p>
+  <p><strong>Condizioni:</strong> <span class="tag rain-tag">Thunderstorm</span> <span class="tag rain-tag">Slight rain</span> <span class="tag">Overcast</span></p>
+</div>
+
+<div class="card">
+  <h4>🌦️ Tappa 12: Mattinata → Castel del Monte (28 settembre)</h4>
+  <p>Pioviggine intermittente nell'ultimo tratto (66% del percorso). 0.3 mm/15min, 
+  nuvole all'89%, vento a 12 km/h. Temperatura 22.5°C.
+  L'ultima tappa — pedalare dalla costa verso l'entroterra pugliese con il cielo che si chiude.</p>
+  <p><strong>Condizioni:</strong> <span class="tag rain-tag">Slight rain showers</span> <span class="tag">Partly cloudy</span></p>
+</div>
+
+<p style="color:var(--dim);margin-top:16px;font-style:italic;">
+  Le tappe 1–6, 9, 10 e 11 non hanno avuto pioggia misurabile durante la pedalata.
+  Tappa 5 (Firenze→San Gimignano) è stata la più bella: cielo limpido, 30°C, visibilità 75 km.
+</p>
+
+<h2>Corrispondenza Frame-per-Frame</h2>
+
+<div class="card">
+  <h4>Allineamento garantito</h4>
+  <p>Ogni <code>weather_tappa_XX.csv</code> ha <strong>esattamente lo stesso numero di righe</strong> del corrispondente <code>tappa_XX.csv</code>.</p>
+<pre><code>Tappa  |  tappa CSV  |  weather CSV  |  Match
+  01   |  13077      |  13077        |  ✅
+  02   |  17273      |  17273        |  ✅
+  03   |  18001      |  18001        |  ✅
+  04   |   5394      |   5394        |  ✅
+  05   |  14484      |  14484        |  ✅
+  ...  |  ...        |  ...          |  ✅</code></pre>
+  <p style="margin-top:8px;">La riga N del weather CSV corrisponde al frame N del tappa CSV → stesso momento, stessa posizione.</p>
+</div>
+
+<div class="page-nav">
+  <a href="data_gpx.html">← Dati GPX</a>
+  <a href="data_gopro.html">GoPro &amp; POI →</a>
+</div>
+
+</div>
+
+<footer>DESNIVEL — Marco Musto — 2025/2026</footer>
+</body>
+</html>

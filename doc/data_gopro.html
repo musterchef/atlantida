@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DESNIVEL — GoPro &amp; POI</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <span class="nav-label">DOC</span>
+  <a href="index.html">Overview</a>
+  <a href="data_gpx.html">Dati GPX</a>
+  <a href="data_weather.html">Dati Meteo</a>
+  <a href="data_gopro.html" class="active">GoPro &amp; POI</a>
+  <a href="pipeline.html">Pipeline</a>
+  <a href="touchdesigner.html">Uso in TD</a>
+</nav>
+
+<div class="container">
+
+<h2>Dati GoPro</h2>
+<p class="lead">
+  I video GoPro Hero 10 contengono telemetria GPS embedded nel formato GPMF (GoPro Metadata Format). 
+  Tre script lavorano su questi dati: estrazione GPS, mapping alla tappa, e tracce complete.
+</p>
+
+<h3>Script e Flusso</h3>
+
+<div class="card">
+  <h4>1. gpmf_extract.py — Parser GPMF</h4>
+  <p>Parser binario nativo del formato GPMF di GoPro. Estrae dalla traccia dati dei video MP4:</p>
+  <ul style="margin:8px 0 0 20px;">
+    <li>Coordinate GPS (lat, lon, alt)</li>
+    <li>Velocità 2D e 3D</li>
+    <li>Fix GPS (precisione)</li>
+    <li>Timestamp relativi al video</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h4>2. gopro_mapper.py — Associazione Video → Tappa</h4>
+  <p>Scansiona la cartella <code>gopro/</code>, estrae i metadati di ogni video (ffprobe) e li associa 
+  alla tappa corrispondente usando:</p>
+  <ul style="margin:8px 0 0 20px;">
+    <li>Timestamp di creazione del video</li>
+    <li>Coordinate GPS del primo punto</li>
+    <li>Matching temporale con le date delle tappe GPX (tolleranza ±24h)</li>
+  </ul>
+  <p style="margin-top:8px;"><strong>Output:</strong> <code>output/gopro_map.json</code> — ogni video con la sua tappa, km e frame associato.</p>
+</div>
+
+<div class="card">
+  <h4>3. gopro_tracks.py — Tracce GPS complete</h4>
+  <p>Estrae la traccia GPS completa di ogni video e la salva come JSON e opzionalmente come GPX.</p>
+  <ul style="margin:8px 0 0 20px;">
+    <li>Pulizia: rimozione spike (&gt;500m tra campioni), duplicati, punti senza fix</li>
+    <li>Calcolo: distanza cumulativa, statistiche per traccia</li>
+    <li>Export: <code>output/gopro_tracks.json</code> + file .gpx individuali in <code>gpx/gopro/tappaXX/</code></li>
+  </ul>
+</div>
+
+<h3>Dati estratti per punto GPS (da GPMF)</h3>
+<table>
+  <tr><th>Campo</th><th>Tipo</th><th>Descrizione</th></tr>
+  <tr><td><code>lat</code></td><td>float</td><td>Latitudine</td></tr>
+  <tr><td><code>lon</code></td><td>float</td><td>Longitudine</td></tr>
+  <tr><td><code>alt</code></td><td>float</td><td>Altitudine GPS (meno precisa del barometro GPX)</td></tr>
+  <tr><td><code>speed_2d</code></td><td>m/s</td><td>Velocità orizzontale</td></tr>
+  <tr><td><code>speed_3d</code></td><td>m/s</td><td>Velocità 3D (include verticale)</td></tr>
+  <tr><td><code>gps_fix</code></td><td>int</td><td>Qualità fix: 0=none, 2=2D, 3=3D</td></tr>
+  <tr><td><code>time_offset_s</code></td><td>float</td><td>Secondi dall'inizio del video</td></tr>
+  <tr><td><code>cum_dist_m</code></td><td>float</td><td>Distanza percorsa (dopo pulizia)</td></tr>
+</table>
+
+<h3>Uso potenziale in TouchDesigner</h3>
+<p>I video GoPro sono associati a frame specifici delle tappe. Questo permette di:</p>
+<ul style="margin:8px 0 0 20px; line-height:2;">
+  <li>Sincronizzare la riproduzione video con la posizione sulla traccia</li>
+  <li>Usare la velocità GPS del video come parametro live (confronto GPX vs video)</li>
+  <li>Triggerare il cambio video al frame giusto della timeline</li>
+</ul>
+
+<h2>Punti di Interesse (POI)</h2>
+<p class="lead">
+  Lo script <code>poi_discovery.py</code> cerca punti di interesse lungo le 12 tappe usando 
+  Wikipedia Geosearch e OpenStreetMap (Overpass API).
+</p>
+
+<h3>Come funziona la ricerca</h3>
+<ol style="margin:12px 0 12px 20px; line-height:2;">
+  <li>Campiona un punto ogni ~2 km lungo la traccia GPX</li>
+  <li>Per ogni punto, chiede a <strong>Wikipedia</strong> gli articoli geolocalizzati nel raggio di 100m</li>
+  <li>Filtra: scarta pagine stub (&lt;5000 byte), scarta titoli generici (strade, scuole, ospedali...)</li>
+  <li>Tiene sempre: castelli, cattedrali, musei, parchi, UNESCO, ponti...</li>
+  <li>Risultato: lista di POI con coordinate, descrizione, distanza dalla traccia</li>
+</ol>
+
+<h3>Filtri applicati</h3>
+<table>
+  <tr><th>Lista</th><th>Comportamento</th><th>Esempi</th></tr>
+  <tr>
+    <td>Blacklist (scarta)</td>
+    <td>Scarta titoli che contengono queste parole</td>
+    <td>"strada", "stazione di", "scuola", "ospedale", "quartiere", "campionato"...</td>
+  </tr>
+  <tr>
+    <td>Whitelist (tieni)</td>
+    <td>Tiene sempre, anche se la pagina è piccola</td>
+    <td>"castello", "cattedrale", "museo", "parco nazionale", "UNESCO", "faro"...</td>
+  </tr>
+  <tr>
+    <td>Size filter</td>
+    <td>Scarta se pagina Wikipedia &lt; 5000 byte (stub)</td>
+    <td>Solo se non è in whitelist</td>
+  </tr>
+</table>
+
+<h3>Uso potenziale in TouchDesigner</h3>
+<ul style="margin:8px 0 0 20px; line-height:2;">
+  <li>Sovrimpressione del nome del luogo al passaggio</li>
+  <li>Trigger di eventi visivi/sonori ai POI (es. flash, cambio scena)</li>
+  <li>Heatmap di densità culturale lungo la traccia</li>
+  <li>Layer testuale/tipografico generativo</li>
+</ul>
+
+<h3>Output</h3>
+<pre><code>output/poi_discovery.json
+
+{
+  "tappa": 1,
+  "poi": [
+    {
+      "title": "Castello di Moncalieri",
+      "lat": 45.0123,
+      "lon": 7.6789,
+      "dist_from_route_m": 45,
+      "wiki_url": "https://it.wikipedia.org/wiki/...",
+      "page_size": 12450
+    },
+    ...
+  ]
+}</code></pre>
+
+<div class="page-nav">
+  <a href="data_weather.html">← Dati Meteo</a>
+  <a href="pipeline.html">Pipeline →</a>
+</div>
+
+</div>
+
+<footer>DESNIVEL — Marco Musto — 2025/2026</footer>
+</body>
+</html>

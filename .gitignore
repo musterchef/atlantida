@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Large media (escluse da GitHub: limite 100 MB per file)
+/gopro/
+/video/
+
+# Output generato
+/output/
+
+# TouchDesigner backups
+/td/Backup/
+
+# Note di sviluppo locali
+DEV_NOTES.md
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

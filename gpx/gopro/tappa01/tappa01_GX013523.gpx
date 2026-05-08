@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Desnivel GoPro Track Extractor"
+     xmlns="http://www.topografix.com/GPX/1/1">
+  <trk><name>GX013523.MP4</name><trkseg>
+    <trkpt lat="45.1665538" lon="7.8674640"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1667444" lon="7.8678776"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1666727" lon="7.8677162"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1666917" lon="7.8677666"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1665896" lon="7.8675700"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1666669" lon="7.8677231"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1668151" lon="7.8680385"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1670254" lon="7.8684981"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1671072" lon="7.8686858"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1673634" lon="7.8692110"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1673913" lon="7.8692722"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1673274" lon="7.8691665"><ele>223.0</ele></trkpt>
+    <trkpt lat="45.1672358" lon="7.8689760"><ele>223.0</ele></trkpt>
+  </trkseg></trk>
+</gpx>

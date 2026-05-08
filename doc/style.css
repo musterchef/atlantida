@@ -1,0 +1,266 @@
+/* DESNIVEL — Shared Documentation Theme */
+
+:root {
+  --bg: #0a0a0f;
+  --fg: #e0ddd6;
+  --accent: #d4a857;
+  --accent2: #6ba36b;
+  --dim: #7a7770;
+  --surface: #141420;
+  --border: #2a2a3a;
+  --code-bg: #1a1a2a;
+  --link: #8ab4f8;
+  --rain: #6b9bd2;
+}
+
+/* ── Reset & Base ── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.7;
+}
+a { color: var(--link); }
+
+/* ── Navigation ── */
+nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 40px;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+nav a {
+  color: var(--dim);
+  text-decoration: none;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+nav a:hover, nav a.active { color: var(--accent); }
+nav .nav-label {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.85em;
+  letter-spacing: 0.15em;
+}
+
+/* ── Layout ── */
+.container { max-width: 1100px; margin: 0 auto; padding: 40px; }
+
+/* ── Typography ── */
+h2 {
+  font-size: 1.8em;
+  font-weight: 300;
+  color: var(--accent);
+  margin: 50px 0 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.05em;
+}
+h2:first-of-type { margin-top: 10px; }
+h3 { font-size: 1.2em; font-weight: 500; color: var(--fg); margin: 30px 0 12px; }
+h4 { color: var(--accent); margin: 16px 0 8px; font-weight: 500; }
+p { margin: 10px 0; color: var(--fg); opacity: 0.9; }
+.lead { font-size: 1.05em; color: var(--dim); font-style: italic; margin-bottom: 24px; }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.88em; }
+th {
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 500;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:hover td { background: rgba(212,168,87,0.03); }
+
+/* ── Code ── */
+code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+  font-size: 0.88em;
+  color: var(--accent2);
+}
+pre {
+  background: var(--code-bg);
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+pre code { background: none; padding: 0; color: var(--fg); }
+
+/* ── Cards & Grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.card h4 { color: var(--accent); font-weight: 500; margin-bottom: 8px; font-size: 0.95em; }
+.card p { font-size: 0.88em; opacity: 0.8; margin: 4px 0; }
+.card .stat { font-size: 1.8em; font-weight: 200; color: var(--fg); margin: 4px 0; }
+
+/* ── Tags ── */
+.tag {
+  display: inline-block;
+  background: rgba(212,168,87,0.12);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.78em;
+  margin: 2px;
+}
+.tag.green { background: rgba(107,163,107,0.12); color: var(--accent2); }
+.rain-tag { background: rgba(107,155,210,0.15); color: var(--rain); }
+
+/* ── Highlights ── */
+.highlight { color: var(--accent); }
+.highlight-green { color: var(--accent2); }
+
+/* ── Hero (index) ── */
+.hero {
+  background: linear-gradient(135deg, #0a0a1f 0%, #1a0a2f 50%, #0a1a1f 100%);
+  padding: 80px 40px 60px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(212,168,87,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 50%, rgba(107,163,107,0.06) 0%, transparent 60%);
+}
+.hero h1 {
+  font-size: 3.5em;
+  font-weight: 200;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  position: relative;
+}
+.hero .subtitle {
+  font-size: 1.1em;
+  color: var(--dim);
+  margin-top: 12px;
+  font-style: italic;
+  position: relative;
+}
+.hero .route {
+  font-size: 0.95em;
+  color: var(--fg);
+  margin-top: 24px;
+  opacity: 0.7;
+  position: relative;
+}
+
+/* ── Flow Diagrams ── */
+.flow-diagram, .flow {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 30px;
+  margin: 20px 0;
+  text-align: center;
+  font-family: monospace;
+  font-size: 0.9em;
+  line-height: 2;
+  color: var(--dim);
+}
+.flow-diagram .arrow, .flow .arrow { color: var(--accent); }
+.flow-diagram .node, .flow .node {
+  display: inline-block;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: 4px;
+  color: var(--fg);
+  margin: 4px;
+}
+
+/* ── Weather Timeline (weather page) ── */
+.weather-timeline { display: flex; flex-direction: column; gap: 6px; margin: 16px 0; }
+.wt-row { display: flex; align-items: center; gap: 8px; font-size: 0.82em; }
+.wt-label { width: 30px; text-align: right; color: var(--dim); }
+.wt-bar { flex: 1; height: 20px; border-radius: 3px; position: relative; }
+.wt-desc { width: 120px; color: var(--dim); font-size: 0.9em; }
+.weather-bar { height: 24px; border-radius: 4px; margin: 4px 0; display: flex; overflow: hidden; }
+.weather-bar div { height: 100%; }
+
+/* ── Dependencies Grid (pipeline page) ── */
+.dep-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.dep-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; }
+.dep-card .name { color: var(--accent2); font-family: monospace; }
+.dep-card .desc { color: var(--dim); font-size: 0.85em; margin-top: 4px; }
+
+/* ── Idea Blocks (touchdesigner page) ── */
+.idea { border-left: 3px solid var(--accent); padding-left: 16px; margin: 16px 0; }
+.idea-weather { border-left-color: var(--link); }
+
+/* ── Table of Contents ── */
+.toc { columns: 2; column-gap: 40px; }
+.toc li { margin: 4px 0; font-size: 0.92em; list-style: none; }
+.toc li::before { content: '→ '; color: var(--accent); }
+
+/* ── Page Navigation ── */
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  margin: 60px 0 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.page-nav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9em;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.page-nav a:hover { opacity: 1; }
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding: 40px;
+  color: var(--dim);
+  font-size: 0.8em;
+  border-top: 1px solid var(--border);
+  margin-top: 60px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .hero { padding: 40px 20px 30px; }
+  .hero h1 { font-size: 2em; }
+  .container { padding: 20px; }
+  nav { padding: 12px 16px; gap: 12px; }
+  .toc { columns: 1; }
+  .grid { grid-template-columns: 1fr; }
+  .dep-grid { grid-template-columns: 1fr; }
+}

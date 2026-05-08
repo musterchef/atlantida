@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DESNIVEL — Data Pipeline Documentation</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="hero">
+  <h1>DESNIVEL</h1>
+  <div class="subtitle">del viatge al so, del terreny al gest audiovisual</div>
+  <div class="route">Torino → Castel del Monte &nbsp;|&nbsp; 12 tappe &nbsp;|&nbsp; 980 km &nbsp;|&nbsp; Settembre 2025</div>
+</div>
+
+<nav>
+  <span class="nav-label">DOC</span>
+  <a href="index.html" class="active">Overview</a>
+  <a href="data_gpx.html">Dati GPX</a>
+  <a href="data_weather.html">Dati Meteo</a>
+  <a href="data_gopro.html">GoPro &amp; POI</a>
+  <a href="pipeline.html">Pipeline</a>
+  <a href="touchdesigner.html">Uso in TD</a>
+</nav>
+
+<div class="container">
+
+<h2>Il Progetto</h2>
+<p class="lead">
+  Desnivel traduce un viaggio in bicicletta da Torino a Castel del Monte — 12 tappe, ~980 km, 14 giorni — 
+  in un'esperienza audiovisiva generativa. GPS, meteo, video e dati territoriali diventano materia espressiva 
+  per TouchDesigner e Ableton Live.
+</p>
+
+<h3>Cosa contiene questa documentazione</h3>
+<ul class="toc">
+  <li><a href="data_gpx.html">Dati GPX</a> — canali estratti, derivati, normalizzazione</li>
+  <li><a href="data_weather.html">Dati Meteo</a> — come li recuperiamo, interpolazione frame-per-frame</li>
+  <li><a href="data_gopro.html">GoPro &amp; POI</a> — telemetria video, punti di interesse</li>
+  <li><a href="pipeline.html">Pipeline Tecnica</a> — flusso completo dei dati, script, dipendenze</li>
+  <li><a href="touchdesigner.html">Uso in TouchDesigner</a> — come caricare e usare i dati</li>
+</ul>
+
+<h2>I Dati in Numeri</h2>
+<div class="grid">
+  <div class="card">
+    <h4>Tappe</h4>
+    <div class="stat">12</div>
+    <p>15–28 settembre 2025</p>
+  </div>
+  <div class="card">
+    <h4>Distanza totale</h4>
+    <div class="stat">~980 km</div>
+    <p>Torino → Castel del Monte</p>
+  </div>
+  <div class="card">
+    <h4>Punti GPS</h4>
+    <div class="stat">224.101</div>
+    <p>1 punto/secondo da Strava</p>
+  </div>
+  <div class="card">
+    <h4>Frame output</h4>
+    <div class="stat">147.755</div>
+    <p>Ricampionati a 30 fps</p>
+  </div>
+  <div class="card">
+    <h4>Canali per frame</h4>
+    <div class="stat">18 + 30</div>
+    <p>18 GPX + 30 meteo</p>
+  </div>
+  <div class="card">
+    <h4>Durata TD totale</h4>
+    <div class="stat">~82 min</div>
+    <p>Tappa più lunga = 10 min</p>
+  </div>
+</div>
+
+<h2>Le 12 Tappe</h2>
+<table>
+  <tr>
+    <th>#</th>
+    <th>Tappa</th>
+    <th>Data</th>
+    <th>Dist</th>
+    <th>Dislivello</th>
+    <th>Durata TD</th>
+    <th>Meteo</th>
+  </tr>
+  <tr><td>1</td><td>Torino → Cascina Nomade (Dogliani)</td><td>15 set</td><td>89.7 km</td><td>+641 / -367 m</td><td>7.3 min</td><td><span class="tag">Partly cloudy</span> <span class="tag">Overcast</span></td></tr>
+  <tr><td>2</td><td>Cascina Nomade → Genova</td><td>16 set</td><td>122.4 km</td><td>+1204 / -1693 m</td><td>9.6 min</td><td><span class="tag">Overcast</span></td></tr>
+  <tr><td>3</td><td>Genova → Levanto</td><td>17 set</td><td>100.8 km</td><td>+1722 / -1694 m</td><td>10.0 min</td><td><span class="tag green">Clear sky</span> <span class="tag">Partly cloudy</span></td></tr>
+  <tr><td>4</td><td>Levanto → La Spezia</td><td>18 set</td><td>38.6 km</td><td>+842 / -893 m</td><td>3.0 min</td><td><span class="tag green">Clear sky</span></td></tr>
+  <tr><td>5</td><td>Firenze → San Gimignano</td><td>19 set</td><td>60.0 km</td><td>+1135 / -1068 m</td><td>8.1 min</td><td><span class="tag green">Clear sky</span></td></tr>
+  <tr><td>6</td><td>Orvieto → Bagnoregio → Lago di Bolsena</td><td>20 set</td><td>35.6 km</td><td>+688 / -508 m</td><td>5.2 min</td><td><span class="tag green">Mainly clear</span></td></tr>
+  <tr><td>7</td><td>Roma → Sabaudia</td><td>23 set</td><td>106.8 km</td><td>+660 / -705 m</td><td>8.8 min</td><td><span class="tag" style="background:rgba(100,140,220,0.15);color:#8ab4f8">Rain showers</span> <span class="tag">Overcast</span></td></tr>
+  <tr><td>8</td><td>Sabaudia → Formia</td><td>24 set</td><td>69.0 km</td><td>+363 / -333 m</td><td>5.2 min</td><td><span class="tag" style="background:rgba(100,140,220,0.15);color:#8ab4f8">Thunderstorm</span></td></tr>
+  <tr><td>9</td><td>Napoli → San Nicola Manfredi</td><td>25 set</td><td>72.9 km</td><td>+780 / -420 m</td><td>6.4 min</td><td><span class="tag">Overcast</span> <span class="tag green">Mainly clear</span></td></tr>
+  <tr><td>10</td><td>San Nicola Manfredi → San Severo</td><td>26 set</td><td>111.5 km</td><td>+1561 / -1854 m</td><td>6.9 min</td><td><span class="tag green">Clear sky</span> <span class="tag">Overcast</span></td></tr>
+  <tr><td>11</td><td>Peschici → Mattinata</td><td>27 set</td><td>68.6 km</td><td>+1215 / -1231 m</td><td>5.9 min</td><td><span class="tag">Overcast</span></td></tr>
+  <tr><td>12</td><td>Mattinata → Castel del Monte</td><td>28 set</td><td>104.1 km</td><td>+836 / -374 m</td><td>5.6 min</td><td><span class="tag">Partly cloudy</span> <span class="tag" style="background:rgba(100,140,220,0.15);color:#8ab4f8">Light rain</span></td></tr>
+</table>
+
+<h2>Architettura del Flusso Dati</h2>
+<div class="flow-diagram">
+  <span class="node">GPX (Strava)</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">desnivel_gpx_to_td.py</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">tappa_XX.csv</span>
+  <br><br>
+  <span class="node">GPX + Open-Meteo API</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">weather_fetch.py</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">weather_tappa_XX.csv</span>
+  <br><br>
+  <span class="node">GoPro MP4</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">gopro_mapper.py</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">gopro_map.json</span>
+  <br><br>
+  <span class="node">Wikipedia + OSM</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">poi_discovery.py</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">poi_discovery.json</span>
+  <br><br>
+  <span class="node">Coastline shapefile</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">terrain_classify.py</span>
+  <span class="arrow">&nbsp;→&nbsp;</span>
+  <span class="node">terrain_type (nel CSV)</span>
+</div>
+
+<p style="text-align:center;color:var(--dim);font-size:0.85em;margin-top:8px;">
+  Tutti i CSV della stessa tappa condividono lo stesso numero di frame → riga N = stesso momento.
+</p>
+
+<div class="page-nav">
+  <span></span>
+  <a href="data_gpx.html">Dati GPX →</a>
+</div>
+
+</div>
+
+<footer>
+  DESNIVEL — Marco Musto — 2025/2026<br>
+  Generato automaticamente dalla pipeline dati
+</footer>
+
+</body>
+</html>

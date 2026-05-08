@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Desnivel GoPro Track Extractor"
+     xmlns="http://www.topografix.com/GPX/1/1">
+  <trk><name>GX013530.MP4</name><trkseg>
+    <trkpt lat="45.0698230" lon="7.6883685"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0687891" lon="7.6924343"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0687826" lon="7.6924330"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0687749" lon="7.6924404"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0687717" lon="7.6924486"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0687723" lon="7.6924493"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0688055" lon="7.6925616"><ele>279.4</ele></trkpt>
+    <trkpt lat="45.0688303" lon="7.6923894"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0688289" lon="7.6923762"><ele>200.9</ele></trkpt>
+    <trkpt lat="45.0688225" lon="7.6923646"><ele>200.9</ele></trkpt>
+    <trkpt lat="45.0688159" lon="7.6923551"><ele>201.0</ele></trkpt>
+    <trkpt lat="45.0688140" lon="7.6923446"><ele>201.1</ele></trkpt>
+    <trkpt lat="45.0688167" lon="7.6923302"><ele>201.3</ele></trkpt>
+    <trkpt lat="45.0688234" lon="7.6923259"><ele>201.4</ele></trkpt>
+    <trkpt lat="45.0688352" lon="7.6923252"><ele>201.5</ele></trkpt>
+    <trkpt lat="45.0688457" lon="7.6923241"><ele>201.5</ele></trkpt>
+    <trkpt lat="45.0688511" lon="7.6923237"><ele>201.5</ele></trkpt>
+    <trkpt lat="45.0688533" lon="7.6923241"><ele>201.2</ele></trkpt>
+    <trkpt lat="45.0688552" lon="7.6923278"><ele>201.0</ele></trkpt>
+    <trkpt lat="45.0688566" lon="7.6923325"><ele>200.9</ele></trkpt>
+    <trkpt lat="45.0688530" lon="7.6923362"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0688472" lon="7.6923476"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0688426" lon="7.6923583"><ele>200.8</ele></trkpt>
+    <trkpt lat="45.0688412" lon="7.6923847"><ele>201.2</ele></trkpt>
+    <trkpt lat="45.0688358" lon="7.6923926"><ele>201.4</ele></trkpt>
+    <trkpt lat="45.0688322" lon="7.6924005"><ele>201.4</ele></trkpt>
+    <trkpt lat="45.0688301" lon="7.6924053"><ele>201.5</ele></trkpt>
+    <trkpt lat="45.0688283" lon="7.6924112"><ele>201.6</ele></trkpt>
+    <trkpt lat="45.0688317" lon="7.6924237"><ele>201.7</ele></trkpt>
+    <trkpt lat="45.0688333" lon="7.6924382"><ele>201.8</ele></trkpt>
+    <trkpt lat="45.0688335" lon="7.6924521"><ele>201.9</ele></trkpt>
+    <trkpt lat="45.0688329" lon="7.6924646"><ele>202.0</ele></trkpt>
+    <trkpt lat="45.0688322" lon="7.6924760"><ele>202.2</ele></trkpt>
+    <trkpt lat="45.0688279" lon="7.6924993"><ele>202.4</ele></trkpt>
+    <trkpt lat="45.0688236" lon="7.6925215"><ele>202.6</ele></trkpt>
+    <trkpt lat="45.0688190" lon="7.6925405"><ele>202.8</ele></trkpt>
+    <trkpt lat="45.0688134" lon="7.6925571"><ele>203.0</ele></trkpt>
+    <trkpt lat="45.0688081" lon="7.6925734"><ele>203.2</ele></trkpt>
+    <trkpt lat="45.0688029" lon="7.6925870"><ele>203.4</ele></trkpt>
+    <trkpt lat="45.0687988" lon="7.6926005"><ele>203.7</ele></trkpt>
+    <trkpt lat="45.0687948" lon="7.6926115"><ele>203.9</ele></trkpt>
+    <trkpt lat="45.0687931" lon="7.6926141"><ele>204.0</ele></trkpt>
+    <trkpt lat="45.0687911" lon="7.6926171"><ele>204.2</ele></trkpt>
+    <trkpt lat="45.0687852" lon="7.6926330"><ele>204.4</ele></trkpt>
+    <trkpt lat="45.0687801" lon="7.6926482"><ele>204.6</ele></trkpt>
+    <trkpt lat="45.0687800" lon="7.6926522"><ele>204.7</ele></trkpt>
+    <trkpt lat="45.0687797" lon="7.6926569"><ele>204.6</ele></trkpt>
+  </trkseg></trk>
+</gpx>

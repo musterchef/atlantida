@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DESNIVEL — Dati GPX</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <span class="nav-label">DOC</span>
+  <a href="index.html">Overview</a>
+  <a href="data_gpx.html" class="active">Dati GPX</a>
+  <a href="data_weather.html">Dati Meteo</a>
+  <a href="data_gopro.html">GoPro &amp; POI</a>
+  <a href="pipeline.html">Pipeline</a>
+  <a href="touchdesigner.html">Uso in TD</a>
+</nav>
+
+<div class="container">
+
+<h2>Sorgente: file GPX da Strava</h2>
+<p class="lead">
+  Ogni tappa è registrata con Strava come attività "cycling". Il GPX contiene un trackpoint al secondo 
+  con 4 campi: <code>lat</code>, <code>lon</code>, <code>ele</code>, <code>time</code>. 
+  Nessuna estensione Strava (heart rate, cadenza, potenza) è presente.
+</p>
+
+<h3>File sorgente</h3>
+<pre><code>gpx/
+  tappa01_Torino_Cascina_Nomade_Dogliani.gpx    (19.610 punti)
+  tappa02_Cascina_Nomade_Genova.gpx              (28.213 punti)
+  tappa03_Genova_Levanto.gpx                     (27.332 punti)
+  ...
+  tappa12_Mattinata_Castel_del_Monte.gpx         (15.989 punti)</code></pre>
+
+<h3>Struttura di un trackpoint</h3>
+<pre><code>&lt;trkpt lat="45.0809920" lon="7.6570820"&gt;
+  &lt;ele&gt;257.8&lt;/ele&gt;
+  &lt;time&gt;2025-09-15T07:22:58Z&lt;/time&gt;
+&lt;/trkpt&gt;</code></pre>
+
+<h2>Dati Estratti (Raw → Derivati)</h2>
+
+<p>Lo script <code>desnivel_gpx_to_td.py</code> trasforma i 4 campi raw in <strong>18 canali per frame</strong>.</p>
+
+<h3>Campi di posizione (normalizzati 0→1 nella tappa)</h3>
+<table>
+  <tr><th>Canale</th><th>Tipo</th><th>Range</th><th>Derivato da</th><th>Descrizione</th></tr>
+  <tr><td><code>lat_norm</code></td><td>Posizione</td><td>0→1</td><td>lat</td><td>Latitudine normalizzata nel range della tappa</td></tr>
+  <tr><td><code>lon_norm</code></td><td>Posizione</td><td>0→1</td><td>lon</td><td>Longitudine normalizzata nel range della tappa</td></tr>
+  <tr><td><code>ele_norm</code></td><td>Posizione</td><td>0→1</td><td>ele</td><td>Elevazione normalizzata (0 = min, 1 = max della tappa)</td></tr>
+</table>
+
+<h3>Campi cinematici (istantanei, punto per punto)</h3>
+<table>
+  <tr><th>Canale</th><th>Tipo</th><th>Range</th><th>Formula</th><th>Descrizione</th></tr>
+  <tr>
+    <td><code>speed_kmh</code></td><td>Istantaneo</td><td>0→~120</td>
+    <td><code>haversine(p[i-1], p[i]) / dt × 3.6</code></td>
+    <td>Velocità tra due punti consecutivi</td>
+  </tr>
+  <tr>
+    <td><code>slope</code></td><td>Istantaneo</td><td>-1→1</td>
+    <td><code>ele_delta / dist</code></td>
+    <td>Pendenza (+ = salita, - = discesa). Valore grezzo, non %</td>
+  </tr>
+  <tr>
+    <td><code>bearing_deg</code></td><td>Istantaneo</td><td>0→360</td>
+    <td><code>atan2(sin(Δlon)·cos(lat2), ...)</code></td>
+    <td>Direzione di marcia in gradi (0=Nord, 90=Est)</td>
+  </tr>
+  <tr>
+    <td><code>curvature</code></td><td>Istantaneo</td><td>-1→1</td>
+    <td><code>(bearing[i] - bearing[i-1]) / 180</code></td>
+    <td>Variazione angolare normalizzata. 0=dritto, ±1=inversione</td>
+  </tr>
+  <tr>
+    <td><code>ele_delta</code></td><td>Istantaneo</td><td>variabile</td>
+    <td><code>ele[i] - ele[i-1]</code></td>
+    <td>Variazione altimetrica puntuale in metri</td>
+  </tr>
+</table>
+
+<h3>Campi cumulativi</h3>
+<table>
+  <tr><th>Canale</th><th>Range</th><th>Descrizione</th></tr>
+  <tr><td><code>cum_dist_m</code></td><td>0→max</td><td>Distanza totale percorsa in metri</td></tr>
+  <tr><td><code>cum_ele_gain_norm</code></td><td>0→1</td><td>Dislivello positivo cumulato (normalizzato)</td></tr>
+  <tr><td><code>cum_ele_loss_norm</code></td><td>0→1</td><td>Dislivello negativo cumulato (normalizzato)</td></tr>
+</table>
+
+<h3>Indici derivati (rolling window, 30 campioni)</h3>
+<table>
+  <tr><th>Canale</th><th>Range</th><th>Formula</th><th>Cosa rivela</th></tr>
+  <tr>
+    <td><code>difficulty</code></td><td>0→1</td>
+    <td>media mobile di <code>|slope|</code> × 10, cap a 1.0</td>
+    <td>Durezza del tratto: valori alti = salita/discesa ripida sostenuta</td>
+  </tr>
+  <tr>
+    <td><code>flow_index</code></td><td>0→1</td>
+    <td><code>1 - varianza(|curvature|) × 50</code></td>
+    <td>Continuità del movimento: 1=rettilineo fluido, 0=tornanti caotici</td>
+  </tr>
+  <tr>
+    <td><code>effort</code></td><td>0→1</td>
+    <td><code>speed × |slope|</code> (normalizzato al max)</td>
+    <td>Sforzo fisico: veloce + ripido = massimo effort</td>
+  </tr>
+</table>
+
+<h3>Classificazione terreno</h3>
+<table>
+  <tr><th>Canale</th><th>Range</th><th>Metodo</th><th>Significato</th></tr>
+  <tr>
+    <td><code>terrain_type</code></td><td>0→1 continuo</td>
+    <td>Distanza dalla costa + elevazione (<code>terrain_classify.py</code>)</td>
+    <td>
+      <code>0.00</code> = mare/costa<br>
+      <code>0.33</code> = pianura<br>
+      <code>0.66</code> = collina<br>
+      <code>1.00</code> = montagna<br>
+      Con transizioni smooth
+    </td>
+  </tr>
+</table>
+
+<p>Il classificatore usa il shapefile Natural Earth 10m delle coste. 
+Calcola la distanza dal mare e la combina con l'elevazione per decidere il tipo di terreno. 
+Le transizioni sono interpolate linearmente per evitare salti bruschi.</p>
+
+<h3>Campi temporali</h3>
+<table>
+  <tr><th>Canale</th><th>Range</th><th>Descrizione</th></tr>
+  <tr><td><code>frame</code></td><td>0→N</td><td>Indice del frame (dopo resampling a 30fps)</td></tr>
+  <tr><td><code>td_time</code></td><td>0→durata</td><td>Tempo rimappato: la tappa più lunga dura 600s, le altre in proporzione</td></tr>
+  <tr><td><code>td_time_norm</code></td><td>0→1</td><td>Progresso normalizzato nella tappa</td></tr>
+</table>
+
+<h2>Time Warp: compressione temporale</h2>
+<div class="card">
+  <h4>Come funziona</h4>
+  <p>Tutte le tappe vengono rimappate proporzionalmente: la tappa più lunga in tempo reale (Tappa 3, 11.2h) 
+  diventa esattamente <strong>600 secondi</strong> (10 min) in TD. Le altre mantengono la proporzione.</p>
+  <p>Esempio: Tappa 4 dura 3.35h reali → <code>(3.35 / 11.19) × 600 = 179.8s</code> → ~3 min in TD.</p>
+  <p>Dopo il time warp, i dati vengono <strong>ricampionati a 30 fps</strong> con interpolazione lineare, 
+  producendo il CSV finale con un frame ogni ~33ms.</p>
+</div>
+
+<h2>Dati Aggiuntivi Estraibili (non ancora implementati)</h2>
+<p>Questi canali sono calcolabili dai 4 campi raw senza dati esterni:</p>
+
+<table>
+  <tr><th>Canale</th><th>Formula</th><th>Cosa rivela</th><th>Uso potenziale in TD</th></tr>
+  <tr><td><code>accel</code></td><td>derivata della velocità</td><td>Scatti, frenate, ripartenze</td><td>Screen shake, flash, intensità particelle</td></tr>
+  <tr><td><code>jerk</code></td><td>derivata dell'accelerazione</td><td>Impatti, buche, cambi bruschi</td><td>Glitch shader, distorsione audio</td></tr>
+  <tr><td><code>angular_velocity</code></td><td>Δbearing / dt</td><td>Curve dolci vs tornanti</td><td>Rotazione camera, larghezza trail</td></tr>
+  <tr><td><code>sinuosity</code></td><td>distanza percorsa / retta su finestra</td><td>Rettilineo vs serpentine</td><td>Complessità frattale noise</td></tr>
+  <tr><td><code>power_est_w</code></td><td>modello fisico ciclismo</td><td>Potenza stimata in Watt</td><td>Energia visiva, emissione particelle</td></tr>
+  <tr><td><code>terrain_roughness</code></td><td>varianza ele su finestra corta</td><td>Strada liscia vs irregolare</td><td>Displacement map, grana texture</td></tr>
+</table>
+
+<h2>Formato Output CSV</h2>
+<pre><code>output/tappa_01.csv
+output/tappa_02.csv
+...
+output/tappa_12.csv</code></pre>
+
+<p>Ogni file ha una riga di header + N righe di dati. Esempio prime righe:</p>
+<pre><code>frame,td_time,td_time_norm,lat_norm,lon_norm,ele_norm,cum_dist_m,speed_kmh,slope,bearing_deg,curvature,ele_delta,cum_ele_gain_norm,cum_ele_loss_norm,difficulty,flow_index,effort,terrain_type
+0,0.0,0.0,0.99988,0.005735,0.152584,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.55
+1,0.033335,7.6e-05,0.999744,0.005724,0.152584,8.571207,12.694448,0.0,182.178,0.002885,0.0,0.0,0.0,0.0,0.0,0.0,0.55</code></pre>
+
+<div class="page-nav">
+  <a href="index.html">← Overview</a>
+  <a href="data_weather.html">Dati Meteo →</a>
+</div>
+
+</div>
+
+<footer>DESNIVEL — Marco Musto — 2025/2026</footer>
+</body>
+</html>
