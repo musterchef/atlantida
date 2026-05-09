@@ -19,14 +19,37 @@ import math, json, csv, os, glob, sys
 from datetime import datetime
 from pathlib import Path
 from terrain_classify import classify_terrain
+from audio_mapper import map_rows as map_sonic_rows
+from audio_mapper import map_rows_with_bpm_smoothing
+from constants import (
+    SAVGOL_WINDOW_DEFAULT,
+    MUSICAL_TAU_SECONDS, MUSICAL_BLOCK_SECONDS,
+    MUSICAL_DEADBAND_BPM, MUSICAL_MAX_CHANGE_BPM_PER_S,
+    MUSICAL_OUTPUT_STEP_BPM, get_bpm_grid, BPM_GRID_STEP_DEFAULT,
+)
 
-# ─────────────────── CONFIG ────────────────────
+# ─────────────────── CONFIG ────────────────
 PROJECT_DIR    = Path(__file__).resolve().parent.parent  # C:\Users\marco\Documents\Desnivel
 GPX_DIR        = str(PROJECT_DIR / "gpx")               # dove stanno i GPX
 OUT_DIR        = str(PROJECT_DIR / "output")             # cartella output
 MAX_DURATION_S = 600.0    # 10 min in secondi
 RESAMPLE_FPS   = 30       # frequenza di campionamento per TD (0 = no resample, raw)
 TERRAIN_METHOD = "coastline"  # "elevation" | "coastline" | "srtm"
+# ─ Sonic output ─
+EXPORT_SONIC            = True       # genera tappa_XX_sonic.json
+SONIC_INCLUDE_SOURCE    = False      # include valori origine per debug
+SONIC_SMOOTH_BPM        = True       # Savitzky-Goyal smoothing su velocità
+SONIC_QUANTIZE_BPM      = True       # Quantizza BPM a griglia musicale
+SONIC_BLEND_BPM_FLOW    = True       # Modula BPM con flow_index
+SONIC_BPM_SMOOTH_WINDOW = SAVGOL_WINDOW_DEFAULT  # Finestra Savitzky-Goyal
+SONIC_BPM_GRID_STEP     = 2          # Step di quantizzazione BPM (per griglia densa)
+# ─ Musical shaping (importati da constants.py) ─
+SONIC_MUSICAL_POST      = True       # Shaping musicale finale (anti-nervosismo)
+SONIC_MUSICAL_TAU_S     = MUSICAL_TAU_SECONDS
+SONIC_MUSICAL_BLOCK_S   = MUSICAL_BLOCK_SECONDS
+SONIC_MUSICAL_DEADBAND  = MUSICAL_DEADBAND_BPM
+SONIC_MUSICAL_MAX_DPS   = MUSICAL_MAX_CHANGE_BPM_PER_S
+SONIC_MUSICAL_STEP_BPM  = MUSICAL_OUTPUT_STEP_BPM
 # ────────────────────────────────────────────────
 
 NS = {"gpx": "http://www.topografix.com/GPX/1/1"}
@@ -371,11 +394,15 @@ def main():
         ele_gain = sum(max(0, rows[i]["ele_delta"]) for i in range(1, len(rows)))
         ele_loss = sum(min(0, rows[i]["ele_delta"]) for i in range(1, len(rows)))
 
+        # Timestamp di inizio tappa (per mappatura time-of-day in audio_mapper)
+        start_dt = pts[0]["time"] if pts and pts[0].get("time") else None
+
         stages.append({
             "num":           num,
             "name":          name,
             "filepath":      fp,
             "raw_rows":      rows,
+            "start_dt":      start_dt,
             "real_duration":  real_duration,
             "total_dist_km": total_dist / 1000.0,
             "n_points":      len(rows),
@@ -408,8 +435,43 @@ def main():
         n_frames = len(rows)
         total_csv_dur = rows[-1].get("td_time", 0)
 
+        # ─── Sonic JSON (audio_mapper) ───
+        sonic_file = None
+        if EXPORT_SONIC:
+            # Usa la versione con BPM smoothing se abilitata
+            if SONIC_SMOOTH_BPM or SONIC_QUANTIZE_BPM or SONIC_BLEND_BPM_FLOW:
+                # Griglia BPM costruita dinamicamente dal step
+                bpm_grid = get_bpm_grid(SONIC_BPM_GRID_STEP) if SONIC_QUANTIZE_BPM else None
+                sonic_rows = map_rows_with_bpm_smoothing(
+                    rows,
+                    start_dt=s.get("start_dt"),
+                    include_source=SONIC_INCLUDE_SOURCE,
+                    smooth_bpm=SONIC_SMOOTH_BPM,
+                    quantize_bpm=SONIC_QUANTIZE_BPM,
+                    blend_bpm_flow=SONIC_BLEND_BPM_FLOW,
+                    smooth_window=SONIC_BPM_SMOOTH_WINDOW,
+                    bpm_grid=bpm_grid,
+                    musical_post_smooth=SONIC_MUSICAL_POST,
+                    musical_tau_seconds=SONIC_MUSICAL_TAU_S,
+                    musical_block_seconds=SONIC_MUSICAL_BLOCK_S,
+                    musical_deadband_bpm=SONIC_MUSICAL_DEADBAND,
+                    musical_max_change_bpm_per_s=SONIC_MUSICAL_MAX_DPS,
+                    musical_output_step_bpm=SONIC_MUSICAL_STEP_BPM,
+                )
+            else:
+                sonic_rows = map_sonic_rows(
+                    rows,
+                    start_dt=s.get("start_dt"),
+                    include_source=SONIC_INCLUDE_SOURCE,
+                )
+            sonic_path = os.path.join(OUT_DIR, f"tappa_{s['num']:02d}_sonic.json")
+            with open(sonic_path, "w", encoding="utf-8") as fh:
+                json.dump(sonic_rows, fh, ensure_ascii=False)
+            sonic_file = f"tappa_{s['num']:02d}_sonic.json"
+
         print(f"  tappa {s['num']:>2d} → {target_dur:>6.1f}s ({target_dur/60:.1f}min) | "
-              f"{n_frames:>6d} frames | {csv_path}")
+              f"{n_frames:>6d} frames | {csv_path}"
+              + (f" + {sonic_file}" if sonic_file else ""))
 
         summary.append({
             "tappa":              s["num"],
@@ -426,6 +488,8 @@ def main():
             "ele_gain_m":        round(s["ele_gain"], 1),
             "ele_loss_m":        round(s["ele_loss"], 1),
             "csv_file":          f"tappa_{s['num']:02d}.csv",
+            "sonic_file":        sonic_file,
+            "start_dt":          s["start_dt"].isoformat() if s.get("start_dt") else None,
             "fps":               RESAMPLE_FPS,
         })
 
