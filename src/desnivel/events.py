@@ -30,6 +30,8 @@ class EventSource(str, Enum):
     """Calcolato dai dati GPX da un detector."""
     EXTERNAL = "external"
     """Dichiarato dall'autore in `events/<stage>.json`."""
+    USER = "user"
+    """Prodotto in tempo reale da un utente in modalità live (vedi Appendice A)."""
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,9 @@ class Event:
         t: tempo in secondi dall'inizio della tappa.
         location: posizione geografica, opzionale.
         payload: campi specifici del `kind`, validati dal registry.
+        source_id: etichetta opzionale che identifica la sorgente
+            (es. ``"gpx_auto"``, ``"user_42"``). Usata in modalità live
+            per distinguere i contributi di sorgenti diverse. Vedi Appendice A.
     """
 
     kind: str
@@ -49,6 +54,7 @@ class Event:
     t: float
     location: GeoPoint | None = None
     payload: Mapping[str, Any] = field(default_factory=dict)
+    source_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -62,6 +68,7 @@ class Event:
                 else None
             ),
             "payload": dict(self.payload),
+            "source_id": self.source_id,
         }
 
 
