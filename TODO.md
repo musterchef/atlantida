@@ -23,15 +23,55 @@ Lo scopo di questo binario e' **chiudere il loop**: dati -> OSC ->
 qualcosa che si vede/sente. Anche minimale: serve per capire cosa
 funziona musicalmente prima di accumulare altri detector.
 
+### Contratto Ableton: bridge MIDI ora, M4L dopo
+
+**Destinazione finale = patch Max for Live nativo** che riceve OSC
+direttamente e modula parametri Live con risoluzione piena.
+
+**Step provvisorio = bridge OSC→MIDI in Python** per arrivare
+all'ascolto in mezz'ora senza scrivere Max. Decisione presa
+consapevolmente: serve a iterare e capire quali canali sono
+musicalmente sensati. Quando lo sappiamo, il bridge si butta.
+
+Vincoli sul bridge perche' sia "buttabile senza rimpianti":
+
+1. **Stesso contratto OSC** del futuro M4L. Il bridge legge gli stessi
+   `/mod/<group>/<name>` e `/event/...` definiti in
+   `CONTRATTO-MODULAZIONI.md`. Niente address custom solo-per-MIDI.
+2. **Mapping canale -> CC# dichiarativo**, in un dict piccolo nel
+   bridge. E' una tabella di traduzione, non logica musicale: nessun
+   smoothing, nessun re-scaling oltre il cast a 7-bit. La logica
+   musicale resta in Python.
+3. **Nessun nuovo canale** introdotto per far stare le cose nel
+   bridge. Se un canale non si mappa bene a un CC (es. payload
+   evento con testo), il bridge lo lascia perdere e lo recupereremo
+   in M4L. Documentare cosa si perde.
+4. **Zero stato in Ableton "implicito"**: i mapping MIDI Map sono
+   manuali e per loro natura non versionati. Tutto cio' che e'
+   significativo resta su file Python. Ableton fa solo
+   sound-design, non logica.
+5. **Codice in `src/desnivel/bridges/osc_to_midi.py` isolato**: non
+   tocca pipeline ne' sink. Quando M4L sara' pronto, si cancella il
+   file e basta.
+
+### Passi concreti
+
+- [ ] **`OscToMidiBridge` + CLI `desnivel-bridge-midi`** — server
+  `python-osc` + `mido`, mapping canali->CC dichiarativo, eventi
+  `/event/major/*` -> Note On su canale 16. Stampa mappa all'avvio.
 - [ ] **Patch TD canarino**: rete minima con un `OSC In CHOP`, mappa
   3-4 canali (`journey_energy`, `journey_openness`, `meso_tension`)
   a parametri visivi banali (colore, scale, density). Non e' l'opera
   finale: serve a sentire cosa danno i canali esistenti.
-- [ ] **Patch M4L canarino**: device Max for Live che riceve OSC,
-  mappa 2-3 canali a macro-controlli di un synth. Stessa filosofia.
-- [ ] **Settimana di ascolto**: lanciare `desnivel-play --speed 8` su
-  tutte le 12 tappe, prendere appunti su cosa funziona, cosa e' muto,
-  cosa stride. Solo dopo decidere se serve altro nel Binario B.
+- [ ] **Settimana di ascolto** col bridge MIDI: lanciare
+  `desnivel-play --speed 8` su tutte le 12 tappe, MIDI Map verso un
+  Wavetable (o synth a scelta), prendere appunti su quali canali
+  "tirano" musicalmente. Output atteso: lista dei 5-6 canali
+  davvero usati, con note su range/curve.
+- [ ] **M4L canarino (dopo l'ascolto)**: device Max for Live che
+  riceve OSC direttamente sui canali emersi dall'ascolto. Sostituisce
+  il bridge. A questo punto si cancella `bridges/osc_to_midi.py` e
+  l'entry point in `pyproject.toml`.
 
 ## Binario B — Dati (parallelo, con freno)
 

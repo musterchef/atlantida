@@ -14,8 +14,10 @@ dependencies = [
 [project.optional-dependencies]
 # Visualizzazione (CLI plot_stage). Non necessario per la pipeline core.
 plot = ["matplotlib>=3.7"]
-# OSC live (futuro, quando arriverà OscSink).
+# OSC live (OscSink + bridge MIDI).
 osc = ["python-osc>=1.8"]
+# Bridge MIDI provvisorio verso Ableton (Binario A, si butta con M4L).
+midi = ["mido>=1.3", "python-rtmidi>=1.5"]
 # Geometria (SeaDetector, CoastalClassifier: shapefile costa + distanze).
 geo = ["shapely>=2.0", "pyshp>=2.3"]
 # Scoperta POI offline (tools/discover_poi.py, query Overpass).
@@ -24,6 +26,8 @@ dev = [
     "pytest>=7",
     "matplotlib>=3.7",
     "python-osc>=1.8",
+    "mido>=1.3",
+    "python-rtmidi>=1.5",
     "shapely>=2.0",
     "pyshp>=2.3",
     "requests>=2.28",
@@ -34,6 +38,7 @@ desnivel-run = "desnivel.cli.run_stage:main"
 desnivel-all = "desnivel.cli.run_all:main"
 desnivel-plot = "desnivel.cli.plot_stage:main"
 desnivel-play = "desnivel.cli.play:main"
+desnivel-bridge-midi = "desnivel.bridges.osc_to_midi:main"
 desnivel-discover-poi = "desnivel.tools.discover_poi:main"
 
 [tool.setuptools.packages.find]
