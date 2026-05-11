@@ -6,9 +6,6 @@ fondo sotto `## Fatto` con la data.
 
 ## In coda — prossimo
 
-- [ ] **CLI `desnivel.cli.plot_stage`** *(ispirato a `old/visualize_sonic.py`)*
-  Apre `output/<stage>_modulations.csv` e plotta i canali (matplotlib).
-  Riscritto da zero, niente eredità della struttura dati vecchia.
 - [ ] **Pacchetto installabile** *(piccolo, opzionale)*
   Aggiungere `[project]` minimale a `pyproject.toml` così `pip install -e .`
   permette `python -m desnivel.cli.run_all` senza `PYTHONPATH=src`.
@@ -75,3 +72,5 @@ fondo sotto `## Fatto` con la data.
   Vandermonde, supporta qualunque `window`/`polyorder`) — 8 test.
 - [x] `run_all.py` + report di metriche sul corpus (12 tappe processate,
   journey_* coerente, JSON report opzionale).
+- [x] CLI `plot_stage` per ispezionare canali (matplotlib, eventi
+  sovrapposti come linee verticali).
