@@ -15,8 +15,6 @@ fondo sotto `## Fatto` con la data.
 
 ## Roadmap detector
 
-- [ ] **SummitDetector** — un evento `summit` per tappa (massimo globale con
-  prominenza ≥ 50 m).
 - [ ] **SeaDetector** — riusa shapefile `data/coastline/` + logica di
   distanza dalla costa estratta da `old/terrain_classify.py::_coastline_dist`.
   Riscritta in `src/desnivel/detectors/sea.py`.
@@ -75,3 +73,5 @@ fondo sotto `## Fatto` con la data.
   Niente più `PYTHONPATH=src`. Dipendenze opzionali: `[plot]`, `[osc]`, `[dev]`.
 - [x] `TensionModulator` (canale `meso_tension`, charge 30s/decay 60s)
   — 6 test, montato in `run_stage` e `run_all`.
+- [x] `SummitDetector` (un evento `summit` MAJOR per tappa, prominenza
+  semplificata ≥ 50 m) — 6 test. Su corpus reale: 9/12 tappe con vetta.

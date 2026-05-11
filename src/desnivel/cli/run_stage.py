@@ -7,6 +7,7 @@ from pathlib import Path
 import desnivel.events_builtin  # noqa: F401  (registra i tipi standard)
 from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.loader import load_track
+from desnivel.detectors import SummitDetector
 from desnivel.modulators import JourneyModulator, TensionModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
@@ -70,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
 
     pipeline = Pipeline(
         modulators=[JourneyModulator(config), TensionModulator(config)],
-        detectors=[],
+        detectors=[SummitDetector(config)],
         sinks=[sink],
         config=config,
     )
