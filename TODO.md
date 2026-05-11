@@ -6,25 +6,32 @@ fondo sotto `## Fatto` con la data.
 
 ## In coda — prossimo
 
-(da decidere: prossimo modulatore/detector dalla roadmap)
-
-## Roadmap modulatori (da IMPLEMENTAZIONE.md)
-
+- [ ] **CityDetector** — riusa logica di sampling + chiamate
+  Wikipedia/Overpass da `old/poi_discovery.py`. Riscritta in
+  `src/desnivel/detectors/city.py`. È il candidato naturale dopo il
+  trittico costiero: stessa famiglia ("framing ambientale"), stesso
+  pattern detector+classifier.
 - [ ] **StateMachine** per i canali macro (dwell time, transizioni).
 - [ ] **Modulatori meso/body/micro** (LFO, vento corporeo, respiro).
 
 ## Roadmap detector
 
-- [ ] **SeaDetector** — riusa shapefile `data/coastline/` + logica di
-  distanza dalla costa estratta da `old/terrain_classify.py::_coastline_dist`.
-  Riscritta in `src/desnivel/detectors/sea.py`.
-- [ ] **CityDetector** — riusa logica di sampling + chiamate Wikipedia/Overpass
-  da `old/poi_discovery.py`. Riscritta in `src/desnivel/detectors/city.py`.
 - [ ] **StopDetector / ResumeDetector** — minor events su soglia velocità.
 - [ ] **TerrainDetector** *(minor `territory_change`)* — riscritta dal
   metodo `_elevation_only` di `old/terrain_classify.py`.
 - [ ] **ExternalEventDetector** — legge `events/<stage>.json` con eventi
   manuali (categoria USER).
+
+## Roadmap classifier
+
+- [ ] **`UrbanClassifier`** — variante `urban` per `start`/`end` quando
+  il punto è dentro un centro abitato (riusa CityDetector). Stesso
+  pattern di `coastal`.
+- [ ] **`MountainStageClassifier`** — variante `mountain` su tappa con
+  quota mediana alta + dislivello positivo grande (es. tappe 10/12).
+- [ ] **`InlandClassifier`** — variante `inland` esplicita per tappe
+  lontane dalla costa (mediana > 30 km). Polo opposto di
+  `coastal`/`sea_view` nei mapping musicali.
 
 ## Roadmap sink
 
@@ -89,3 +96,21 @@ fondo sotto `## Fatto` con la data.
   `arrival_climb` (poi ritirato in v0.4).
 - [x] Refactor: helper condivisi `detectors/_elevation.py`
   (`smooth_elevation`, `sample_at`) per evitare duplicazione fra detector.
+- [x] **`SeaDetector`** (MAJOR `sea` alla prima discesa sotto 500 m
+  dalla costa; tappe gia' costiere non emettono) + **`CoastalClassifier`**
+  (variante `coastal` su `end` entro 1000 m dalla costa). Helper
+  condiviso `geo/coastline.py` (shapely 2 + pyshp, lazy import,
+  haversine in metri). 5+5 test con FakeCoastline (niente shapely nei
+  test unit). Verificato sul corpus: tappe 02/04/07 hanno `sea`,
+  tappe 02/07/08 hanno `end` coastal.
+- [x] **Trittico costiero completo** (2026-05-11): estensione di
+  `CoastalClassifier` a `start`+`end`, nuovo `CoastalStageClassifier`
+  (carattere costiero per mediana < 1 km, cattura tappa_11
+  Peschici-Mattinata che termina nell'entroterra ma percorre la costa
+  garganica) e nuovo `SeaViewClassifier` (variante `sea_view` per
+  tappe panoramiche in quota: mediana < 5 km dalla costa + quota
+  mediana ≥ 150 m + max ≥ 250 m; cattura tappa_04 Cinque Terre).
+  Helper condiviso `geo/coast_stats.py` con cache LRU (chiave
+  `stage_id` + dimensione, niente `id(track)`). 13 nuovi test.
+  Validato su 12 tappe del corpus: 06 e 10 restano puro entroterra
+  (mediana 53/58 km dalla costa).

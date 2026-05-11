@@ -5,10 +5,15 @@ import argparse
 from pathlib import Path
 
 import desnivel.events_builtin  # noqa: F401  (registra i tipi standard)
-from desnivel.classifiers import ArrivalClimbClassifier
+from desnivel.classifiers import (
+    ArrivalClimbClassifier,
+    CoastalClassifier,
+    CoastalStageClassifier,
+    SeaViewClassifier,
+)
 from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.loader import load_track
-from desnivel.detectors import EndDetector, StartDetector, SummitDetector
+from desnivel.detectors import EndDetector, SeaDetector, StartDetector, SummitDetector
 from desnivel.modulators import JourneyModulator, TensionModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
@@ -76,8 +81,14 @@ def main(argv: list[str] | None = None) -> int:
             StartDetector(config),
             EndDetector(config),
             SummitDetector(config),
+            SeaDetector(config),
         ],
-        classifiers=[ArrivalClimbClassifier(config)],
+        classifiers=[
+            ArrivalClimbClassifier(config),
+            CoastalClassifier(config),
+            CoastalStageClassifier(config),
+            SeaViewClassifier(config),
+        ],
         sinks=[sink],
         config=config,
     )

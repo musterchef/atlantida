@@ -78,6 +78,34 @@ class EventConfig:
     salita emette `arrival_climb`. Misurato rispetto al minimo della
     seconda metà della tappa."""
     sea_distance_threshold_m: float = 500.0
+    """Soglia per il MAJOR `sea`: la prima volta che la distanza dalla
+    costa scende sotto questo valore, emette l'evento. Tappe che
+    iniziano già sotto soglia non emettono (non c'è "arrivo al mare":
+    semmai è una tappa costiera, lavoro del classifier)."""
+    sea_detector_eval_rate_hz: float = 1.0
+    """Frequenza di valutazione del SeaDetector. 1 Hz è sufficiente per
+    cogliere la "prima volta sotto soglia" e taglia il costo di un
+    ordine di grandezza rispetto al sample rate interno (10 Hz)."""
+    coastal_arrival_threshold_m: float = 1000.0
+    """Soglia per la variante `coastal` di `start`/`end`: se la posizione
+    di apertura/chiusura è entro questa distanza dalla costa, il framing
+    viene marcato come costiero. Più larga di `sea_distance_threshold_m`:
+    "finire/iniziare in riva al mare" è un carattere ambientale, più
+    morbido di "ecco il mare"."""
+    coastal_stage_max_median_m: float = 1000.0
+    """Soglia per la variante `coastal` come carattere di tappa intera:
+    se la *mediana* della distanza dalla costa lungo la tappa è sotto
+    questa soglia, la tappa nel suo insieme è costiera anche se il
+    singolo punto di start/end non lo è (es. Peschici-Mattinata, che
+    termina 1.5km nell'entroterra ma percorre la costa garganica per
+    più della metà del tempo)."""
+    coastal_view_max_median_m: float = 5000.0
+    coastal_view_min_ele_median_m: float = 150.0
+    coastal_view_min_ele_max_m: float = 250.0
+    """Soglie per la variante `sea_view` (panoramica sul mare): tappe
+    che restano vicine alla costa (< 5 km mediana) ma in quota
+    (mediana quota ≥ 150 m, max ≥ 250 m). Cattura le Cinque Terre e
+    altre alte vie costiere, distinte da `coastal` (in spiaggia)."""
     territory_stable_window_s: float = 20.0
 
     def major_cooldown_s(self, stage_duration_s: float) -> float:
@@ -131,6 +159,20 @@ class GpxConfig:
 
 
 @dataclass(frozen=True)
+class GeoConfig:
+    """Parametri di geometria (costa, future feature spaziali).
+
+    Il path dello shapefile non sta qui: viene passato esplicitamente
+    a `Coastline(...)` quando serve (default in `geo/coastline.py`).
+    """
+
+    # Bounding box di interesse (lon_min, lat_min, lon_max, lat_max).
+    # Default: Italia allargata. Riduce il costo di carico dello
+    # shapefile mondiale a ~50 segmenti.
+    coastline_bbox: tuple[float, float, float, float] = (6.0, 36.0, 19.0, 48.0)
+
+
+@dataclass(frozen=True)
 class Config:
     """Configurazione completa del sistema."""
 
@@ -140,6 +182,7 @@ class Config:
     gpx: GpxConfig = field(default_factory=GpxConfig)
     events: EventConfig = field(default_factory=EventConfig)
     osc: OscConfig = field(default_factory=OscConfig)
+    geo: GeoConfig = field(default_factory=GeoConfig)
 
 
 DEFAULT_CONFIG: Config = Config()

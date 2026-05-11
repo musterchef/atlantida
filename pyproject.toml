@@ -16,10 +16,14 @@ dependencies = [
 plot = ["matplotlib>=3.7"]
 # OSC live (futuro, quando arriverà OscSink).
 osc = ["python-osc>=1.8"]
+# Geometria (SeaDetector, CoastalClassifier: shapefile costa + distanze).
+geo = ["shapely>=2.0", "pyshp>=2.3"]
 dev = [
     "pytest>=7",
     "matplotlib>=3.7",
     "python-osc>=1.8",
+    "shapely>=2.0",
+    "pyshp>=2.3",
 ]
 
 [project.scripts]
