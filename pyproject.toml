@@ -1,3 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "desnivel"
+version = "0.1.0"
+description = "Generative audiovisual system: GPX cycling data modulates a self-running ecosystem."
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+# Visualizzazione (CLI plot_stage). Non necessario per la pipeline core.
+plot = ["matplotlib>=3.7"]
+# OSC live (futuro, quando arriverà OscSink).
+osc = ["python-osc>=1.8"]
+dev = [
+    "pytest>=7",
+    "matplotlib>=3.7",
+    "python-osc>=1.8",
+]
+
+[project.scripts]
+desnivel-run = "desnivel.cli.run_stage:main"
+desnivel-all = "desnivel.cli.run_all:main"
+desnivel-plot = "desnivel.cli.plot_stage:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

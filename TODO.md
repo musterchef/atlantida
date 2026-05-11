@@ -6,9 +6,7 @@ fondo sotto `## Fatto` con la data.
 
 ## In coda — prossimo
 
-- [ ] **Pacchetto installabile** *(piccolo, opzionale)*
-  Aggiungere `[project]` minimale a `pyproject.toml` così `pip install -e .`
-  permette `python -m desnivel.cli.run_all` senza `PYTHONPATH=src`.
+(da decidere: prossimo modulatore/detector dalla roadmap)
 
 ## Roadmap modulatori (da IMPLEMENTAZIONE.md)
 
@@ -74,3 +72,6 @@ fondo sotto `## Fatto` con la data.
   journey_* coerente, JSON report opzionale).
 - [x] CLI `plot_stage` per ispezionare canali (matplotlib, eventi
   sovrapposti come linee verticali).
+- [x] Pacchetto installabile (`pip install -e .`): comandi
+  `desnivel-run`, `desnivel-all`, `desnivel-plot` direttamente sul PATH.
+  Niente più `PYTHONPATH=src`. Dipendenze opzionali: `[plot]`, `[osc]`, `[dev]`.
