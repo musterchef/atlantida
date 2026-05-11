@@ -234,3 +234,77 @@ Le basi documentali sono pronte:
 Il prossimo passo è il **branch git dedicato** (es. `feat/musical-architecture`) e lo **scaffolding minimo**: cartella `src/desnivel/`, `config.py`, `track.py`, `events.py` con registry, `pipeline.py`, `FileSink`, CLI `run_stage.py`. Eseguibile end-to-end ma vuoto: produce un CSV con la sola colonna `t`.
 
 Subito dopo: il modulo `journey`. È il più semplice, è indipendente dagli altri, e permette di validare l'intera catena (Python → file → OSC → ricezione) con un singolo canale che si muove in modo lento e prevedibile. Una volta che `journey/phase` arriva correttamente in Ableton, tutto il resto si aggancia con sicurezza.
+
+---
+
+## Appendice A — Modalità Live (interazione utente)
+
+Il sistema è progettato per due modalità operative coesistenti:
+
+- **Automatica**: i dati del viaggio modulano il sistema, come descritto in tutto il documento.
+- **Live**: uno o più utenti interagiscono in tempo reale con il sistema, contribuendo modulazioni ed eventi.
+
+La modalità live **non è in implementazione in questa fase**: l'architettura la rende possibile senza riscritture future, e questa appendice ne fissa i vincoli di design da rispettare fin da subito.
+
+### A.1 Principio cardine
+
+> **Anche l'utente non suona note. L'utente modula condizioni.**
+
+Vale per l'utente la stessa regola del GPX: non si introducono trigger MIDI diretti, ma contributi a `/mod/*` e `/event/*`. Questa scelta preserva la coerenza dello stato e garantisce che il sistema resti musicalmente continuo anche durante l'interazione.
+
+### A.2 Convivenza tra automatico e live
+
+Le sorgenti automatiche e live convergono sugli **stessi bus**. Ogni canale `/mod/*` può ricevere contributi da più sorgenti contemporaneamente, fusi secondo una di queste modalità (dichiarate per canale, non globali):
+
+- **Blend**: media pesata. Lo stato finale è la combinazione delle sorgenti.
+- **Override**: l'utente prevale temporaneamente. Al termine dell'interazione, il sistema ritorna in modo graduale al valore automatico (con un fade configurato).
+- **Offset**: l'utente aggiunge una variazione al valore automatico (utile per gesti espressivi sopra il sistema base).
+- **Additive su soglia**: l'utente può solo *aumentare* o *aggiungere*, mai sottrarre (utile per non interferire con la narrazione automatica).
+
+La scelta della modalità per ciascun canale è una decisione musicale: alcuni canali (tonalità) non andranno mai in override utente, altri (cutoff, jitter) sono naturalmente espressivi.
+
+### A.3 Eventi prodotti dall'utente
+
+Gli eventi possono nascere anche dall'utente. Il modello dati è già compatibile: `EventSource` prevede una terza origine `USER` (o `LIVE`) oltre a `DERIVED` ed `EXTERNAL`. Un evento `USER` ha la stessa struttura degli altri (kind, category, t, location, payload) e attraversa lo stesso filtro di cooldown e cap della pipeline.
+
+L'autore di un'azione live può scegliere `kind` esistenti o crearne di nuovi nel registry, esattamente come per gli eventi esterni.
+
+### A.4 Identità delle sorgenti
+
+In modalità multi-utente serve poter distinguere chi ha prodotto cosa. Per questo:
+
+- Gli eventi avranno un campo opzionale `source_id: str | None` (es. ``"marco"``, ``"gpx_auto"``, ``"user_42"``).
+- I contributi a `/mod/*`, quando arriveranno da più sorgenti, saranno taggati con la stessa convenzione.
+
+`source_id` ha tre usi:
+1. **Visualizzazione**: vedere chi sta modulando cosa.
+2. **Registrazione**: ricostruire una performance dopo l'evento.
+3. **Risoluzione di conflitti**: regole come "l'utente A vince sull'utente B su questo canale".
+
+### A.5 Trasporto in ingresso
+
+Il sistema è già OSC-centrico in uscita. L'ingresso live userà gli **stessi protocolli OSC**, in direzione opposta, con un namespace dedicato:
+
+- `/live/mod/<canale> <valore> [source_id]` per contribuire a un canale.
+- `/live/event/<category>/<kind> <payload> [source_id]` per emettere un evento.
+
+Ciò significa che ogni dispositivo che parla OSC (Lemur, TouchOSC, una webapp con OSC over WebSocket, un sensore custom) può diventare un client live senza modifiche al cuore del sistema.
+
+### A.6 Cosa cambia *adesso* in vista del futuro
+
+Per non dover stravolgere nulla quando la modalità live verrà attivata, oggi si introducono solo queste minime predisposizioni:
+
+1. `EventSource` include il valore `USER` (anche se nessun detector lo produce ancora).
+2. `Event` ha il campo opzionale `source_id: str | None = None`, lasciato a `None` per gli eventi automatici.
+3. La pipeline si comporta in modo identico a prescindere dal `source_id`: è solo un'etichetta.
+
+Nessuna logica di fusione, nessun trasporto in ingresso, nessun mixer vengono implementati in questa fase. Verranno aggiunti come **nuovi moduli** quando sarà il momento, senza toccare il codice esistente.
+
+### A.7 Cosa non si fa ora
+
+- Non si progetta la UI di un eventuale client live.
+- Non si definisce il vocabolario completo dei messaggi `/live/...`.
+- Non si implementa il mixer di canali multi-sorgente.
+- Non si discute la modalità di sincronizzazione fra più utenti.
+
+Tutto questo è demandato a una fase successiva, quando si avranno requisiti chiari dalla pratica.
