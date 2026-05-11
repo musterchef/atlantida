@@ -103,16 +103,25 @@ EVENT_REGISTRY.register(EventType(
 ))
 
 EVENT_REGISTRY.register(EventType(
-    kind="city_arrival",
-    label="Arrivo in città",
+    kind="poi",
+    label="Passaggio in POI",
     default_category=EventCategory.MAJOR,
     source=EventSource.DERIVED,
     payload_schema={
         "type": "object",
-        "properties": {"city_name": {"type": "string"}},
+        "properties": {
+            "name": {"type": "string"},
+            "kind": {"type": "string"},
+            "tags": {"type": "array", "items": {"type": "string"}},
+            "distance_from_center_m": {"type": "number"},
+        },
         "additionalProperties": True,
     },
-    description="Ingresso nella città di arrivo della tappa.",
+    description=(
+        "Entrata nel raggio di un POI del registry (città, borgo, "
+        "landmark). Un evento per ogni entrata fresca; il re-entry sullo "
+        "stesso POI richiede un cooldown configurabile."
+    ),
 ))
 
 # --- Eventi minori derivati -------------------------------------------------

@@ -18,18 +18,22 @@ plot = ["matplotlib>=3.7"]
 osc = ["python-osc>=1.8"]
 # Geometria (SeaDetector, CoastalClassifier: shapefile costa + distanze).
 geo = ["shapely>=2.0", "pyshp>=2.3"]
+# Scoperta POI offline (tools/discover_poi.py, query Overpass).
+discover = ["requests>=2.28"]
 dev = [
     "pytest>=7",
     "matplotlib>=3.7",
     "python-osc>=1.8",
     "shapely>=2.0",
     "pyshp>=2.3",
+    "requests>=2.28",
 ]
 
 [project.scripts]
 desnivel-run = "desnivel.cli.run_stage:main"
 desnivel-all = "desnivel.cli.run_all:main"
 desnivel-plot = "desnivel.cli.plot_stage:main"
+desnivel-discover-poi = "desnivel.tools.discover_poi:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

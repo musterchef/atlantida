@@ -6,17 +6,20 @@ fondo sotto `## Fatto` con la data.
 
 ## In coda — prossimo
 
-- [ ] **CityDetector** — riusa logica di sampling + chiamate
-  Wikipedia/Overpass da `old/poi_discovery.py`. Riscritta in
-  `src/desnivel/detectors/city.py`. È il candidato naturale dopo il
-  trittico costiero: stessa famiglia ("framing ambientale"), stesso
-  pattern detector+classifier.
+- [ ] **Popolare `data/poi.json`** — lanciare `desnivel-discover-poi`
+  sul corpus, rivedere a mano (cancellare paeselli non rilevanti,
+  correggere `radius_m`), rinominare. Senza questo file il
+  `POIDetector` resta silenzioso (registry vuoto).
+- [ ] **`UrbanClassifier`** — variante `urban` per `start`/`end` quando
+  il punto è dentro un POI del registry. Riusa `POIRegistry`.
 - [ ] **StateMachine** per i canali macro (dwell time, transizioni).
 - [ ] **Modulatori meso/body/micro** (LFO, vento corporeo, respiro).
 
 ## Roadmap detector
 
 - [ ] **StopDetector / ResumeDetector** — minor events su soglia velocità.
+  Combinato con `POIDetector` per ottenere il concetto di "visita"
+  (stop dentro un POI).
 - [ ] **TerrainDetector** *(minor `territory_change`)* — riscritta dal
   metodo `_elevation_only` di `old/terrain_classify.py`.
 - [ ] **ExternalEventDetector** — legge `events/<stage>.json` con eventi
@@ -24,9 +27,6 @@ fondo sotto `## Fatto` con la data.
 
 ## Roadmap classifier
 
-- [ ] **`UrbanClassifier`** — variante `urban` per `start`/`end` quando
-  il punto è dentro un centro abitato (riusa CityDetector). Stesso
-  pattern di `coastal`.
 - [ ] **`MountainStageClassifier`** — variante `mountain` su tappa con
   quota mediana alta + dislivello positivo grande (es. tappe 10/12).
 - [ ] **`InlandClassifier`** — variante `inland` esplicita per tappe
@@ -114,3 +114,14 @@ fondo sotto `## Fatto` con la data.
   `stage_id` + dimensione, niente `id(track)`). 13 nuovi test.
   Validato su 12 tappe del corpus: 06 e 10 restano puro entroterra
   (mediana 53/58 km dalla costa).
+- [x] **POIRegistry + POIDetector** (2026-05-12): sistema unificato
+  per città, borghi e landmark come "POI = punto con raggio + metadati
+  liberi (`kind`, `tags`)". Helper `geo/poi.py` con query batch
+  numpy (haversine), `detectors/poi.py` con cooldown re-entry
+  (default 3600 s) per evitare jitter su POI grandi e permettere
+  ri-visita significativa. Manifest curato in `data/poi.json`
+  (assente = registry vuoto, detector silenzioso). Pre-popolatore
+  semi-automatico `tools/discover_poi.py` (`desnivel-discover-poi`,
+  optional `[discover]`): una query Overpass per tappa con bbox
+  stretto + buffer, dedup globale per (nome, lat·1e4, lon·1e4).
+  Niente rete a runtime. 13 nuovi test.

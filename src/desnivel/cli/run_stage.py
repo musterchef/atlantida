@@ -13,7 +13,7 @@ from desnivel.classifiers import (
 )
 from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.loader import load_track
-from desnivel.detectors import EndDetector, SeaDetector, StartDetector, SummitDetector
+from desnivel.detectors import EndDetector, POIDetector, SeaDetector, StartDetector, SummitDetector
 from desnivel.modulators import JourneyModulator, TensionModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
@@ -82,6 +82,7 @@ def main(argv: list[str] | None = None) -> int:
             EndDetector(config),
             SummitDetector(config),
             SeaDetector(config),
+            POIDetector(config),
         ],
         classifiers=[
             ArrivalClimbClassifier(config),

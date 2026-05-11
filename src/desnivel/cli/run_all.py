@@ -29,7 +29,7 @@ from desnivel.classifiers import (
 from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.events import Event, EventCategory
 from desnivel.modulation import ModulationFrame
-from desnivel.detectors import EndDetector, SeaDetector, StartDetector, SummitDetector
+from desnivel.detectors import EndDetector, POIDetector, SeaDetector, StartDetector, SummitDetector
 from desnivel.modulators import JourneyModulator, TensionModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
@@ -104,6 +104,7 @@ def _process_stage(
             EndDetector(config),
             SummitDetector(config),
             SeaDetector(config),
+            POIDetector(config),
         ],
         classifiers=[
             ArrivalClimbClassifier(config),

@@ -106,6 +106,14 @@ class EventConfig:
     che restano vicine alla costa (< 5 km mediana) ma in quota
     (mediana quota ≥ 150 m, max ≥ 250 m). Cattura le Cinque Terre e
     altre alte vie costiere, distinte da `coastal` (in spiaggia)."""
+    poi_detector_eval_rate_hz: float = 1.0
+    """Frequenza di valutazione del POIDetector. 1 Hz sufficiente per
+    cogliere l'entrata nel raggio di un POI."""
+    poi_reentry_cooldown_s: float = 3600.0
+    """Cooldown minimo prima di riemettere un evento `poi` per lo
+    stesso POI. Evita jitter su POI grandi (cammino tortuoso che esce
+    e rientra) e permette comunque di emettere una seconda entrata
+    significativa (es. ritorno serale in un borgo dopo un'ora fuori)."""
     territory_stable_window_s: float = 20.0
 
     def major_cooldown_s(self, stage_duration_s: float) -> float:
