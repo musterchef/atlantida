@@ -1,10 +1,4 @@
-"""CLI: esegue la pipeline su una singola tappa.
-
-In questa fase di scaffolding la sorgente del `Track` è sintetica:
-un Track vuoto di durata configurabile, sufficiente a validare la
-catena end-to-end. Il loader GPX vero sostituirà ``_build_track``
-senza modifiche al resto della CLI.
-"""
+"""CLI: esegue la pipeline su una singola tappa."""
 from __future__ import annotations
 
 import argparse
@@ -12,16 +6,32 @@ from pathlib import Path
 
 import desnivel.events_builtin  # noqa: F401  (registra i tipi standard)
 from desnivel.config import DEFAULT_CONFIG, Config
+from desnivel.loader import load_track
 from desnivel.modulators import JourneyModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
 from desnivel.track import Track, make_empty_track
 
 
-def _build_track(stage_id: str, duration_s: float, config: Config) -> Track:
-    """Sorgente del Track. Placeholder finché non c'è il loader GPX."""
+def _resolve_gpx_path(stage: str, gpx_dir: Path) -> Path | None:
+    """Cerca un file GPX la cui parte iniziale corrisponde a ``stage``.
+
+    Convenzione: ``stage='tappa_01'`` matcha ``tappa01_*.gpx``.
+    """
+    head = stage.replace("_", "")  # tappa_01 -> tappa01
+    matches = sorted(gpx_dir.glob(f"{head}_*.gpx"))
+    return matches[0] if matches else None
+
+
+def _build_track(
+    stage: str, gpx_dir: Path, duration_s: float, config: Config,
+) -> Track:
+    """Costruisce un Track. Preferisce il GPX vero; altrimenti placeholder vuoto."""
+    gpx_path = _resolve_gpx_path(stage, gpx_dir)
+    if gpx_path is not None:
+        return load_track(gpx_path, config=config, stage_id=stage)
     return make_empty_track(
-        stage_id=stage_id,
+        stage_id=stage,
         duration_s=duration_s,
         rate_hz=config.timing.internal_rate_hz,
     )
@@ -40,19 +50,23 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--stage", required=True, help="Identificatore tappa (es. tappa_01).")
     parser.add_argument(
+        "--gpx-dir", default="gpx", type=Path,
+        help="Cartella con i file .gpx delle tappe.",
+    )
+    parser.add_argument(
         "--duration", type=float, default=3600.0,
-        help="Durata della tappa in secondi (placeholder, finché non c'è il loader GPX).",
+        help="Durata fallback in secondi se non viene trovato il GPX.",
     )
     parser.add_argument("--sink", default="file", choices=["file"])
     parser.add_argument(
-        "--output-dir", default="output",
+        "--output-dir", default="output", type=Path,
         help="Cartella di output per il sink 'file'.",
     )
     args = parser.parse_args(argv)
 
     config = DEFAULT_CONFIG
-    track = _build_track(args.stage, args.duration, config)
-    sink = _build_sink(args.sink, Path(args.output_dir))
+    track = _build_track(args.stage, args.gpx_dir, args.duration, config)
+    sink = _build_sink(args.sink, args.output_dir)
 
     pipeline = Pipeline(
         modulators=[JourneyModulator(config)],
@@ -62,10 +76,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     frame, events = pipeline.run(track)
 
+    source = track.metadata.get("source_path", "(synthetic)")
     print(
         f"[run_stage] {track.stage_id}: "
-        f"{track.n_samples} campioni, {len(frame.channel_names)} canali, "
-        f"{len(events)} eventi → {args.output_dir}/",
+        f"durata={track.duration_s:.1f}s, {track.n_samples} campioni, "
+        f"{len(frame.channel_names)} canali, {len(events)} eventi  "
+        f"<- {source}",
     )
     return 0
 
