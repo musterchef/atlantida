@@ -42,13 +42,37 @@ EVENT_REGISTRY.register(EventType(
     payload_schema={
         "type": "object",
         "properties": {
-            "elevation_m": {"type": "number"},
+            "ele_m": {"type": "number"},
             "prominence_m": {"type": "number"},
         },
-        "required": ["elevation_m"],
+        "required": ["ele_m"],
         "additionalProperties": True,
     },
-    description="Massimo globale di altitudine della tappa.",
+    description=(
+        "Picco interno con prominenza topografica massima sopra soglia. "
+        "Non e' il massimo globale: tappe che terminano in cima usano "
+        "'arrival_climb' invece."
+    ),
+))
+
+EVENT_REGISTRY.register(EventType(
+    kind="arrival_climb",
+    label="Arrivo in salita",
+    default_category=EventCategory.MAJOR,
+    source=EventSource.DERIVED,
+    payload_schema={
+        "type": "object",
+        "properties": {
+            "climb_delta_m": {"type": "number"},
+            "final_ele_m": {"type": "number"},
+        },
+        "required": ["climb_delta_m"],
+        "additionalProperties": True,
+    },
+    description=(
+        "Tappa che termina significativamente piu' in alto del minimo "
+        "della seconda meta'. Es. arrivo in collina (Dogliani, Castel del Monte)."
+    ),
 ))
 
 EVENT_REGISTRY.register(EventType(

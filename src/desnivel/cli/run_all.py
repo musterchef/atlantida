@@ -23,7 +23,7 @@ import desnivel.events_builtin  # noqa: F401  (registra i tipi standard)
 from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.events import Event, EventCategory
 from desnivel.modulation import ModulationFrame
-from desnivel.detectors import SummitDetector
+from desnivel.detectors import ArrivalClimbDetector, SummitDetector
 from desnivel.modulators import JourneyModulator, TensionModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
@@ -93,7 +93,7 @@ def _process_stage(
     track: Track = _build_track(stage, gpx_dir, duration_s=3600.0, config=config)
     pipeline = Pipeline(
         modulators=[JourneyModulator(config), TensionModulator(config)],
-        detectors=[SummitDetector(config)],
+        detectors=[SummitDetector(config), ArrivalClimbDetector(config)],
         sinks=[sink] if sink is not None else [],
         config=config,
     )

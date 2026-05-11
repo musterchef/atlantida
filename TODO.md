@@ -74,4 +74,11 @@ fondo sotto `## Fatto` con la data.
 - [x] `TensionModulator` (canale `meso_tension`, charge 30s/decay 60s)
   — 6 test, montato in `run_stage` e `run_all`.
 - [x] `SummitDetector` (un evento `summit` MAJOR per tappa, prominenza
-  semplificata ≥ 50 m) — 6 test. Su corpus reale: 9/12 tappe con vetta.
+  topografica massima sopra soglia, non massimo globale) — 7 test.
+- [x] `ArrivalClimbDetector` (un evento `arrival_climb` MAJOR per tappe
+  che terminano in salita, soglia 50m dal minimo della seconda metà)
+  — 6 test. Cattura Dogliani, Castel del Monte e altri arrivi in collina.
+- [x] Contratto v0.3 (`doc/CONTRATTO-MODULAZIONI.md` su `main`):
+  summit per prominenza, nuovo `arrival_climb`, MAJOR/tappa 3-6.
+- [x] Refactor: helper condivisi `detectors/_elevation.py`
+  (`smooth_elevation`, `sample_at`) per evitare duplicazione fra detector.

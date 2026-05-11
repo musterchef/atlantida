@@ -60,12 +60,37 @@ def test_summit_not_detected_if_low_prominence():
 
 
 def test_summit_not_detected_on_monotonic_climb():
-    """Salita continua (vetta al bordo, prominenza zero su un lato): niente."""
+    """Salita continua (max sul bordo, niente picchi interni): niente.
+
+    Cattura il caso 'arrivo in salita': non e' una vetta, c'e'
+    ArrivalClimbDetector dedicato per quello."""
     n = 30 * 60 * int(RATE_HZ)
-    ele = np.linspace(0.0, 500.0, n)  # massimo sul bordo destro
+    ele = np.linspace(0.0, 500.0, n)  # massimo sul bordo destro, nessun picco interno
     track = _make_track(ele)
     events = list(SummitDetector(DEFAULT_CONFIG).detect(track))
     assert events == []
+
+
+def test_summit_picks_interior_peak_even_if_lower_than_arrival():
+    """Tappa con vetta intermedia + arrivo in cima ancora piu' alto:
+    summit deve scegliere la vetta intermedia (prominenza > 50m), non
+    l'arrivo (prominenza zero su un lato)."""
+    rate_hz = RATE_HZ
+    # 8 ore: parte da 200m, vetta interna a 350m, scende a 200m,
+    # poi sale a 500m finale (arrivo in cima).
+    n_quart = 30 * 60 * int(rate_hz)  # 30 min ciascun segmento
+    seg1 = np.linspace(200.0, 350.0, n_quart)
+    seg2 = np.linspace(350.0, 200.0, n_quart)
+    seg3 = np.linspace(200.0, 200.0, n_quart)
+    seg4 = np.linspace(200.0, 500.0, n_quart)
+    ele = np.concatenate([seg1, seg2, seg3, seg4])
+    track = _make_track(ele)
+    events = list(SummitDetector(DEFAULT_CONFIG).detect(track))
+    assert len(events) == 1
+    e = events[0]
+    # La vetta interna e' a ~30 min, non a fine tappa (~120 min).
+    assert e.t < 30 * 60 + 60  # tolleranza 1 min per smoothing
+    assert e.payload["ele_m"] == pytest.approx(350.0, abs=2.0)
 
 
 def test_summit_returns_empty_without_elevation():

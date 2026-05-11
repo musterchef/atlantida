@@ -73,6 +73,10 @@ class EventConfig:
     stop_speed_threshold_kmh: float = 2.0
     stop_min_duration_s: float = 30.0
     summit_min_prominence_m: float = 50.0
+    arrival_climb_min_delta_m: float = 50.0
+    """Dislivello finale (m) sopra il quale una tappa che termina in
+    salita emette `arrival_climb`. Misurato rispetto al minimo della
+    seconda metà della tappa."""
     sea_distance_threshold_m: float = 500.0
     territory_stable_window_s: float = 20.0
 
