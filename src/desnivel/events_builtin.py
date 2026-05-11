@@ -21,8 +21,21 @@ EVENT_REGISTRY.register(EventType(
     label="Inizio tappa",
     default_category=EventCategory.MAJOR,
     source=EventSource.DERIVED,
-    payload_schema=_empty_object_schema(),
-    description="Apertura della tappa, una sola volta.",
+    payload_schema={
+        "type": "object",
+        "properties": {
+            "variants": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+        },
+        "additionalProperties": True,
+    },
+    description=(
+        "Apertura della tappa, una sola volta. Il carattere specifico "
+        "(dawn, urban, manual, ...) e' codificato in payload.variants "
+        "dai classifier pluggabili. Vedi CONTRATTO-MODULAZIONI.md §3.1.1."
+    ),
 ))
 
 EVENT_REGISTRY.register(EventType(
@@ -30,8 +43,24 @@ EVENT_REGISTRY.register(EventType(
     label="Fine tappa",
     default_category=EventCategory.MAJOR,
     source=EventSource.DERIVED,
-    payload_schema=_empty_object_schema(),
-    description="Chiusura della tappa, una sola volta.",
+    payload_schema={
+        "type": "object",
+        "properties": {
+            "variants": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+            "climb_delta_m": {"type": "number"},
+            "final_ele_m": {"type": "number"},
+        },
+        "additionalProperties": True,
+    },
+    description=(
+        "Chiusura della tappa, una sola volta. Il carattere specifico "
+        "(climb, sunset, natural, urban, ...) e' codificato in "
+        "payload.variants dai classifier pluggabili. "
+        "Vedi CONTRATTO-MODULAZIONI.md §3.1.1."
+    ),
 ))
 
 EVENT_REGISTRY.register(EventType(
@@ -51,27 +80,7 @@ EVENT_REGISTRY.register(EventType(
     description=(
         "Picco interno con prominenza topografica massima sopra soglia. "
         "Non e' il massimo globale: tappe che terminano in cima usano "
-        "'arrival_climb' invece."
-    ),
-))
-
-EVENT_REGISTRY.register(EventType(
-    kind="arrival_climb",
-    label="Arrivo in salita",
-    default_category=EventCategory.MAJOR,
-    source=EventSource.DERIVED,
-    payload_schema={
-        "type": "object",
-        "properties": {
-            "climb_delta_m": {"type": "number"},
-            "final_ele_m": {"type": "number"},
-        },
-        "required": ["climb_delta_m"],
-        "additionalProperties": True,
-    },
-    description=(
-        "Tappa che termina significativamente piu' in alto del minimo "
-        "della seconda meta'. Es. arrivo in collina (Dogliani, Castel del Monte)."
+        "l'evento 'end' con variante 'climb' (vedi §3.1.1)."
     ),
 ))
 

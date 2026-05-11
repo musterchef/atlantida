@@ -75,10 +75,17 @@ fondo sotto `## Fatto` con la data.
   — 6 test, montato in `run_stage` e `run_all`.
 - [x] `SummitDetector` (un evento `summit` MAJOR per tappa, prominenza
   topografica massima sopra soglia, non massimo globale) — 7 test.
-- [x] `ArrivalClimbDetector` (un evento `arrival_climb` MAJOR per tappe
-  che terminano in salita, soglia 50m dal minimo della seconda metà)
-  — 6 test. Cattura Dogliani, Castel del Monte e altri arrivi in collina.
-- [x] Contratto v0.3 (`doc/CONTRATTO-MODULAZIONI.md` su `main`):
-  summit per prominenza, nuovo `arrival_climb`, MAJOR/tappa 3-6.
+- [x] `StartDetector` / `EndDetector` (framing obbligatori, sempre presenti,
+  bypassano cooldown/cap) — 4 test.
+- [x] Architettura **classifier pluggabili** (`EventClassifier` Protocol +
+  fusione nel payload, varianti come lista) — 4 test pipeline.
+- [x] `ArrivalClimbClassifier` (variante `climb` per `end`, soglia 50m dal
+  minimo della seconda metà) — 7 test. Cattura Dogliani, Castel del Monte
+  e altri arrivi in collina. Sostituisce `ArrivalClimbDetector` (v0.3).
+- [x] Contratto v0.4 (`doc/CONTRATTO-MODULAZIONI.md`): varianti di
+  `start`/`end` via `payload.variants: list[str]`, ritirato `arrival_climb`
+  come MAJOR autonomo, MAJOR/tappa 3-5.
+- [x] Contratto v0.3 (storico): summit per prominenza, evento
+  `arrival_climb` (poi ritirato in v0.4).
 - [x] Refactor: helper condivisi `detectors/_elevation.py`
   (`smooth_elevation`, `sample_at`) per evitare duplicazione fra detector.

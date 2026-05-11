@@ -1,6 +1,6 @@
 """Rilevatori di eventi (derivati dai dati o esterni)."""
-from .arrival_climb import ArrivalClimbDetector
 from .base import EventDetector
+from .bookends import EndDetector, StartDetector
 from .summit import SummitDetector
 
-__all__ = ["EventDetector", "SummitDetector", "ArrivalClimbDetector"]
+__all__ = ["EventDetector", "StartDetector", "EndDetector", "SummitDetector"]
