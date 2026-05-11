@@ -4,46 +4,88 @@ Tracciamento del lavoro residuo. Le voci sono ordinate per priorità
 all'interno di ogni sezione. Quando una voce è completata, spostarla in
 fondo sotto `## Fatto` con la data.
 
-## In coda — prossimo
+## Architettura: chi fa cosa
+
+Python e' il direttore d'orchestra: legge GPX, decide quali eventi
+accadono e a che intensita' modulare i canali. TD e Ableton ricevono
+via OSC e sono organi sensoriali (visual, audio). Una sola fonte di
+verita', niente logica musicale dentro TD o Ableton.
+
+```
+   Python pipeline (DESNIVEL) ──OSC──> TD (visual)
+                              ──OSC──> Ableton/M4L (audio)
+                              ──OSC──> ... (luci, altro)
+```
+
+## Binario A — Integrazione (priorita' ora)
+
+Lo scopo di questo binario e' **chiudere il loop**: dati -> OSC ->
+qualcosa che si vede/sente. Anche minimale: serve per capire cosa
+funziona musicalmente prima di accumulare altri detector.
+
+- [ ] **Patch TD canarino**: rete minima con un `OSC In CHOP`, mappa
+  3-4 canali (`journey_energy`, `journey_openness`, `meso_tension`)
+  a parametri visivi banali (colore, scale, density). Non e' l'opera
+  finale: serve a sentire cosa danno i canali esistenti.
+- [ ] **Patch M4L canarino**: device Max for Live che riceve OSC,
+  mappa 2-3 canali a macro-controlli di un synth. Stessa filosofia.
+- [ ] **Settimana di ascolto**: lanciare `desnivel-play --speed 8` su
+  tutte le 12 tappe, prendere appunti su cosa funziona, cosa e' muto,
+  cosa stride. Solo dopo decidere se serve altro nel Binario B.
+
+## Binario B — Dati (parallelo, con freno)
+
+Tutto questo binario aspetta esito dello spike di integrazione: regola
+da rispettare e' **non aggiungere un detector finche' non si sa quale
+canale musicale alimentera'** e che sensazione dovrebbe produrre.
+
+### Dati: completamenti immediati
 
 - [ ] **Popolare `data/poi.json`** — lanciare `desnivel-discover-poi`
   sul corpus, rivedere a mano (cancellare paeselli non rilevanti,
   correggere `radius_m`), rinominare. Senza questo file il
-  `POIDetector` resta silenzioso (registry vuoto).
-- [ ] **`UrbanClassifier`** — variante `urban` per `start`/`end` quando
-  il punto è dentro un POI del registry. Riusa `POIRegistry`.
-- [ ] **StateMachine** per i canali macro (dwell time, transizioni).
-- [ ] **Modulatori meso/body/micro** (LFO, vento corporeo, respiro).
+  `POIDetector` resta silenzioso (registry vuoto). Da fare in
+  parallelo allo spike di integrazione: serve come materiale di
+  ascolto.
 
-## Roadmap detector
+### Dati: nuovi detector (dopo lo spike)
 
-- [ ] **StopDetector / ResumeDetector** — minor events su soglia velocità.
-  Combinato con `POIDetector` per ottenere il concetto di "visita"
-  (stop dentro un POI).
+- [ ] **StopDetector / ResumeDetector** — minor events su soglia
+  velocita'. Combinato con `POIDetector` per ottenere il concetto di
+  "visita" (stop dentro un POI).
 - [ ] **TerrainDetector** *(minor `territory_change`)* — riscritta dal
   metodo `_elevation_only` di `old/terrain_classify.py`.
-- [ ] **ExternalEventDetector** — legge `events/<stage>.json` con eventi
-  manuali (categoria USER).
+- [ ] **ExternalEventDetector** — legge `events/<stage>.json` con
+  eventi manuali (categoria USER).
 
-## Roadmap classifier
+### Dati: nuovi classifier (dopo lo spike)
 
+- [ ] **`UrbanClassifier`** — variante `urban` per `start`/`end`
+  quando il punto e' dentro un POI del registry. Riusa `POIRegistry`.
 - [ ] **`MountainStageClassifier`** — variante `mountain` su tappa con
   quota mediana alta + dislivello positivo grande (es. tappe 10/12).
 - [ ] **`InlandClassifier`** — variante `inland` esplicita per tappe
   lontane dalla costa (mediana > 30 km). Polo opposto di
   `coastal`/`sea_view` nei mapping musicali.
 
-## Roadmap sink
+### Dati: nuovi modulatori (dopo lo spike)
 
-- [ ] **OscSink** — invio live a TouchDesigner/Ableton (python-osc).
-- [ ] **ReplaySink** + flag `--speed` su `run_stage` per playback offline.
+- [ ] **StateMachine** per i canali macro (dwell time, transizioni).
+- [ ] **Modulatori meso/body/micro** (LFO, vento corporeo, respiro).
+  Decidere quali concretamente solo dopo aver ascoltato i canali
+  esistenti.
+
+## Roadmap sink (oltre OSC)
+
+- [ ] **ReplaySink** + flag `--speed` su `run_stage` per playback
+  offline da CSV. Utile se il computer che gira la pipeline e quello
+  che ospita TD/Ableton sono diversi.
 
 ## Roadmap integrazione esterna
 
-- [ ] **Patch Ableton / Max for Live** che riceve gli OSC del contratto v0.2.
-- [ ] **Loader meteo** *(da `old/weather_fetch.py`)* — quando servirà al
-  layer paesaggio. Modulo autonomo, niente riscrittura: chiamarlo come
-  utility.
+- [ ] **Loader meteo** *(da `old/weather_fetch.py`)* — quando servira'
+  al layer paesaggio. Modulo autonomo, niente riscrittura: chiamarlo
+  come utility.
 
 ## Da non fare (scartati)
 
@@ -60,6 +102,17 @@ fondo sotto `## Fatto` con la data.
 
 ## Fatto
 
+- [x] **OscSink + CLI `desnivel-play`** (2026-05-12): primo passo
+  del Binario A, chiude il loop dati -> OSC. Architettura modulare in
+  tre strati: `build_schedule()` funzione pura (testabile senza
+  rete), `OscClient` Protocol con `UdpOscClient` (python-osc lazy
+  import) e `FakeOscClient` per i test, `OscSink` orchestratore con
+  timing wall-clock via `time.monotonic()` e flag `--speed` per
+  playback accelerato. Conversione automatica nomi canale ->
+  address OSC (`journey_phase` -> `/mod/journey/phase`), eventi su
+  `/event/{major,minor}/<kind>` con payload JSON. 11 nuovi test
+  (98 totali). CLI `desnivel-play --stage tappa_04 --speed 8`
+  funzionante con `--dry-run` per ispezione schedule senza rete.
 - [x] Documenti di architettura (`ARCHITETTURA-MUSICALE`, `CONTRATTO-MODULAZIONI`,
   `IMPLEMENTAZIONE`).
 - [x] Scaffolding pipeline (config, track, events, modulation, pipeline,

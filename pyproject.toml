@@ -33,6 +33,7 @@ dev = [
 desnivel-run = "desnivel.cli.run_stage:main"
 desnivel-all = "desnivel.cli.run_all:main"
 desnivel-plot = "desnivel.cli.plot_stage:main"
+desnivel-play = "desnivel.cli.play:main"
 desnivel-discover-poi = "desnivel.tools.discover_poi:main"
 
 [tool.setuptools.packages.find]
