@@ -10,8 +10,6 @@ fondo sotto `## Fatto` con la data.
 
 ## Roadmap modulatori (da IMPLEMENTAZIONE.md)
 
-- [ ] **TensionModulator** — usa `asymmetric_leaky_integrator` già pronto;
-  emette `/mod/meso/tension`.
 - [ ] **StateMachine** per i canali macro (dwell time, transizioni).
 - [ ] **Modulatori meso/body/micro** (LFO, vento corporeo, respiro).
 
@@ -75,3 +73,5 @@ fondo sotto `## Fatto` con la data.
 - [x] Pacchetto installabile (`pip install -e .`): comandi
   `desnivel-run`, `desnivel-all`, `desnivel-plot` direttamente sul PATH.
   Niente più `PYTHONPATH=src`. Dipendenze opzionali: `[plot]`, `[osc]`, `[dev]`.
+- [x] `TensionModulator` (canale `meso_tension`, charge 30s/decay 60s)
+  — 6 test, montato in `run_stage` e `run_all`.
