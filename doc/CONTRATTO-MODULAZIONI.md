@@ -99,7 +99,7 @@ Gli eventi si dividono in **due categorie distinte**, su sotto-namespace separat
 
 ### 3.1 Eventi maggiori — `/event/major/*`
 
-Massimo **3–6 per tappa intera**. Sono i momenti memorabili del viaggio.
+Massimo **3–5 per tappa intera**. Sono i momenti memorabili del viaggio.
 Producono un gesto musicale identificabile (singola nota tenuta, campanellino, apertura del riverbero, ingresso di un sub-layer raro). Il gesto specifico è deciso da Ableton in base allo stato corrente, non dal contratto.
 
 Cooldown obbligatorio: **almeno 10 minuti** tra un evento maggiore e il successivo. Se la stessa tappa avesse più vette candidate, ne passa **solo quella con la prominenza topografica maggiore**.
@@ -108,12 +108,43 @@ Cooldown obbligatorio: **almeno 10 minuti** tra un evento maggiore e il successi
 |---|---|---|
 | `/event/major/start` | Apertura della tappa: introduzione progressiva dei layer | Inizio della tappa, una sola volta |
 | `/event/major/summit` | Apertura del riverbero, palette rarefatta, eventuale nota tenuta | Vetta principale della tappa: picco interno con prominenza massima, sopra soglia (default 50 m) |
-| `/event/major/arrival_climb` | Chiusura "conquistata": pad luminoso tenuto, palette più ricca, distinta dalla rarefazione di `end` | La tappa termina significativamente più in alto del minimo della seconda metà (dislivello finale ≥ soglia, default 50 m) |
 | `/event/major/sea` | Attivazione del sub-layer marino con coda infinita | Prima volta che la distanza dalla costa scende sotto soglia |
 | `/event/major/city_arrival` | Introduzione di un timbro più ricco e definito | Ingresso nella città di arrivo della tappa |
 | `/event/major/end` | Chiusura: rarefazione progressiva fino al silenzio | Fine della tappa, una sola volta |
 
 Ogni evento maggiore porta un **payload** con il valore numerico significativo (es. quota della vetta, distanza dalla costa) per consentire all'esecutore di scegliere il gesto con sfumature.
+
+### 3.1.1 Varianti di `start` e `end`
+
+Gli eventi `start` e `end` sono *framing* obbligatori della tappa: cadono sempre, e una sola volta. Il loro carattere musicale specifico (chiusura con pad luminoso conquistato, chiusura nella natura, apertura in cascina all'alba, apertura urbana, ecc.) non è codificato come evento separato, ma come **varianti del payload**:
+
+```
+payload: {
+  "variants": ["climb", "natural"],
+  "climb_delta_m": 323.1,
+  "final_ele_m": 531.6,
+  ...
+}
+```
+
+Il campo `variants` è una **lista** di etichette: la stessa chiusura può essere sia `climb` sia `sunset`. Ogni variante contribuisce i propri campi specifici al payload.
+
+Varianti previste (lista estendibile senza modifiche al contratto OSC):
+
+| Variante | Significato | Campi aggiuntivi |
+|---|---|---|
+| `standard` | Default, niente di particolare da segnalare. | `final_ele_m` |
+| `climb` | Termina in salita significativa. | `climb_delta_m`, `final_ele_m` |
+| `descent` | Termina dopo lunga discesa. | `descent_delta_m`, `final_ele_m` |
+| `coastal` | Termina vicino al mare. | `coast_distance_m` |
+| `urban` | Termina in città conosciuta. | `city_name` |
+| `natural` | Termina lontano da centri abitati. | `nearest_city_km` |
+| `dawn` | Inizia/termina nei minuti dell'alba. | `sun_delta_s` |
+| `sunset` | Inizia/termina nei minuti del tramonto. | `sun_delta_s` |
+| `night` | Inizia/termina in notturna. | `sun_delta_s` |
+| `manual` | Marcato esplicitamente dall'autore (es. "saluto con Lollo"). | `note` |
+
+Le varianti sono prodotte da **classificatori pluggabili** (vedi IMPLEMENTAZIONE.md): ogni classifier osserva l'evento e il `Track`, e decide se aggiungere la propria etichetta al `variants` e i propri campi al payload. L'aggiunta di una nuova variante non richiede modifiche al contratto OSC: l'esecutore (TouchDesigner/Ableton) può anche ignorare le varianti che non riconosce.
 
 ### 3.2 Eventi minori — `/event/minor/*`
 
@@ -161,7 +192,7 @@ Il volume di traffico OSC complessivo resta basso (poche decine di messaggi al s
 | `/mod/meso/*` | 4 Hz | Sufficiente per modulazioni armoniche e timbriche |
 | `/mod/body/*` | 2 Hz | Il pattern non si ridisegna a frame-rate |
 | `/mod/micro/*` | 10–20 Hz | L'unico canale "veloce", ma di valori sempre smussati |
-| `/event/major/*` | 3–6 per tappa | Cooldown 10 minuti |
+| `/event/major/*` | 3–5 per tappa | Cooldown 10 minuti |
 | `/event/minor/*` | sporadica | Cooldown 90 secondi |
 
 ---
@@ -202,9 +233,10 @@ Per chiarezza, queste cose non viaggiano sui bus `/mod/` e `/event/`:
 
 ## 8. Versione del contratto
 
-Versione **0.3** — chiarisce la selezione della vetta principale (prominenza topografica, non altezza assoluta) e introduce l'evento maggiore `arrival_climb` per le tappe che terminano in salita (es. Dogliani, Castel del Monte). Modifica additiva, ma cambia la *definizione* del trigger di `summit` (da "massimo globale" a "picco con prominenza massima"). Il numero atteso di MAJOR per tappa sale a 3–6.
+Versione **0.4** — introduce le **varianti del payload** per `start` e `end` (`payload.variants: list[str]`) prodotte da classificatori pluggabili, e ritira `arrival_climb` come evento autonomo (ora è la variante `climb` di `end`). Razionale: la chiusura di una tappa è sempre una sola, ma il suo carattere (in salita, al tramonto, in cascina, in città) si compone da più osservazioni indipendenti senza moltiplicare i tipi di evento. Permette di aggiungere nuove varianti senza modifiche al contratto OSC.
 
 Storico:
+- **0.3** — chiarisce la selezione della vetta principale (prominenza topografica, non altezza assoluta) e introduce l'evento maggiore `arrival_climb` per le tappe che terminano in salita (es. Dogliani, Castel del Monte). Modifica additiva, ma cambia la *definizione* del trigger di `summit` (da "massimo globale" a "picco con prominenza massima").
 - **0.2** — introduce la scala `journey` (arco di tappa) e la suddivisione degli eventi in **maggiori** (gesto musicale) e **minori** (transizioni di stato accelerate, nessuna nota).
 - **0.1** — bozza iniziale, tre scale temporali, un solo bus eventi.
 
