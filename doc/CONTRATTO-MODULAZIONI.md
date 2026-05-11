@@ -99,15 +99,16 @@ Gli eventi si dividono in **due categorie distinte**, su sotto-namespace separat
 
 ### 3.1 Eventi maggiori — `/event/major/*`
 
-Massimo **3–5 per tappa intera**. Sono i momenti memorabili del viaggio.
+Massimo **3–6 per tappa intera**. Sono i momenti memorabili del viaggio.
 Producono un gesto musicale identificabile (singola nota tenuta, campanellino, apertura del riverbero, ingresso di un sub-layer raro). Il gesto specifico è deciso da Ableton in base allo stato corrente, non dal contratto.
 
-Cooldown obbligatorio: **almeno 10 minuti** tra un evento maggiore e il successivo. Se la stessa tappa avesse più vette candidate, ne passa **solo la più alta**.
+Cooldown obbligatorio: **almeno 10 minuti** tra un evento maggiore e il successivo. Se la stessa tappa avesse più vette candidate, ne passa **solo quella con la prominenza topografica maggiore**.
 
 | Evento | Significato musicale | Condizione di trigger |
 |---|---|---|
 | `/event/major/start` | Apertura della tappa: introduzione progressiva dei layer | Inizio della tappa, una sola volta |
-| `/event/major/summit` | Apertura del riverbero, palette rarefatta, eventuale nota tenuta | Vetta principale della tappa (massimo globale, non locale) |
+| `/event/major/summit` | Apertura del riverbero, palette rarefatta, eventuale nota tenuta | Vetta principale della tappa: picco interno con prominenza massima, sopra soglia (default 50 m) |
+| `/event/major/arrival_climb` | Chiusura "conquistata": pad luminoso tenuto, palette più ricca, distinta dalla rarefazione di `end` | La tappa termina significativamente più in alto del minimo della seconda metà (dislivello finale ≥ soglia, default 50 m) |
 | `/event/major/sea` | Attivazione del sub-layer marino con coda infinita | Prima volta che la distanza dalla costa scende sotto soglia |
 | `/event/major/city_arrival` | Introduzione di un timbro più ricco e definito | Ingresso nella città di arrivo della tappa |
 | `/event/major/end` | Chiusura: rarefazione progressiva fino al silenzio | Fine della tappa, una sola volta |
@@ -160,7 +161,7 @@ Il volume di traffico OSC complessivo resta basso (poche decine di messaggi al s
 | `/mod/meso/*` | 4 Hz | Sufficiente per modulazioni armoniche e timbriche |
 | `/mod/body/*` | 2 Hz | Il pattern non si ridisegna a frame-rate |
 | `/mod/micro/*` | 10–20 Hz | L'unico canale "veloce", ma di valori sempre smussati |
-| `/event/major/*` | 3–5 per tappa | Cooldown 10 minuti |
+| `/event/major/*` | 3–6 per tappa | Cooldown 10 minuti |
 | `/event/minor/*` | sporadica | Cooldown 90 secondi |
 
 ---
@@ -201,9 +202,10 @@ Per chiarezza, queste cose non viaggiano sui bus `/mod/` e `/event/`:
 
 ## 8. Versione del contratto
 
-Versione **0.2** — introduce la scala `journey` (arco di tappa) e la suddivisione degli eventi in **maggiori** (3–5 per tappa, gesto musicale) e **minori** (transizioni di stato accelerate, nessuna nota).
+Versione **0.3** — chiarisce la selezione della vetta principale (prominenza topografica, non altezza assoluta) e introduce l'evento maggiore `arrival_climb` per le tappe che terminano in salita (es. Dogliani, Castel del Monte). Modifica additiva, ma cambia la *definizione* del trigger di `summit` (da "massimo globale" a "picco con prominenza massima"). Il numero atteso di MAJOR per tappa sale a 3–6.
 
 Storico:
+- **0.2** — introduce la scala `journey` (arco di tappa) e la suddivisione degli eventi in **maggiori** (gesto musicale) e **minori** (transizioni di stato accelerate, nessuna nota).
 - **0.1** — bozza iniziale, tre scale temporali, un solo bus eventi.
 
 Ogni modifica al contratto richiede l'aggiornamento di tutti e tre gli stadi. Le modifiche additive (nuovi canali) sono compatibili all'indietro; le modifiche al significato di un canale esistente sono **breaking** e richiedono un cambio di versione minore.
