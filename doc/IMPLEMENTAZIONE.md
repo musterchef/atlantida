@@ -109,6 +109,22 @@ Esistono due famiglie di detector:
 - **Derivati dai dati** (`SummitDetector`, `SeaDetector`, `StopDetector`, ecc.): producono eventi a partire dalle metriche calcolate.
 - **Esterni** (`ExternalEventDetector`): leggono il file `events/<stage>.json` della tappa e producono `Event` dichiarati dall'autore. È così che entrano `derby_allo_stadio`, `treno_preso_al_volo`, `pioggia_torrenziale`.
 
+### 2.5 `EventClassifier` — arricchire eventi senza moltiplicarli
+
+Per aggiungere informazione semantica a un evento già rilevato (es. dire che un `end` è di tipo "in salita" oppure "al tramonto") senza creare un nuovo tipo di evento, esiste un secondo Protocol:
+
+```python
+class EventClassifier(Protocol):
+    applies_to_kinds: tuple[str, ...] | None  # None = tutti
+    def classify(self, event: Event, track: Track) -> dict[str, Any]: ...
+```
+
+Ogni classifier restituisce un piccolo dict che **viene fuso** nel `payload` dell'evento. Convenzione del campo `variants` (lista di etichette stringa): se più classifier marcano lo stesso evento, le loro etichette si accumulano (`["climb", "natural"]`). Vedi CONTRATTO-MODULAZIONI.md §3.1.1.
+
+La pipeline applica i classifier subito dopo i detector, prima dei filtri di cooldown. Esempi pluggabili: `ArrivalClimbClassifier`, `CoastalClassifier`, `UrbanClassifier`, `SunsetClassifier`, `ManualNoteClassifier` (legge `track.metadata`).
+
+Vantaggio architetturale: aggiungere `sunset` non richiede modifiche al contratto OSC né a nessun detector. Un nuovo classifier, un nuovo file, niente altro.
+
 ---
 
 ## 3. Architettura dei moduli
@@ -139,6 +155,10 @@ src/desnivel/
     stop.py
     territory.py
     external.py          # legge eventi dichiarati nel metadata
+  classifiers/
+    __init__.py
+    base.py              # interfaccia EventClassifier
+    arrival_climb.py     # marca `end` come `climb` se l'arrivo è in salita
   sinks/
     __init__.py
     base.py              # interfaccia Sink
