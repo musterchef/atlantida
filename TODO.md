@@ -6,15 +6,12 @@ fondo sotto `## Fatto` con la data.
 
 ## In coda — prossimo
 
-- [ ] **`run_all.py` + report di metriche sul corpus**
-  Processa le 12 tappe in batch, produce un report (durata, n_samples,
-  range journey_*, n_eventi per categoria) per validare coerenza.
-
-## In coda — dopo `run_all`
-
 - [ ] **CLI `desnivel.cli.plot_stage`** *(ispirato a `old/visualize_sonic.py`)*
   Apre `output/<stage>_modulations.csv` e plotta i canali (matplotlib).
   Riscritto da zero, niente eredità della struttura dati vecchia.
+- [ ] **Pacchetto installabile** *(piccolo, opzionale)*
+  Aggiungere `[project]` minimale a `pyproject.toml` così `pip install -e .`
+  permette `python -m desnivel.cli.run_all` senza `PYTHONPATH=src`.
 
 ## Roadmap modulatori (da IMPLEMENTAZIONE.md)
 
@@ -76,3 +73,5 @@ fondo sotto `## Fatto` con la data.
 - [x] Audit `old/` per riuso (questa lista nasce da lì).
 - [x] Savitzky-Golay in `_filters.py` (riscritto con pseudoinversa di
   Vandermonde, supporta qualunque `window`/`polyorder`) — 8 test.
+- [x] `run_all.py` + report di metriche sul corpus (12 tappe processate,
+  journey_* coerente, JSON report opzionale).
