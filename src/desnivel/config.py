@@ -31,6 +31,29 @@ class SmoothingConfig:
 
 
 @dataclass(frozen=True)
+class JourneyConfig:
+    """Parametri della scala di arco di tappa.
+
+    L'arco di tappa evolve molto lentamente: queste costanti di tempo
+    sono dell'ordine dei minuti, non dei secondi.
+    """
+
+    energy_charge_tau_s: float = 300.0
+    """Memoria di carica dell'energia accumulata sull'intera tappa."""
+    energy_decay_tau_s: float = 600.0
+    """Memoria di rilascio dell'energia."""
+    openness_base: float = 0.2
+    """Valore minimo di apertura, a inizio tappa."""
+    openness_phase_weight: float = 0.5
+    """Quanto l'apertura cresce con l'avanzare della tappa (0..1)."""
+    openness_energy_weight: float = 0.3
+    """Quanto l'apertura aumenta con l'energia accumulata (0..1)."""
+    effort_channel: str = "effort"
+    """Nome del canale di Track.samples da cui leggere lo sforzo.
+    Se assente, l'energia resta a zero."""
+
+
+@dataclass(frozen=True)
 class EventConfig:
     """Parametri degli eventi.
 
@@ -91,6 +114,7 @@ class Config:
 
     timing: TimingConfig = field(default_factory=TimingConfig)
     smoothing: SmoothingConfig = field(default_factory=SmoothingConfig)
+    journey: JourneyConfig = field(default_factory=JourneyConfig)
     events: EventConfig = field(default_factory=EventConfig)
     osc: OscConfig = field(default_factory=OscConfig)
 

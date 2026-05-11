@@ -12,6 +12,7 @@ from pathlib import Path
 
 import desnivel.events_builtin  # noqa: F401  (registra i tipi standard)
 from desnivel.config import DEFAULT_CONFIG, Config
+from desnivel.modulators import JourneyModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
 from desnivel.track import Track, make_empty_track
@@ -54,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     sink = _build_sink(args.sink, Path(args.output_dir))
 
     pipeline = Pipeline(
-        modulators=[],
+        modulators=[JourneyModulator(config)],
         detectors=[],
         sinks=[sink],
         config=config,
