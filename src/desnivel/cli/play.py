@@ -35,7 +35,12 @@ from desnivel.detectors import (
     SummitDetector,
 )
 from desnivel.loader import load_track
-from desnivel.modulators import JourneyModulator, MacroModulator, TensionModulator
+from desnivel.modulators import (
+    HarmonyModulator,
+    JourneyModulator,
+    MacroModulator,
+    TensionModulator,
+)
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import OscSink, UdpOscClient
 from desnivel.track import Track, make_empty_track
@@ -68,6 +73,7 @@ def _build_pipeline(config: Config) -> Pipeline:
             JourneyModulator(config),
             TensionModulator(config),
             MacroModulator(config),
+            HarmonyModulator(config),
         ],
         detectors=[
             StartDetector(config),

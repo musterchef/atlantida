@@ -96,6 +96,47 @@ class MacroConfig:
 
 
 @dataclass(frozen=True)
+class HarmonyConfig:
+    """Parametri di `HarmonyModulator`: la fondamentale `meso_root`.
+
+    La fondamentale cambia ogni `km_per_change` km lungo una sequenza
+    modale (`interval_sequence`) di offset in semitoni rispetto a
+    `base_midi`. Sequenza pensata per "viaggio modale": tonica, VII
+    grado, sottodominante, mediante, dominante. Si scorre ciclicamente.
+    """
+
+    base_midi: int = 48
+    """Nota MIDI di riferimento (default C2 = 48). La tonica della
+    sequenza."""
+
+    interval_sequence: tuple[int, ...] = (0, -2, 5, 3, 7)
+    """Offset in semitoni rispetto a `base_midi` per ogni sezione.
+    Default: i (C) → ♭VII (Bb) → IV (F) → ♭III (Eb) → V (G).
+    Movimento modale tipo "phrygian wandering"."""
+
+    km_per_change: float = 8.0
+    """Distanza percorsa (km) per avanzare di una posizione nella
+    sequenza."""
+
+    distance_channel: str = "cum_dist_m"
+    """Nome del canale sorgente in `track.samples` (metri cumulati)."""
+
+    min_dwell_s: float = 20.0
+    """Tempo minimo (s) prima di poter cambiare di nuovo: anti-flicker
+    per tappe che oscillano vicino al confine di sezione (km_per_change
+    centrato su uno start/stop)."""
+
+    poi_force_tonic: bool = True
+    """Se True e il `MacroModulator` ha caricato un POIRegistry,
+    quando si e' dentro un POI la fondamentale torna alla tonica
+    (offset 0). Da' al POI un suo "atterraggio armonico"."""
+
+    poi_registry_path: str | None = None
+    """Stesso meccanismo di `MacroConfig.poi_registry_path`. Se None,
+    POI override disattivato qui (anche se attivo nel macro)."""
+
+
+@dataclass(frozen=True)
 class EventConfig:
     """Parametri degli eventi.
 
@@ -230,6 +271,7 @@ class Config:
     smoothing: SmoothingConfig = field(default_factory=SmoothingConfig)
     journey: JourneyConfig = field(default_factory=JourneyConfig)
     macro: MacroConfig = field(default_factory=MacroConfig)
+    harmony: HarmonyConfig = field(default_factory=HarmonyConfig)
     gpx: GpxConfig = field(default_factory=GpxConfig)
     events: EventConfig = field(default_factory=EventConfig)
     osc: OscConfig = field(default_factory=OscConfig)

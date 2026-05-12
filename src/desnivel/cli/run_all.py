@@ -30,7 +30,12 @@ from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.events import Event, EventCategory
 from desnivel.modulation import ModulationFrame
 from desnivel.detectors import EndDetector, POIDetector, SeaDetector, StartDetector, SummitDetector
-from desnivel.modulators import JourneyModulator, MacroModulator, TensionModulator
+from desnivel.modulators import (
+    HarmonyModulator,
+    JourneyModulator,
+    MacroModulator,
+    TensionModulator,
+)
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
 from desnivel.track import Track
@@ -102,6 +107,7 @@ def _process_stage(
             JourneyModulator(config),
             TensionModulator(config),
             MacroModulator(config),
+            HarmonyModulator(config),
         ],
         detectors=[
             StartDetector(config),

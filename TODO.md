@@ -88,8 +88,10 @@ bridge MIDI, TD ascolter? in futuro direttamente. Non si scrive nulla
   sezione della tappa, con policy swappabili
   (`config.macro.policy_name`) + override POI -> bells. Vedi
   `doc/DESIGN-MACRO.md`.
-- [ ] **`HarmonyModulator`** — sblocca `meso_root`. Cambia la
-  fondamentale ogni N km o su trigger (POI, summit).
+- [x] **`HarmonyModulator`** — sblocca `meso_root`. Cambia la
+  fondamentale ogni `km_per_change` km lungo una sequenza modale
+  configurabile in `HarmonyConfig`. POI override -> ritorno a
+  tonica (se `poi_force_tonic`). Anti-flicker via dwell time.
 - [ ] **`BodyModulator`** — sblocca `body_euclid_k`, `body_euclid_rot`.
   Pattern ritmici euclidei. Da fare dopo il MacroModulator e dopo
   almeno una sessione di sound design su Ableton.
