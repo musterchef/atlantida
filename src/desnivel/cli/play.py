@@ -130,6 +130,10 @@ def main(argv: list[str] | None = None) -> int:
         "--dry-run", action="store_true",
         help="Calcola la schedule e stampa un riepilogo senza inviare nulla.",
     )
+    parser.add_argument(
+        "--loop", action="store_true",
+        help="Riavvia la tappa all'infinito (Ctrl+C per uscire).",
+    )
     args = parser.parse_args(argv)
 
     if args.speed <= 0:
@@ -161,9 +165,20 @@ def main(argv: list[str] | None = None) -> int:
     estimated = track.duration_s / args.speed
     print(
         f"[desnivel-play] invio a {args.osc_host}:{args.osc_port} "
-        f"@ speed={args.speed}x (~{estimated:.0f}s previsti)",
+        f"@ speed={args.speed}x (~{estimated:.0f}s previsti)"
+        + ("  [loop]" if args.loop else ""),
     )
-    sink.emit(track.stage_id, frame, events)
+    try:
+        iteration = 0
+        while True:
+            iteration += 1
+            if args.loop:
+                print(f"[desnivel-play] giro #{iteration}")
+            sink.emit(track.stage_id, frame, events)
+            if not args.loop:
+                break
+    except KeyboardInterrupt:
+        print("\n[desnivel-play] interrotto.")
     print("[desnivel-play] fine.")
     return 0
 

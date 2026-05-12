@@ -39,6 +39,7 @@ desnivel-all = "desnivel.cli.run_all:main"
 desnivel-plot = "desnivel.cli.plot_stage:main"
 desnivel-play = "desnivel.cli.play:main"
 desnivel-bridge-midi = "desnivel.bridges.osc_to_midi:main"
+desnivel-midi-sweep = "desnivel.tools.midi_sweep:main"
 desnivel-discover-poi = "desnivel.tools.discover_poi:main"
 
 [tool.setuptools.packages.find]
