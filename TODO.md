@@ -56,37 +56,51 @@ Vincoli sul bridge perche' sia "buttabile senza rimpianti":
 
 ### Passi concreti
 
-- [ ] **`OscToMidiBridge` + CLI `desnivel-bridge-midi`** — server
+- [x] **`OscToMidiBridge` + CLI `desnivel-bridge-midi`** — server
   `python-osc` + `mido`, mapping canali->CC dichiarativo, eventi
   `/event/major/*` -> Note On su canale 16. Stampa mappa all'avvio.
-- [ ] **Patch TD canarino**: rete minima con un `OSC In CHOP`, mappa
-  3-4 canali (`journey_energy`, `journey_openness`, `meso_tension`)
-  a parametri visivi banali (colore, scale, density). Non e' l'opera
-  finale: serve a sentire cosa danno i canali esistenti.
-- [ ] **Settimana di ascolto** col bridge MIDI: lanciare
-  `desnivel-play --speed 8` su tutte le 12 tappe, MIDI Map verso un
-  Wavetable (o synth a scelta), prendere appunti su quali canali
-  "tirano" musicalmente. Output atteso: lista dei 5-6 canali
-  davvero usati, con note su range/curve.
-- [ ] **M4L canarino (dopo l'ascolto)**: device Max for Live che
-  riceve OSC direttamente sui canali emersi dall'ascolto. Sostituisce
-  il bridge. A questo punto si cancella `bridges/osc_to_midi.py` e
-  l'entry point in `pyproject.toml`.
+- [ ] **M4L canarino (target finale)**: device Max for Live che
+  riceve OSC direttamente sui canali della pipeline. Sostituisce il
+  bridge. A quel punto si cancella `bridges/osc_to_midi.py` e
+  l'entry point in `pyproject.toml`. Vincolo: deve consumare
+  **esattamente lo stesso contratto OSC** (`/mod/<group>/<name>`,
+  `/event/<bus>/<kind>`) che useranno anche TD e qualsiasi altro
+  client.
+- [ ] **Patch TD canarino** — *rimandato* su richiesta utente.
+  Si fara' dopo che il sound design Ableton sara' stabile. Vincolo
+  fondamentale: **ogni modulator/detector aggiunto al Binario B deve
+  restare compatibile con TD**, cioe' niente address custom solo per
+  Ableton, niente smoothing dentro il bridge, niente logica musicale
+  asimmetrica fra i due client. La pipeline e' unica.
 
-## Binario B — Dati (parallelo, con freno)
+## Binario B — Dati (in corso)
 
-Tutto questo binario aspetta esito dello spike di integrazione: regola
-da rispettare e' **non aggiungere un detector finche' non si sa quale
-canale musicale alimentera'** e che sensazione dovrebbe produrre.
+Regola fondamentale: ogni canale aggiunto qui deve essere **agnostico
+sul client**. La pipeline emette su OSC, Ableton ascolta tramite
+bridge MIDI, TD ascolter? in futuro direttamente. Non si scrive nulla
+"solo per Ableton" o "solo per TD".
 
-### Dati: completamenti immediati
+### Priorita' 1: nuovi modulator (sblocca canali silenti)
+
+- [x] **`MacroModulator`** — sblocca `macro_scale`, `macro_palette`,
+  `macro_register`, `macro_space`, `macro_brightness`.
+  Decide modalita' musicale e timbro ("mondo sonoro") sezione per
+  sezione della tappa, con policy swappabili
+  (`config.macro.policy_name`) + override POI -> bells. Vedi
+  `doc/DESIGN-MACRO.md`.
+- [ ] **`HarmonyModulator`** — sblocca `meso_root`. Cambia la
+  fondamentale ogni N km o su trigger (POI, summit).
+- [ ] **`BodyModulator`** — sblocca `body_euclid_k`, `body_euclid_rot`.
+  Pattern ritmici euclidei. Da fare dopo il MacroModulator e dopo
+  almeno una sessione di sound design su Ableton.
+
+### Priorita' 2: dati statici
 
 - [ ] **Popolare `data/poi.json`** — lanciare `desnivel-discover-poi`
-  sul corpus, rivedere a mano (cancellare paeselli non rilevanti,
-  correggere `radius_m`), rinominare. Senza questo file il
-  `POIDetector` resta silenzioso (registry vuoto). Da fare in
-  parallelo allo spike di integrazione: serve come materiale di
-  ascolto.
+  sul corpus, filtrare i 44k candidati a ~50-100 POI rilevanti.
+  Senza questo file il `POIDetector` resta silenzioso (registry
+  vuoto). Serve un piccolo tool di filtro (per kind, per nome) per
+  non doverlo fare a mano voce per voce.
 
 ### Dati: nuovi detector (dopo lo spike)
 

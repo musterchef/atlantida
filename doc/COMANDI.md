@@ -81,7 +81,12 @@ Mapping CC attivi adesso:
 - **CC 20** = `journey/phase` (0→1 lineare nella tappa)
 - **CC 21** = `journey/energy` (sforzo locale)
 - **CC 22** = `journey/openness` (varianza altimetria)
+- **CC 23** = `macro/scale` (modalita' musicale, int)
+- **CC 24** = `macro/palette` (famiglia timbrica, int)
 - **CC 26** = `meso/tension` (cambi di pendenza)
+- **CC 29** = `macro/register` (registro grave→acuto, 0..1)
+- **CC 30** = `macro/space` (riverbero/ampiezza, 0..1)
+- **CC 31** = `macro/brightness` (brillantezza, 0..1)
 
 Note degli eventi (canale MIDI 16):
 - C4 (60) = start

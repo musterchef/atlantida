@@ -30,7 +30,7 @@ from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.events import Event, EventCategory
 from desnivel.modulation import ModulationFrame
 from desnivel.detectors import EndDetector, POIDetector, SeaDetector, StartDetector, SummitDetector
-from desnivel.modulators import JourneyModulator, TensionModulator
+from desnivel.modulators import JourneyModulator, MacroModulator, TensionModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
 from desnivel.track import Track
@@ -98,7 +98,11 @@ def _process_stage(
 ) -> StageMetrics:
     track: Track = _build_track(stage, gpx_dir, duration_s=3600.0, config=config)
     pipeline = Pipeline(
-        modulators=[JourneyModulator(config), TensionModulator(config)],
+        modulators=[
+            JourneyModulator(config),
+            TensionModulator(config),
+            MacroModulator(config),
+        ],
         detectors=[
             StartDetector(config),
             EndDetector(config),

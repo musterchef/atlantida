@@ -35,7 +35,7 @@ from desnivel.detectors import (
     SummitDetector,
 )
 from desnivel.loader import load_track
-from desnivel.modulators import JourneyModulator, TensionModulator
+from desnivel.modulators import JourneyModulator, MacroModulator, TensionModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import OscSink, UdpOscClient
 from desnivel.track import Track, make_empty_track
@@ -64,7 +64,11 @@ def _build_pipeline(config: Config) -> Pipeline:
     """Costruisce la pipeline standard (stessi detector/modulator di
     `desnivel-run` e `desnivel-all`)."""
     return Pipeline(
-        modulators=[JourneyModulator(config), TensionModulator(config)],
+        modulators=[
+            JourneyModulator(config),
+            TensionModulator(config),
+            MacroModulator(config),
+        ],
         detectors=[
             StartDetector(config),
             EndDetector(config),

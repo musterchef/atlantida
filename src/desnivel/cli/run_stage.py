@@ -14,7 +14,7 @@ from desnivel.classifiers import (
 from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.loader import load_track
 from desnivel.detectors import EndDetector, POIDetector, SeaDetector, StartDetector, SummitDetector
-from desnivel.modulators import JourneyModulator, TensionModulator
+from desnivel.modulators import JourneyModulator, MacroModulator, TensionModulator
 from desnivel.pipeline import Pipeline
 from desnivel.sinks import FileSink
 from desnivel.track import Track, make_empty_track
@@ -76,7 +76,11 @@ def main(argv: list[str] | None = None) -> int:
     sink = _build_sink(args.sink, args.output_dir)
 
     pipeline = Pipeline(
-        modulators=[JourneyModulator(config), TensionModulator(config)],
+        modulators=[
+            JourneyModulator(config),
+            TensionModulator(config),
+            MacroModulator(config),
+        ],
         detectors=[
             StartDetector(config),
             EndDetector(config),

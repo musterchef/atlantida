@@ -54,6 +54,48 @@ class JourneyConfig:
 
 
 @dataclass(frozen=True)
+class MacroConfig:
+    """Parametri del MacroModulator (sezioni macro-temporali della tappa).
+
+    Le soglie di bucketing (quota, varianza) sono **derivate dalla tappa
+    stessa** via percentili, cosi' che ogni tappa "viva" nei propri
+    estremi. Le costanti qui sotto governano solo il *come* si calcola
+    e si stabilizza l'output, non il *cosa*.
+
+    Vedi `modulators/macro_policies.py` per le tabelle musicali e
+    `doc/DESIGN-MACRO.md` per il design completo.
+    """
+
+    policy_name: str = "default"
+    """Nome della `MacroPolicy` da usare (vedi macro_policies.POLICIES)."""
+
+    elev_percentiles: tuple[float, float] = (33.0, 67.0)
+    """Percentili (su tutta la tappa) per dividere la quota mediana di
+    sezione in 3 bucket (basso/medio/alto). 33/67 = terzili."""
+
+    var_percentile: float = 60.0
+    """Percentile sopra il quale la varianza locale e' considerata
+    "mossa". Default 60 = solo il 40% delle sezioni piu' irregolari
+    cade in `var_bucket=1`."""
+
+    section_window_s: float = 60.0
+    """Finestra mobile (s) per quota mediana e std-dev locali. E' la
+    grana percettiva delle sezioni macro."""
+
+    fallback_palette: int = 0
+    fallback_scale: int = 1
+    """Valori usati se la tappa e' troppo corta o senza elevation."""
+
+    elevation_channel: str = "ele"
+    openness_channel: str = "journey_openness"
+    """Nomi dei canali sorgente (in track.samples e in frame.channels)."""
+
+    poi_registry_path: str | None = None
+    """Path al `data/poi.json` per il `palette` override sui POI.
+    Se None o file assente, override disattivato."""
+
+
+@dataclass(frozen=True)
 class EventConfig:
     """Parametri degli eventi.
 
@@ -187,6 +229,7 @@ class Config:
     timing: TimingConfig = field(default_factory=TimingConfig)
     smoothing: SmoothingConfig = field(default_factory=SmoothingConfig)
     journey: JourneyConfig = field(default_factory=JourneyConfig)
+    macro: MacroConfig = field(default_factory=MacroConfig)
     gpx: GpxConfig = field(default_factory=GpxConfig)
     events: EventConfig = field(default_factory=EventConfig)
     osc: OscConfig = field(default_factory=OscConfig)
