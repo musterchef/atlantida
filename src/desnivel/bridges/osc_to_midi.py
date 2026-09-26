@@ -47,13 +47,16 @@ class CcMapping:
     Args:
         cc: numero del CC (0-127).
         is_int: se ``True``, il valore arriva gia' come intero
-            (es. ``macro_scale``, ``meso_root``) e va solo clippato
-            in 0-127. Se ``False``, e' un float in 0..1 e va
-            scalato a 0-127.
+            (es. ``macro_scale``, ``meso_root``). Se ``False``, e'
+            un float in 0..1 e va scalato a 0-127.
+        source_min/source_max: range opzionale per un canale intero
+            signed, codificato nel range MIDI unsigned 0-127.
     """
 
     cc: int
     is_int: bool = False
+    source_min: float | None = None
+    source_max: float | None = None
 
 
 #: Mappa address OSC -> CC. Volutamente piccola: solo i canali che
@@ -67,7 +70,9 @@ CHANNEL_TO_CC: dict[str, CcMapping] = {
     "/mod/macro/register":   CcMapping(cc=29),
     "/mod/macro/space":      CcMapping(cc=30),
     "/mod/macro/brightness": CcMapping(cc=31),
-    "/mod/meso/root":        CcMapping(cc=25, is_int=True),
+    "/mod/meso/root":        CcMapping(
+        cc=25, is_int=True, source_min=-12, source_max=12,
+    ),
     "/mod/meso/tension":     CcMapping(cc=26),
     "/mod/body/euclid_k":    CcMapping(cc=27, is_int=True),
     "/mod/body/euclid_rot":  CcMapping(cc=28, is_int=True),
@@ -94,11 +99,25 @@ EVENT_VELOCITY = 100
 def osc_to_midi_value(mapping: CcMapping, value: float) -> int:
     """Funzione pura: traduce un valore OSC in un CC MIDI 0-127.
 
-    - ``is_int``: clip a 0-127 dopo round (il valore arriva gia' come
-      indice discreto, es. modo musicale).
+        - ``is_int`` senza range: clip a 0-127 dopo round (il valore arriva
+            gia' come indice discreto, es. modo musicale).
+        - ``source_min/source_max``: normalizza il range sorgente signed
+            nel range unsigned del CC MIDI.
     - altrimenti: assume 0..1 e scala a 0-127.
     """
     if mapping.is_int:
+        if mapping.source_min is not None or mapping.source_max is not None:
+            if mapping.source_min is None or mapping.source_max is None:
+                raise ValueError(
+                    "source_min e source_max devono essere entrambi definiti",
+                )
+            if mapping.source_max <= mapping.source_min:
+                raise ValueError("source_max deve essere maggiore di source_min")
+            normalized = (
+                (float(value) - mapping.source_min)
+                / (mapping.source_max - mapping.source_min)
+            )
+            return int(np.clip(round(normalized * 127.0), 0, 127))
         return int(np.clip(round(float(value)), 0, 127))
     scaled = round(float(value) * 127.0)
     return int(np.clip(scaled, 0, 127))

@@ -44,6 +44,15 @@ def test_int_channel_passes_through_clipped() -> None:
     assert osc_to_midi_value(m, -3) == 0
 
 
+def test_signed_int_channel_maps_source_range_to_midi_range() -> None:
+    m = CcMapping(cc=25, is_int=True, source_min=-12, source_max=12)
+    assert osc_to_midi_value(m, -12) == 0
+    assert osc_to_midi_value(m, 0) == 64
+    assert osc_to_midi_value(m, 12) == 127
+    assert osc_to_midi_value(m, -20) == 0
+    assert osc_to_midi_value(m, 20) == 127
+
+
 # ──────────────────── OscToMidiBridge.handle_mod ────────────────────
 
 
