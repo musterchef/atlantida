@@ -83,7 +83,7 @@ Mapping CC attivi adesso:
 - **CC 22** = `journey/openness` (varianza altimetria)
 - **CC 23** = `macro/scale` (modalita' musicale, int)
 - **CC 24** = `macro/palette` (famiglia timbrica, int)
-- **CC 25** = `meso/root` (nota MIDI della fondamentale, int)
+- **CC 25** = `meso/root` (scostamento in semitoni della fondamentale, int)
 - **CC 26** = `meso/tension` (cambi di pendenza)
 - **CC 27** = `body/euclid_k` (densita' pattern euclideo, int)
 - **CC 28** = `body/euclid_rot` (rotazione pattern, int)
