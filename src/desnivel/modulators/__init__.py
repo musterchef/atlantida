@@ -1,5 +1,6 @@
 """Modulatori dei canali continui ``/mod/*``."""
 from .base import Modulator
+from .body import BodyModulator
 from .harmony import HarmonyModulator
 from .journey import JourneyModulator
 from .macro import MacroModulator
@@ -12,6 +13,7 @@ __all__ = [
     "TensionModulator",
     "MacroModulator",
     "HarmonyModulator",
+    "BodyModulator",
     "MacroPolicy",
     "POLICIES",
     "get_policy",

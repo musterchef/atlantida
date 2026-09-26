@@ -137,6 +137,39 @@ class HarmonyConfig:
 
 
 @dataclass(frozen=True)
+class BodyConfig:
+    """Parametri di `BodyModulator`: i canali ``body_euclid_*``.
+
+    Genera due int che pilotano un pattern ritmico euclideo E(k, n):
+    `body_euclid_k` = numero di hit nel pattern, `body_euclid_rot` =
+    rotazione iniziale. La risoluzione `n` non e' un canale OSC: e'
+    convenuta fra Python e Ableton (qui solo per documentazione).
+
+    Mapping musicale:
+    - `k` ~ densita' ritmica. Cresce con `journey_energy` (piu' sforzo
+      -> piu' hit). Saturazione lineare fra `min_k` e `max_k`.
+    - `rot` ~ "fase del groove". Avanza con `journey_phase` cosi' che
+      il pattern ruoti lungo la tappa, evitando ritornelli identici.
+    """
+
+    steps: int = 16
+    """Risoluzione `n` del pattern euclideo (numero totale di step)."""
+
+    min_k: int = 3
+    max_k: int = 11
+    """Range del numero di hit. `min_k` quando energy=0, `max_k` quando
+    energy=1. Saturazione lineare."""
+
+    energy_channel: str = "journey_energy"
+    phase_channel: str = "journey_phase"
+    """Sorgenti dal frame (entrambe in [0,1])."""
+
+    dwell_s: float = 8.0
+    """Anti-flicker: cambi di `k` o `rot` solo dopo `dwell_s` secondi
+    consecutivi sul nuovo valore."""
+
+
+@dataclass(frozen=True)
 class EventConfig:
     """Parametri degli eventi.
 
@@ -272,6 +305,7 @@ class Config:
     journey: JourneyConfig = field(default_factory=JourneyConfig)
     macro: MacroConfig = field(default_factory=MacroConfig)
     harmony: HarmonyConfig = field(default_factory=HarmonyConfig)
+    body: BodyConfig = field(default_factory=BodyConfig)
     gpx: GpxConfig = field(default_factory=GpxConfig)
     events: EventConfig = field(default_factory=EventConfig)
     osc: OscConfig = field(default_factory=OscConfig)

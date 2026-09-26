@@ -36,47 +36,91 @@ def _sweep_value(t: float, period_s: float) -> int:
     return int(round(tri * 127.0))
 
 
-def _run_solo(midi: "MidoMidiOut", period: float, rate_hz: float) -> None:
-    """Modalita' assistita: un CC alla volta, INVIO per passare al successivo.
+def _run_solo(
+    midi: "MidoMidiOut",
+    period: float,
+    rate_hz: float,
+    cc_order: list[int] | None = None,
+) -> None:
+    """Modalita' assistita: un CC alla volta, due INVIO per ognuno.
 
-    Workflow consigliato:
-      1. Lancia con --solo.
-      2. In Ableton: Cmd+M, clicca il knob, attendi 1-2s -> bind.
-      3. Cmd+M per uscire dal MIDI Map (opzionale).
-      4. Premi INVIO sul terminale per passare al CC successivo.
+    Args:
+        cc_order: lista ordinata di CC# da scorrere. Se None, usa
+            l'ordine di `CHANNEL_TO_CC`. Se un CC# non e' nel bridge,
+            viene saltato con un warning.
+
+    Flusso di mappatura SICURO (evita di sovrascrivere il binding
+    precedente quando si avanza al CC successivo):
+
+      1. Cmd+M in Ableton -> entri in MIDI Map mode.
+      2. INVIO qui -> parte lo sweep del CC corrente.
+      3. Click sul knob target in Ableton -> bind fatto.
+      4. INVIO qui -> ferma lo sweep (smette di emettere).
+      5. Cmd+M in Ableton -> esci dal Map mode (cosi' il knob non
+         e' piu' "armato" e il prossimo CC non lo sovrascrive).
+      6. INVIO qui -> passa al CC successivo, torna al punto 1.
     """
     import threading
 
-    items = list(CHANNEL_TO_CC.items())
+    # Indice inverso: CC# -> address OSC (per stampe leggibili).
+    cc_to_addr = {m.cc: addr for addr, m in CHANNEL_TO_CC.items()}
+
+    if cc_order is None:
+        items = [(addr, m.cc) for addr, m in CHANNEL_TO_CC.items()]
+    else:
+        items = []
+        for cc in cc_order:
+            if cc in cc_to_addr:
+                items.append((cc_to_addr[cc], cc))
+            else:
+                print(f"[sweep --solo] WARN: CC {cc} non e' nel bridge, salto.")
+        if not items:
+            print("[sweep --solo] nessun CC valido in --cc-list. Esco.")
+            return
+
     print("\n[sweep --solo] mapping assistito.")
-    print("Per ogni CC: Cmd+M in Ableton, clicca il knob, INVIO qui.")
+    print(f"Ordine: {[cc for _, cc in items]}")
+    print("Per ogni CC: INVIO per partire, mappa, INVIO per fermare,")
+    print("esci da Map mode (Cmd+M), INVIO per il prossimo.")
     print("Ctrl+C per uscire.\n")
 
     period = max(period, 0.1)
     dt = 1.0 / max(rate_hz, 1.0)
 
+    def _prompt(msg: str) -> bool:
+        """INVIO -> True. EOF/Ctrl+D -> False (uscita pulita)."""
+        try:
+            input(msg)
+            return True
+        except EOFError:
+            return False
+
     try:
-        for addr, m in items:
-            print(f"--> CC {m.cc:3d}   ({addr})    [INVIO per il prossimo]")
+        for addr, cc in items:
+            print(f"\n--- CC {cc:3d}   ({addr}) ---")
+            if not _prompt("  [INVIO per AVVIARE lo sweep] "):
+                break
+
             stop = threading.Event()
 
-            def _emit() -> None:
+            def _emit(cc_num: int = cc) -> None:
                 start = time.monotonic()
                 while not stop.is_set():
                     t = time.monotonic() - start
-                    midi.send_cc(MIDI_CHANNEL_CC, m.cc, _sweep_value(t, period))
+                    midi.send_cc(MIDI_CHANNEL_CC, cc_num, _sweep_value(t, period))
                     time.sleep(dt)
 
             th = threading.Thread(target=_emit, daemon=True)
             th.start()
-            try:
-                input()
-            except EOFError:
-                stop.set(); th.join()
-                break
+            ok = _prompt("  [mappa adesso, poi INVIO per FERMARE] ")
             stop.set()
             th.join()
-        print("[sweep --solo] tutti i CC scorsi. Fine.")
+            if not ok:
+                break
+
+            if not _prompt("  [esci da Map mode in Ableton, poi INVIO per il prossimo CC] "):
+                break
+        print("\n[sweep --solo] tutti i CC scorsi. Fine.")
     finally:
         midi.close()
 
@@ -118,13 +162,26 @@ def main(argv: list[str] | None = None) -> int:
         help="Modalita' assistita: sweep un CC alla volta, premi INVIO "
              "per passare al successivo (Cmd+M -> click knob -> INVIO).",
     )
+    parser.add_argument(
+        "--cc-list", type=str, default=None,
+        help="Lista ordinata di CC# per --solo, separati da virgola "
+             "(es. '25,23,31,30'). Ignorato senza --solo. "
+             "I CC non nel bridge vengono saltati con un warning.",
+    )
     args = parser.parse_args(argv)
 
     midi = MidoMidiOut(args.midi_port)
     print(f"[sweep] -> {args.midi_port}")
 
     if args.solo:
-        _run_solo(midi, args.period, args.rate_hz)
+        cc_order: list[int] | None = None
+        if args.cc_list:
+            try:
+                cc_order = [int(x.strip()) for x in args.cc_list.split(",")
+                            if x.strip()]
+            except ValueError as exc:
+                parser.error(f"--cc-list malformato: {exc}")
+        _run_solo(midi, args.period, args.rate_hz, cc_order=cc_order)
         return 0
 
     if args.cc is not None:

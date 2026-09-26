@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DESNIVEL — Tutorial Rack Ableton (MVP)</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* piccole aggiunte locali */
+  .step {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 16px 22px;
+    margin: 18px 0;
+  }
+  .step h3 { margin-top: 0; color: var(--accent); }
+  .step .num {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg);
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 26px;
+    font-weight: 700;
+    margin-right: 8px;
+    font-size: 0.9em;
+  }
+  .callout {
+    background: rgba(107, 163, 107, 0.08);
+    border-left: 3px solid var(--accent2);
+    padding: 12px 18px;
+    margin: 14px 0;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+  .callout.warn {
+    background: rgba(212, 168, 87, 0.08);
+    border-left-color: var(--accent);
+  }
+  .callout.danger {
+    background: rgba(220, 90, 90, 0.08);
+    border-left-color: #dc5a5a;
+  }
+  .callout strong { color: var(--accent); }
+  .callout.danger strong { color: #dc5a5a; }
+  kbd {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    color: var(--accent2);
+  }
+  .ascii {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82em;
+    line-height: 1.45;
+    background: var(--code-bg);
+    padding: 18px 22px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    white-space: pre;
+    overflow-x: auto;
+    color: var(--fg);
+  }
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 24px;
+    margin: 20px 0 32px;
+  }
+  .toc ol { margin-left: 22px; }
+  .toc a { color: var(--link); text-decoration: none; }
+  .toc a:hover { color: var(--accent); }
+  .macro-row td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Rack Tutorial</h1>
+  <div class="subtitle">DESNIVEL Voice — Minimum Viable Rack</div>
+  <div class="route">4 macro &nbsp;|&nbsp; 1 catena &nbsp;|&nbsp; ~15 min</div>
+</div>
+
+<nav>
+  <span class="nav-label">DOC</span>
+  <a href="index.html">Overview</a>
+  <a href="pipeline.html">Pipeline</a>
+  <a href="touchdesigner.html">TouchDesigner</a>
+  <a href="rack_tutorial.html" class="active">Rack Ableton</a>
+</nav>
+
+<div class="container">
+
+<p class="lead">
+Costruzione minima del rack <code>DESNIVEL Voice</code> per sentire subito qualcosa.
+Niente Chain Selector, niente modalità multiple, niente Scale. Solo 4 macro essenziali e
+un suono che risponda al GPX.
+</p>
+
+<div class="toc">
+  <strong>Indice</strong>
+  <ol>
+    <li><a href="#prereq">Prerequisiti</a></li>
+    <li><a href="#schema">Lo schema</a></li>
+    <li><a href="#track">1. Crea la traccia</a></li>
+    <li><a href="#rack">2. Crea il rack vuoto</a></li>
+    <li><a href="#chains">3. Le 3 catene</a></li>
+    <li><a href="#devices">4. Inserisci i device</a></li>
+    <li><a href="#macros">5. Mappa le 4 macro</a></li>
+    <li><a href="#clip">6. Clip MIDI di test</a></li>
+    <li><a href="#test">7. Lancia il bridge e suona</a></li>
+    <li><a href="#next">Cosa fare dopo che senti</a></li>
+  </ol>
+</div>
+
+<h2 id="prereq">Prerequisiti</h2>
+<ul style="margin-left: 22px; line-height: 2;">
+  <li>Ableton Live aperto (qualsiasi versione recente)</li>
+  <li>IAC Driver attivo (macOS: <em>Audio MIDI Setup → IAC Driver → device is online → Bus 1</em>)</li>
+  <li>In Ableton: <em>Preferences → Link/Tempo/MIDI</em> → <strong>IAC Bus 1</strong> con <strong>Track ON</strong> e <strong>Remote ON</strong></li>
+  <li><code>.venv</code> attivato nella shell, in <code>desnivel/</code></li>
+</ul>
+
+<h2 id="schema">Lo schema</h2>
+<p>Quello che costruiamo è una sola voce con tre device audio in serie. Il rack ha tre catene
+(MIDI → Instrument → Audio), ma <strong>una sola chain per ciascuna</strong>: niente Chain Selector,
+niente modalità.</p>
+
+<div class="ascii">DESNIVEL Voice  (rack)
+│
+├── MIDI chain
+│   └── Pitch                  ← Macro 1 "Root"        (-12 .. +12 st)
+│
+├── Instrument chain
+│   └── Wavetable              (preset: Air Flute Magnus / pad qualsiasi)
+│
+└── Audio chain
+    ├── Auto Filter (LP12)     ← Macro 3 "Brightness"  (400 Hz .. 12 kHz)
+    ├── Saturator              ← Macro 6 "Energy"      (0 dB .. 12 dB)
+    ├── Reverb                 ← Macro 4 "Space"       (0 % .. 45 % Dry/Wet)
+    └── Utility                (gain safety, NON mappato)</div>
+
+<div class="callout">
+<strong>Perché solo 4 macro</strong> — Root, Brightness, Space, Energy sono i 4 parametri che
+trasformano il suono in modo udibile e non ridondante. Tension/Openness/Register/Mode li
+aggiungerai dopo aver sentito che la base funziona.
+</div>
+
+<h2 id="track">1 · Crea la traccia</h2>
+
+<div class="step">
+  <h3><span class="num">1</span> MIDI Track + routing</h3>
+  <p>In Live, <kbd>⌘⇧T</kbd> per nuova traccia MIDI. Rinominala <code>DESNIVEL</code>.</p>
+  <p>Nel pannello sinistro della traccia (<strong>In/Out</strong>):</p>
+  <ul style="margin-left: 22px;">
+    <li><strong>MIDI From</strong>: <code>IAC Driver (Bus 1)</code></li>
+    <li><strong>Channel</strong>: <code>Ch. 1</code> &nbsp;<em>(non "All Channels": filtri così solo i CC, ignorando le note evento sul ch. 16)</em></li>
+    <li><strong>Monitor</strong>: <kbd>In</kbd></li>
+    <li><strong>Audio To</strong>: <code>Master</code></li>
+  </ul>
+</div>
+
+<h2 id="rack">2 · Crea il rack vuoto</h2>
+
+<div class="step">
+  <h3><span class="num">2</span> Instrument Rack</h3>
+  <p>Dalla browser tab <em>Categories → Instruments → Instrument Rack</em>, trascina
+  <strong>Instrument Rack</strong> sulla traccia.</p>
+  <p>Rinomina il rack: <code>DESNIVEL Voice</code>.</p>
+  <p>Premi il pulsante <kbd>Show/Hide Macro Controls</kbd> (icona "M" in alto a sinistra del rack)
+  per vedere le 8 macro.</p>
+</div>
+
+<div class="callout warn">
+<strong>Importante</strong> — assicurati che le macro siano 8 (default). Se sono 4 o 16, click destro su
+una macro → <em>Show 8 Macros</em>.
+</div>
+
+<h2 id="chains">3 · Le 3 catene</h2>
+
+<div class="step">
+  <h3><span class="num">3</span> Apri il Chain List</h3>
+  <p>In alto a sinistra del rack ci sono 3 piccole icone verticali:
+  <strong>M</strong> (macro), <strong>C</strong> (chains), <strong>D</strong> (devices).
+  Clicca <strong>C</strong> per vedere la lista catene.</p>
+  <p>Per ora il rack ha una catena unica vuota. Va bene così. <strong>Non aggiungere altre catene.</strong></p>
+</div>
+
+<h2 id="devices">4 · Inserisci i device</h2>
+
+<div class="step">
+  <h3><span class="num">4a</span> MIDI device: Pitch</h3>
+  <p>Trascina <em>MIDI Effects → Pitch</em> nel rack, <strong>prima</strong> del Wavetable.</p>
+  <p>Lascia tutti i parametri ai default (Pitch = 0).</p>
+</div>
+
+<div class="step">
+  <h3><span class="num">4b</span> Instrument: Wavetable</h3>
+  <p>Trascina un <em>Wavetable</em> nel rack. Carica un preset pad/drone (es. <em>Air Flute Magnus</em>,
+  oppure qualsiasi pad lungo).</p>
+  <p>Verifica: suona quando premi una nota sulla tastiera del Mac? Se sì, ok.</p>
+</div>
+
+<div class="step">
+  <h3><span class="num">4c</span> Audio: Auto Filter</h3>
+  <p>Trascina <em>Auto Filter</em> dopo il Wavetable.</p>
+  <ul style="margin-left: 22px;">
+    <li><strong>Filter type</strong>: Lowpass 12 dB</li>
+    <li><strong>Frequency</strong>: 12 kHz (tutto aperto)</li>
+    <li><strong>Resonance</strong>: 0</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3><span class="num">4d</span> Audio: Saturator</h3>
+  <p>Trascina <em>Saturator</em> dopo l'Auto Filter.</p>
+  <ul style="margin-left: 22px;">
+    <li><strong>Drive</strong>: 0 dB</li>
+    <li><strong>Type</strong>: Analog Clip (o Soft Sat)</li>
+    <li><strong>Output</strong>: -3 dB (per non far scoppiare niente)</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3><span class="num">4e</span> Audio: Reverb</h3>
+  <p>Trascina <em>Reverb</em> (oppure <em>Hybrid Reverb</em>).</p>
+  <ul style="margin-left: 22px;">
+    <li><strong>Decay Time</strong>: 3-5 s (cattedrale)</li>
+    <li><strong>Dry/Wet</strong>: 0 % (parte asciutta, lo gestiremo via macro)</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3><span class="num">4f</span> Audio: Utility (safety)</h3>
+  <p>Trascina <em>Utility</em> in fondo. Lascialo a default. Serve solo come kill switch:
+  se qualcosa scoppia, abbassi <strong>Gain</strong> a -inf e respiri.</p>
+</div>
+
+<h2 id="macros">5 · Mappa le 4 macro</h2>
+
+<p>Click destro sulla <strong>Macro 1</strong> del rack → <strong>Rename</strong>. Rinominale così:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Macro</th>
+      <th>Nome</th>
+      <th>Device → Parametro</th>
+      <th>Range Min</th>
+      <th>Range Max</th>
+      <th>CC OSC bridge</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="macro-row"><td>1</td><td>Root</td><td>Pitch → Pitch</td><td>-12 st</td><td>+12 st</td><td>CC 25</td></tr>
+    <tr class="macro-row"><td>2</td><td>Mode</td><td><em>(skip)</em></td><td>—</td><td>—</td><td>CC 23</td></tr>
+    <tr class="macro-row"><td>3</td><td>Brightness</td><td>Auto Filter → Frequency</td><td>400 Hz</td><td>12 kHz</td><td>CC 31</td></tr>
+    <tr class="macro-row"><td>4</td><td>Space</td><td>Reverb → Dry/Wet</td><td>0 %</td><td>45 %</td><td>CC 30</td></tr>
+    <tr class="macro-row"><td>5</td><td>Tension</td><td><em>(skip)</em></td><td>—</td><td>—</td><td>CC 26</td></tr>
+    <tr class="macro-row"><td>6</td><td>Energy</td><td>Saturator → Drive</td><td>0 dB</td><td>12 dB</td><td>CC 21</td></tr>
+    <tr class="macro-row"><td>7</td><td>Register</td><td><em>(skip)</em></td><td>—</td><td>—</td><td>CC 29</td></tr>
+    <tr class="macro-row"><td>8</td><td>Openness</td><td><em>(skip)</em></td><td>—</td><td>—</td><td>CC 22</td></tr>
+  </tbody>
+</table>
+
+<div class="step">
+  <h3><span class="num">5a</span> Tecnica di mappatura</h3>
+  <p>Per ciascuna delle 4 macro attive:</p>
+  <ol style="margin-left: 22px; line-height: 2;">
+    <li>Click <strong>Map</strong> in alto a destra di Live (entri in Map Mode, sfondo arancione)</li>
+    <li>Click sul parametro del device (es. Auto Filter → Frequency)</li>
+    <li>Click sulla macro corrispondente (es. Macro 3)</li>
+    <li>Nel pannello <strong>Mapping Browser</strong> a sinistra, regola <strong>Min</strong> e <strong>Max</strong>
+        ai valori della tabella sopra (es. 400 Hz / 12 kHz)</li>
+    <li>Click <strong>Map</strong> di nuovo per uscire dal Map Mode</li>
+    <li>Ripeti per la macro successiva</li>
+  </ol>
+</div>
+
+<div class="callout danger">
+<strong>Attenzione binding sweep</strong> — se userai poi <code>desnivel-midi-sweep</code> per mappare
+i CC OSC, <strong>esci dal Map Mode tra un CC e l'altro</strong>: altrimenti Live ti auto-binda il CC
+successivo al knob ancora attivo. Ma per questa fase manuale non serve, perché stiamo solo
+mappando macro→parametro, non CC→macro.
+</div>
+
+<h2 id="clip">6 · Clip MIDI di test</h2>
+
+<div class="step">
+  <h3><span class="num">6</span> Una nota lunga in loop</h3>
+  <p>Doppio click in una clip slot vuota della traccia <code>DESNIVEL</code> per crearla.</p>
+  <ul style="margin-left: 22px; line-height: 2;">
+    <li>Lunghezza clip: <strong>4 misure</strong></li>
+    <li>Una sola nota: <strong>C2</strong>, dall'inizio fino alla fine</li>
+    <li>Velocity: 100</li>
+    <li>Loop: <strong>on</strong></li>
+  </ul>
+  <p>Play. Deve suonare un drone fisso. Se senti il pad, ok.</p>
+</div>
+
+<h2 id="test">7 · Lancia il bridge e suona</h2>
+
+<p>Due terminali aperti, entrambi con <code>.venv</code> attivato e cwd <code>desnivel/</code>.</p>
+
+<h4>Terminale 1 — bridge OSC→MIDI</h4>
+<pre><code>desnivel-bridge-midi --midi-port "IAC Driver Bus 1"</code></pre>
+
+<p>Verifica nell'output che i CC mappati siano elencati (Root=25, Brightness=31, Space=30, Energy=21).</p>
+
+<h4>Terminale 2 — playback tappa</h4>
+<pre><code>desnivel-play --stage tappa_04 --speed 100</code></pre>
+
+<p>Cosa dovresti sentire:</p>
+<ul style="margin-left: 22px; line-height: 1.9;">
+  <li><strong>Root</strong> (CC 25): la fondamentale si muove lentamente lungo la tappa</li>
+  <li><strong>Brightness</strong> (CC 31): il filtro si apre quando c'è energia (salite, fatica)</li>
+  <li><strong>Space</strong> (CC 30): il riverbero respira con i momenti più ampi del percorso</li>
+  <li><strong>Energy</strong> (CC 21): il drive si scalda quando la pedalata si intensifica</li>
+</ul>
+
+<div class="callout">
+<strong>Se non senti modulazione</strong>: controlla che la traccia <code>DESNIVEL</code> abbia
+<em>Monitor: In</em> e che il MIDI From sia <em>IAC Bus 1 / Ch. 1</em>. Nel bridge dovresti vedere
+i CC scorrere nell'output mentre la tappa procede.
+</div>
+
+<div class="callout danger">
+<strong>Se senti click/pop o note random</strong>: probabilmente stai ricevendo anche gli eventi
+(Note On sul canale 16). Verifica che <em>MIDI From → Channel</em> sia <code>Ch. 1</code>, non <code>All Channels</code>.
+</div>
+
+<h2 id="next">Cosa fare dopo che senti</h2>
+
+<p>Una volta che la base suona, queste sono le possibili evoluzioni in ordine di priorità:</p>
+
+<ol style="margin-left: 22px; line-height: 2;">
+  <li><strong>Calibrazione range</strong> — se Brightness apre troppo o troppo poco, stringi/allarga
+      i Min/Max del binding senza toccare il codice</li>
+  <li><strong>Aggiungi Tension</strong> (Macro 5 → Auto Filter Resonance 0-55%) se il filtro
+      ha bisogno di più carattere nei momenti intensi</li>
+  <li><strong>Aggiungi Register</strong> (Macro 7 → secondo Pitch) per fare ottavare quando la
+      tappa è "alta"</li>
+  <li><strong>Aggiungi Mode</strong> (Macro 2 → Chain Selector) <strong>solo</strong> quando hai un
+      secondo strumento da alternare</li>
+  <li><strong>Salva il rack come .adg</strong> — click destro sul rack → Save Preset</li>
+</ol>
+
+<p style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--dim); font-size: 0.9em;">
+La guida completa con tutte le 8 macro e le 6 modalità è in
+<a href="https://github.com" style="color: var(--accent2);">doc/ABLETON-RACK.md</a>.
+Questo tutorial è la versione "minima per sentire", da fare prima di tutto.
+</p>
+
+</div>
+
+</body>
+</html>

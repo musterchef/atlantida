@@ -85,6 +85,8 @@ Mapping CC attivi adesso:
 - **CC 24** = `macro/palette` (famiglia timbrica, int)
 - **CC 25** = `meso/root` (nota MIDI della fondamentale, int)
 - **CC 26** = `meso/tension` (cambi di pendenza)
+- **CC 27** = `body/euclid_k` (densita' pattern euclideo, int)
+- **CC 28** = `body/euclid_rot` (rotazione pattern, int)
 - **CC 29** = `macro/register` (registro grave→acuto, 0..1)
 - **CC 30** = `macro/space` (riverbero/ampiezza, 0..1)
 - **CC 31** = `macro/brightness` (brillantezza, 0..1)

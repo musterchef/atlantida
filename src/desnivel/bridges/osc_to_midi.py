@@ -243,16 +243,37 @@ def build_dispatcher(bridge: OscToMidiBridge):
 
 
 def print_mapping() -> None:
-    """Stampa la mappa attiva (utile all'avvio)."""
-    print("[bridge] canali continui -> CC (MIDI channel "
-          f"{MIDI_CHANNEL_CC + 1}):")
-    for addr, m in CHANNEL_TO_CC.items():
-        kind = "int" if m.is_int else "float 0..1"
-        print(f"  {addr:32s} -> CC {m.cc:3d}   [{kind}]")
-    print(f"[bridge] eventi -> Note On (MIDI channel "
-          f"{MIDI_CHANNEL_EVENTS + 1}):")
+    """Stampa la mappa attiva, raggruppata per Rack semantico.
+
+    La fonte semantica e' `rack_spec.py`; la tabella tecnica
+    OSC→CC vive in `CHANNEL_TO_CC`. Qui le incrociamo cosi'
+    l'utente vede subito: "questo CC sta nel Rack principale,
+    si chiama Brightness, va su Auto Filter Frequency, range
+    400 Hz - 12 kHz".
+    """
+    from .rack_spec import AUX_CC, VOICE_RACK
+
+    print(f"\n[bridge] MIDI CC channel {MIDI_CHANNEL_CC + 1}, "
+          f"events channel {MIDI_CHANNEL_EVENTS + 1}.\n")
+
+    def _print_group(title: str, specs) -> None:
+        print(f"  ── {title} ──")
+        print(f"  {'CC':>3}  {'Macro':<11} {'OSC':<24} "
+              f"{'Device → Param':<32} Range Ableton")
+        for m in specs:
+            rng = f"{m.range_ableton[0]} .. {m.range_ableton[1]}"
+            dev = f"{m.device} → {m.parameter}"
+            print(f"  {m.cc:>3}  {m.name:<11} {m.osc_address:<24} "
+                  f"{dev:<32} {rng}")
+        print()
+
+    _print_group("RACK PRINCIPALE (8 macro)", VOICE_RACK)
+    _print_group("CC AUSILIARI (fuori dal rack)", AUX_CC)
+
+    print("  ── EVENTI (Note On su canale 16) ──")
     for addr, note in EVENT_TO_NOTE.items():
-        print(f"  {addr:32s} -> note {note}")
+        print(f"  note {note:3d}  {addr}")
+    print()
 
 
 def run_bridge(host: str, port: int, midi: MidiOut) -> None:

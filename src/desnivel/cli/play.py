@@ -36,6 +36,7 @@ from desnivel.detectors import (
 )
 from desnivel.loader import load_track
 from desnivel.modulators import (
+    BodyModulator,
     HarmonyModulator,
     JourneyModulator,
     MacroModulator,
@@ -74,6 +75,7 @@ def _build_pipeline(config: Config) -> Pipeline:
             TensionModulator(config),
             MacroModulator(config),
             HarmonyModulator(config),
+            BodyModulator(config),
         ],
         detectors=[
             StartDetector(config),

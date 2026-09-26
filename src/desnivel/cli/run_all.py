@@ -31,6 +31,7 @@ from desnivel.events import Event, EventCategory
 from desnivel.modulation import ModulationFrame
 from desnivel.detectors import EndDetector, POIDetector, SeaDetector, StartDetector, SummitDetector
 from desnivel.modulators import (
+    BodyModulator,
     HarmonyModulator,
     JourneyModulator,
     MacroModulator,
@@ -108,6 +109,7 @@ def _process_stage(
             TensionModulator(config),
             MacroModulator(config),
             HarmonyModulator(config),
+            BodyModulator(config),
         ],
         detectors=[
             StartDetector(config),

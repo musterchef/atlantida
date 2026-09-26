@@ -15,6 +15,7 @@ from desnivel.config import DEFAULT_CONFIG, Config
 from desnivel.loader import load_track
 from desnivel.detectors import EndDetector, POIDetector, SeaDetector, StartDetector, SummitDetector
 from desnivel.modulators import (
+    BodyModulator,
     HarmonyModulator,
     JourneyModulator,
     MacroModulator,
@@ -86,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
             TensionModulator(config),
             MacroModulator(config),
             HarmonyModulator(config),
+            BodyModulator(config),
         ],
         detectors=[
             StartDetector(config),
