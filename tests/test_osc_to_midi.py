@@ -70,6 +70,14 @@ def test_int_mod_address_emits_cc_without_scaling() -> None:
     assert midi.messages == [("cc", MIDI_CHANNEL_CC, 23, 5)]
 
 
+def test_signed_root_mod_address_maps_to_full_cc_range() -> None:
+    midi = FakeMidiOut()
+    bridge = OscToMidiBridge(midi=midi)
+    for value in (-12, 0, 12):
+        bridge.handle_mod("/mod/meso/root", value)
+    assert [message[3] for message in midi.messages] == [0, 64, 127]
+
+
 def test_unknown_mod_address_is_ignored() -> None:
     midi = FakeMidiOut()
     bridge = OscToMidiBridge(midi=midi)
