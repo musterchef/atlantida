@@ -76,6 +76,7 @@ def _run_solo(
                 print(f"[sweep --solo] WARN: CC {cc} non e' nel bridge, salto.")
         if not items:
             print("[sweep --solo] nessun CC valido in --cc-list. Esco.")
+            midi.close()
             return
 
     print("\n[sweep --solo] mapping assistito.")
@@ -170,17 +171,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    midi = MidoMidiOut(args.midi_port)
-    print(f"[sweep] -> {args.midi_port}")
-
+    cc_order: list[int] | None = None
     if args.solo:
-        cc_order: list[int] | None = None
         if args.cc_list:
             try:
                 cc_order = [int(x.strip()) for x in args.cc_list.split(",")
                             if x.strip()]
             except ValueError as exc:
                 parser.error(f"--cc-list malformato: {exc}")
+
+    midi = MidoMidiOut(args.midi_port)
+    print(f"[sweep] -> {args.midi_port}")
+
+    if args.solo:
         _run_solo(midi, args.period, args.rate_hz, cc_order=cc_order)
         return 0
 

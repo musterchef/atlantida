@@ -24,9 +24,9 @@ Il rack contiene **3 catene logiche**, in ordine di segnale:
 ```
 DESNIVEL Voice (Instrument Rack)
 ├── MIDI chain — manipolazione note in ingresso
-│   • Pitch (MIDI device)   ← macro 1: Root
+│   • Instrument internal pitch   ← macro 1: Root
 │   • Scale (opzionale)     ← (modalita' impostata dalla catena attiva)
-│   • Pitch (MIDI device)   ← macro 7: Register
+│   • Instrument internal pitch   ← macro 7: Register
 │
 ├── Instrument chain — la voce. Multi-catena, una per modalità.
 │   • Chain 0 (Ionian)     ┐
@@ -71,16 +71,21 @@ usano per un secondo rack ritmico o per automazioni libere.
 2. Crea un **Instrument Rack** vuoto: drag&drop *Instruments → Instrument Rack* sulla traccia.
 3. Aprilo (click sulla freccia in alto a destra del titolo).
 
-### 2. MIDI chain — Pitch + Register
+### 2. Pitch interno dello strumento
 
-Davanti allo strumento, dentro la *MIDI chain*:
+Per il drone sostenuto, Root e Register devono controllare il pitch interno
+dello strumento, non il device MIDI **Pitch**: i MIDI effect ricevono il
+nuovo valore solo al successivo Note On.
 
-1. Trascina un **Pitch** (Live device, *MIDI Effects → Pitch*).
-2. Click destro sul knob *Pitch* → **Map to Macro 1**. Rinomina la macro **"Root"**.
-3. Cmd-M, clicca sulla riga del binding di Macro 1 nella corsia di sinistra: **Min −12 / Max +12**.
-4. Aggiungi un secondo **Pitch** dopo il primo: stessa procedura ma → **Macro 7 "Register"**, Min −12 / Max +12.
+1. Inserisci lo strumento nella catena e individua il suo parametro interno
+   **Coarse / Transpose**.
+2. Mappalo alla macro **Root** con **Min −12 / Max +12 semitoni**.
+3. Mappa un secondo parametro di trasposizione, oppure lo stesso parametro
+   nel rack scelto, alla macro **Register** con **Min −12 / Max +12 semitoni**.
 
-> Perché due Pitch? Root muove la fondamentale armonica (CC 25), Register muove il "registro" del momento (CC 29, salita/discesa). Si **sommano**: in cima a un colle alto la nota è 1–2 ottave sopra la stessa armonia in pianura.
+I due offset si sommano: Root muove la fondamentale armonica (CC 25),
+Register muove il registro del momento (CC 29). Il valore di `meso_root`
+è già uno scostamento in semitoni rispetto alla tonica di riferimento.
 
 ### 3. Instrument chain — 6 modalità
 

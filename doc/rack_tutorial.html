@@ -138,7 +138,8 @@ niente modalità.</p>
 <div class="ascii">DESNIVEL Voice  (rack)
 │
 ├── MIDI chain
-│   └── Pitch                  ← Macro 1 "Root"        (-12 .. +12 st)
+│   └── Instrument internal pitch
+│                              ← Macro 1 "Root"        (-12 .. +12 st)
 │
 ├── Instrument chain
 │   └── Wavetable              (preset: Air Flute Magnus / pad qualsiasi)
@@ -198,9 +199,9 @@ una macro → <em>Show 8 Macros</em>.
 <h2 id="devices">4 · Inserisci i device</h2>
 
 <div class="step">
-  <h3><span class="num">4a</span> MIDI device: Pitch</h3>
-  <p>Trascina <em>MIDI Effects → Pitch</em> nel rack, <strong>prima</strong> del Wavetable.</p>
-  <p>Lascia tutti i parametri ai default (Pitch = 0).</p>
+  <h3><span class="num">4a</span> Pitch interno dello strumento</h3>
+  <p>Nel Wavetable individua il parametro interno <strong>Coarse / Transpose</strong>.</p>
+  <p>Non usare <em>MIDI Effects → Pitch</em> per il drone: quel device applica il cambio al successivo Note On, non a una nota già sostenuta.</p>
 </div>
 
 <div class="step">
@@ -261,7 +262,7 @@ una macro → <em>Show 8 Macros</em>.
     </tr>
   </thead>
   <tbody>
-    <tr class="macro-row"><td>1</td><td>Root</td><td>Pitch → Pitch</td><td>-12 st</td><td>+12 st</td><td>CC 25</td></tr>
+    <tr class="macro-row"><td>1</td><td>Root</td><td>Instrument → Coarse / Transpose</td><td>-12 st</td><td>+12 st</td><td>CC 25</td></tr>
     <tr class="macro-row"><td>2</td><td>Mode</td><td><em>(skip)</em></td><td>—</td><td>—</td><td>CC 23</td></tr>
     <tr class="macro-row"><td>3</td><td>Brightness</td><td>Auto Filter → Frequency</td><td>400 Hz</td><td>12 kHz</td><td>CC 31</td></tr>
     <tr class="macro-row"><td>4</td><td>Space</td><td>Reverb → Dry/Wet</td><td>0 %</td><td>45 %</td><td>CC 30</td></tr>

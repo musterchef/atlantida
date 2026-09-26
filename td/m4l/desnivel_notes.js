@@ -174,7 +174,7 @@ function bang() {
     var maxIdx;
     if (density < CONFIG.density_sparse) {
         // Solo tonica + quinta: usa pickIdx su 2 gradi
-        maxIdx = Math.min(5, scale.length);
+        maxIdx = Math.min(2, scale.length);
     } else if (density < CONFIG.density_mid) {
         maxIdx = Math.ceil(scale.length * CONFIG.scale_mid_ratio);
     } else {

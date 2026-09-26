@@ -68,8 +68,8 @@ VOICE_RACK: tuple[MacroSpec, ...] = (
         name="Root",
         cc=25,
         osc_address="/mod/meso/root",
-        device="Pitch (MIDI device)",
-        parameter="Pitch",
+        device="Instrument internal pitch",
+        parameter="Coarse / Transpose",
         range_ableton=(-12, 12),
         description=(
             "Fondamentale del momento. Cambia ogni ~8 km lungo la "
@@ -142,8 +142,8 @@ VOICE_RACK: tuple[MacroSpec, ...] = (
         name="Register",
         cc=29,
         osc_address="/mod/macro/register",
-        device="Pitch (secondo)",
-        parameter="Pitch",
+        device="Instrument internal pitch (secondo)",
+        parameter="Coarse / Transpose",
         range_ableton=(-12, 12),
         description=(
             "Registro: -12 sui passaggi bassi della tappa, +12 sulle "

@@ -1,8 +1,8 @@
 """Modulatore armonico: il canale ``/mod/meso/root``.
 
-Decide la **fondamentale** (tonica) del momento: la nota MIDI attorno
-a cui si organizza l'armonia. Cambia ogni `km_per_change` km percorsi,
-scorrendo ciclicamente una sequenza modale di offset in semitoni.
+Decide lo **scostamento della fondamentale** del momento rispetto alla
+tonica di riferimento. Cambia ogni `km_per_change` km percorsi,
+scorrendo ciclicamente una sequenza di offset in semitoni.
 
 Esempio (default):
 - Sezione 0: base + 0   -> C
@@ -34,7 +34,7 @@ _CHANNELS = ("meso_root",)
 
 
 class HarmonyModulator:
-    """Calcola il canale ``meso_root`` (int MIDI, 0..127).
+    """Calcola il canale ``meso_root`` come offset in semitoni.
 
     Args:
         config: configurazione (legge `config.harmony`).
@@ -69,8 +69,8 @@ class HarmonyModulator:
         # 1. Sorgente: distanza cumulata in km.
         cum_m = track.samples.get(cfg.distance_channel)
         if cum_m is None:
-            # Fallback: solo tonica per tutta la tappa.
-            root = np.full(n, float(np.clip(cfg.base_midi, 0, 127)))
+            # Fallback: nessuno scostamento per tutta la tappa.
+            root = np.zeros(n, dtype=float)
             frame.add("meso_root", root)
             return frame
 
@@ -84,22 +84,19 @@ class HarmonyModulator:
             section_idx = (np.floor(cum_km / cfg.km_per_change).astype(int)
                            % len(seq))
 
-        # 3. Lookup -> MIDI note.
-        root = (cfg.base_midi + seq[section_idx]).astype(int)
+        # 3. Lookup -> offset in semitoni rispetto a base_midi.
+        root = seq[section_idx].astype(int)
 
         # 4. POI override: dentro un POI -> tonica.
         if cfg.poi_force_tonic and self.poi_registry is not None and len(self.poi_registry) > 0:
             mask = _poi_mask(track, self.poi_registry)
             if mask.any():
-                root = np.where(mask, cfg.base_midi, root)
+                root = np.where(mask, 0, root)
 
         # 5. Anti-flicker (riusa `_apply_dwell` dal macro).
         rate = self.config.timing.internal_rate_hz
         dwell_n = max(1, int(cfg.min_dwell_s * rate))
         root = _apply_dwell(root, dwell_n)
-
-        # 6. Clip al range MIDI valido.
-        root = np.clip(root, 0, 127)
 
         frame.add("meso_root", root.astype(float))
         return frame

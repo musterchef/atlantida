@@ -51,17 +51,17 @@ def test_root_is_integer_valued() -> None:
     assert np.allclose(v, np.round(v))
 
 
-def test_root_within_midi_range() -> None:
+def test_root_contains_configured_offsets() -> None:
     frame = _run(_track_with_dist(100.0, 600.0))
     v = frame.channels["meso_root"]
-    assert v.min() >= 0
-    assert v.max() <= 127
+    assert v.min() >= min(DEFAULT_CONFIG.harmony.interval_sequence)
+    assert v.max() <= max(DEFAULT_CONFIG.harmony.interval_sequence)
 
 
 def test_starts_on_tonic() -> None:
     cfg = DEFAULT_CONFIG
     frame = _run(_track_with_dist(20.0, 600.0), cfg)
-    assert int(frame.channels["meso_root"][0]) == cfg.harmony.base_midi
+    assert int(frame.channels["meso_root"][0]) == 0
 
 
 def test_changes_after_km_per_change() -> None:
@@ -73,7 +73,8 @@ def test_changes_after_km_per_change() -> None:
     root = frame.channels["meso_root"]
     # Inizio sezione 0 (tonica). Fine sezione 2 -> seq[2].
     assert int(root[0]) == cfg.harmony.base_midi
-    expected_last = cfg.harmony.base_midi + cfg.harmony.interval_sequence[2]
+    expected_last = cfg.harmony.interval_sequence[2]
+    assert int(root[0]) == 0
     assert int(root[-1]) == expected_last
 
 
@@ -89,7 +90,7 @@ def test_sequence_cycles() -> None:
     root = frame.channels["meso_root"]
     # Indice = floor((seq_len + 0.5) * km_per_change / km_per_change) mod seq_len
     #       = (seq_len + 0) mod seq_len = 0 -> tonica.
-    assert int(root[-1]) == cfg.harmony.base_midi
+    assert int(root[-1]) == 0
 
 
 # ──────────────────── Fallback / edge cases ────────────────────────
@@ -101,7 +102,7 @@ def test_fallback_when_no_distance_channel() -> None:
     frame = _run(track)
     root = frame.channels["meso_root"]
     assert root.size == n
-    assert (root == DEFAULT_CONFIG.harmony.base_midi).all()
+    assert (root == 0).all()
 
 
 def test_empty_track() -> None:
@@ -121,7 +122,7 @@ def test_custom_sequence_via_config() -> None:
     ))
     frame = _run(_track_with_dist(2.5, 600.0), cfg)
     root = frame.channels["meso_root"].astype(int)
-    assert set(np.unique(root)).issubset({60, 72})
+    assert set(np.unique(root)).issubset({0, 12})
 
 
 def test_determinism() -> None:
@@ -149,4 +150,4 @@ def test_dwell_prevents_flicker() -> None:
     frame = _run(track, cfg)
     root = frame.channels["meso_root"]
     # Tutta la tappa resta sulla tonica (dwell > durata totale).
-    assert (root == 48).all()
+    assert (root == 0).all()
