@@ -2,9 +2,8 @@
 
 Solo stdlib (`xml.etree`, `datetime`). Estrae i campi essenziali:
 ``lat``, ``lon``, ``ele``, ``t_unix`` (in secondi). Se un trackpoint
-non ha tempo o elevazione, vengono usati valori interpolabili
-successivamente (NaN), oppure la riga viene scartata se mancano
-le coordinate.
+non ha tempo o elevazione, il campo viene rappresentato come `NaN`;
+la riga viene scartata se mancano le coordinate.
 """
 from __future__ import annotations
 
@@ -33,8 +32,8 @@ def parse_gpx_points(path: str | Path) -> dict[str, np.ndarray]:
 
     Returns:
         Dizionario con chiavi ``lat``, ``lon``, ``ele``, ``t_unix``,
-        tutti ``float64`` della stessa lunghezza. ``ele`` può contenere
-        zeri se il GPX non riporta elevazioni.
+        tutti ``float64`` della stessa lunghezza. ``ele`` contiene
+        ``NaN`` se il GPX non riporta elevazione.
     """
     tree = ET.parse(str(path))
     root = tree.getroot()
@@ -53,7 +52,9 @@ def parse_gpx_points(path: str | Path) -> dict[str, np.ndarray]:
         time_el = trkpt.find("gpx:time", _GPX_NS)
         lats.append(float(lat))
         lons.append(float(lon))
-        eles.append(float(ele_el.text) if ele_el is not None and ele_el.text else 0.0)
+        eles.append(
+            float(ele_el.text) if ele_el is not None and ele_el.text else float("nan"),
+        )
         times.append(
             _parse_iso_utc(time_el.text) if time_el is not None and time_el.text else float("nan"),
         )

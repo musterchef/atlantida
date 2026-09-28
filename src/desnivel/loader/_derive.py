@@ -30,6 +30,15 @@ def _safe_div(num: np.ndarray, den: np.ndarray) -> np.ndarray:
     return out
 
 
+def _fill_missing_elevation(values: np.ndarray) -> np.ndarray:
+    """Interpola buchi isolati; mantiene NaN se manca tutta la quota."""
+    valid = np.isfinite(values)
+    if not valid.any() or valid.all():
+        return values.astype(float, copy=True)
+    indices = np.arange(values.size, dtype=float)
+    return np.interp(indices, indices[valid], values[valid])
+
+
 def derive_channels(
     raw: dict[str, np.ndarray],
     cfg: GpxConfig,
@@ -59,7 +68,7 @@ def derive_channels(
     cum_dist = np.cumsum(dist)
 
     # Smussatura leggera dell'elevazione per stabilizzare la pendenza.
-    ele = _running_median(ele_raw, cfg.raw_median_window)
+    ele = _running_median(_fill_missing_elevation(ele_raw), cfg.raw_median_window)
     ele_delta = np.zeros(n, dtype=float)
     if n > 1:
         ele_delta[1:] = np.diff(ele)
@@ -71,17 +80,29 @@ def derive_channels(
     speed_ms = _safe_div(dist, dt)
     speed_kmh = speed_ms * 3.6
 
+    # Pendenza ed effort richiedono quota reale: senza di essa restano
+    # non disponibili invece di essere calcolati su una quota fittizia.
+    has_elevation = np.isfinite(ele).any()
+
     # Pendenza come ele_delta / dist (frazione, non %).
-    slope = _safe_div(ele_delta, dist)
+    if has_elevation:
+        slope = _safe_div(ele_delta, dist)
+    else:
+        slope = np.full(n, np.nan, dtype=float)
 
     # Effort normalizzato in [0, 1] come combinazione lineare di velocità
     # e pendenza positiva, ciascuna saturata sul valore di riferimento.
-    speed_norm = np.clip(speed_kmh / cfg.speed_reference_kmh, 0.0, 1.0)
-    slope_pos_norm = np.clip(np.maximum(slope, 0.0) / cfg.slope_reference, 0.0, 1.0)
-    effort = np.clip(
-        cfg.effort_weight_speed * speed_norm + cfg.effort_weight_slope * slope_pos_norm,
-        0.0, 1.0,
-    )
+    if has_elevation:
+        speed_norm = np.clip(speed_kmh / cfg.speed_reference_kmh, 0.0, 1.0)
+        slope_pos_norm = np.clip(np.maximum(slope, 0.0) / cfg.slope_reference, 0.0, 1.0)
+        effort = np.clip(
+            cfg.effort_weight_speed * speed_norm
+            + cfg.effort_weight_slope * slope_pos_norm,
+            0.0,
+            1.0,
+        )
+    else:
+        effort = np.full(n, np.nan, dtype=float)
 
     return {
         "lat": lat,

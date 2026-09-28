@@ -28,11 +28,30 @@ def _make_minimal_gpx(tmp_path: Path) -> Path:
     return path
 
 
+def _make_gpx_without_elevation(tmp_path: Path) -> Path:
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="test" xmlns="http://www.topografix.com/GPX/1/1">
+    <trk><trkseg>
+        <trkpt lat="45.0700" lon="7.6800"><time>2026-04-12T08:00:00Z</time></trkpt>
+        <trkpt lat="45.0710" lon="7.6810"><time>2026-04-12T08:01:00Z</time></trkpt>
+        <trkpt lat="45.0720" lon="7.6820"><time>2026-04-12T08:02:00Z</time></trkpt>
+    </trkseg></trk>
+</gpx>"""
+        path = tmp_path / "tappa99_no_elevation.gpx"
+        path.write_text(xml)
+        return path
+
+
 def test_parse_gpx_basic(tmp_path: Path) -> None:
     raw = parse_gpx_points(_make_minimal_gpx(tmp_path))
     assert raw["lat"].shape == (3,)
     assert np.allclose(raw["lat"], [45.07, 45.071, 45.072])
     assert raw["t_unix"][1] - raw["t_unix"][0] == pytest.approx(60.0)
+
+
+def test_missing_elevation_is_not_parsed_as_sea_level(tmp_path: Path) -> None:
+    raw = parse_gpx_points(_make_gpx_without_elevation(tmp_path))
+    assert np.isnan(raw["ele"]).all()
 
 
 def test_stage_id_from_path() -> None:
@@ -65,6 +84,17 @@ def test_derive_speed_and_slope_signs(tmp_path: Path) -> None:
     assert derived["effort"].max() <= 1.0
 
 
+def test_partial_missing_elevation_is_interpolated() -> None:
+    raw = {
+        "lat": np.array([45.0, 45.001, 45.002]),
+        "lon": np.array([7.0, 7.001, 7.002]),
+        "ele": np.array([100.0, np.nan, 120.0]),
+        "t_unix": np.array([0.0, 60.0, 120.0]),
+    }
+    derived = derive_channels(raw, DEFAULT_CONFIG.gpx)
+    assert derived["ele"][1] == pytest.approx(110.0)
+
+
 def test_resample_uniform_grid_preserves_endpoints() -> None:
     src_t = np.array([0.0, 30.0, 60.0])
     channels = {"x": np.array([10.0, 20.0, 30.0])}
@@ -88,3 +118,14 @@ def test_load_track_end_to_end(tmp_path: Path) -> None:
     for key in ("speed_kmh", "slope", "effort", "ele"):
         assert key in track.samples
     assert track.metadata["source_path"].endswith("tappa99_test.gpx")
+
+
+def test_track_without_elevation_omits_elevation_dependent_channels(
+    tmp_path: Path,
+) -> None:
+    track = load_track(_make_gpx_without_elevation(tmp_path))
+    assert "ele" not in track.samples
+    assert "slope" not in track.samples
+    assert "effort" not in track.samples
+    assert "speed_kmh" in track.samples
+    assert "cum_dist_m" in track.samples

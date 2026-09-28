@@ -262,6 +262,8 @@ class OscConfig:
     host: str = "127.0.0.1"
     port: int = 9000
     rates_hz: Mapping[str, float] = field(default_factory=lambda: _DEFAULT_OSC_RATES)
+    trip_metrics_rate_hz: float = 1.0
+    """Frequenza del contratto neutrale delle metriche viaggio."""
 
 
 @dataclass(frozen=True)

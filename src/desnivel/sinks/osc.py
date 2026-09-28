@@ -37,25 +37,10 @@ import numpy as np
 from ..config import DEFAULT_CONFIG, Config
 from ..events import Event, EventCategory
 from ..modulation import ModulationFrame
+from .schedule import ScheduledMessage, play_schedule
 
 
 # ──────────────────── Schedule (funzione pura) ─────────────────────
-
-
-@dataclass(frozen=True)
-class ScheduledMessage:
-    """Un messaggio OSC pianificato a un istante `t` della tappa.
-
-    Attributes:
-        t: tempo in secondi dall'inizio della tappa.
-        address: OSC address completo (es. ``/mod/journey/phase``).
-        args: argomenti del messaggio. Per modulazioni: un singolo
-            ``float`` o ``int``. Per eventi: una stringa JSON.
-    """
-
-    t: float
-    address: str
-    args: tuple[Any, ...]
 
 
 def _group_of(channel: str) -> str | None:
@@ -247,16 +232,10 @@ class OscSink:
         self._play(schedule)
 
     def _play(self, schedule: list[ScheduledMessage]) -> None:
-        if not schedule:
-            return
-        start_wall = self.monotonic()
-        speed = self.speed
-        for msg in schedule:
-            target_wall = start_wall + msg.t / speed
-            delay = target_wall - self.monotonic()
-            if delay > 0:
-                self.sleep(delay)
-            self.client.send_message(msg.address, list(msg.args))
+        play_schedule(
+            schedule, self.client, self.speed,
+            sleep=self.sleep, monotonic=self.monotonic,
+        )
 
 
 __all__ = [

@@ -6,15 +6,15 @@ fondo sotto `## Fatto` con la data.
 
 ## Architettura: chi fa cosa
 
-Python e' il direttore d'orchestra: legge GPX, decide quali eventi
-accadono e a che intensita' modulare i canali. TD e Ableton ricevono
-via OSC e sono organi sensoriali (visual, audio). Una sola fonte di
-verita', niente logica musicale dentro TD o Ableton.
+Python legge il GPX e produce metriche e fatti del viaggio via OSC. Max for Live /
+Ableton interpreta quei segnali, mantiene i sequencer e genera l'audio.
+TouchDesigner visualizza la musica e non inoltra i dati GPX ad Ableton.
+Decisione accettata e stato dei percorsi: `doc/DECISIONE-ARCHITETTURA-AUDIO.md`.
 
 ```
-   Python pipeline (DESNIVEL) ──OSC──> TD (visual)
-                              ──OSC──> Ableton/M4L (audio)
-                              ──OSC──> ... (luci, altro)
+  GPX -> Python pipeline (DESNIVEL) ──OSC──> Max for Live / Ableton (audio)
+                                 |
+                                 +── telemetria musicale ──> TD (visual)
 ```
 
 ## Binario A — Integrazione (priorita' ora)
@@ -23,76 +23,99 @@ Lo scopo di questo binario e' **chiudere il loop**: dati -> OSC ->
 qualcosa che si vede/sente. Anche minimale: serve per capire cosa
 funziona musicalmente prima di accumulare altri detector.
 
-### Contratto Ableton: bridge MIDI ora, M4L dopo
+### Percorso audio e bridge di test
 
-**Destinazione finale = patch Max for Live nativo** che riceve OSC
-direttamente e modula parametri Live con risoluzione piena.
+**Percorso audio scelto = Python -> OSC -> Max for Live / Ableton.**
+M4L riceve il contratto OSC e ospita i sequencer autonomi. TouchDesigner
+non e' nel percorso audio; puo' ricevere telemetria musicale per la visualizzazione.
 
-**Step provvisorio = bridge OSC→MIDI in Python** per arrivare
-all'ascolto in mezz'ora senza scrivere Max. Decisione presa
-consapevolmente: serve a iterare e capire quali canali sono
-musicalmente sensati. Quando lo sappiamo, il bridge si butta.
+**Bridge OSC→MIDI = strumento provvisorio di test.** Non e' il consumer
+audio definitivo e non sostituisce i sequencer M4L.
+
+Il percorso storico TouchDesigner -> `/desnivel/*` -> M4L e' legacy.
+Resta disponibile durante la transizione, ma non va esteso come percorso
+principale. Non rimuoverlo prima della prova verticale Python -> OSC ->
+M4L -> audio. Vedi `doc/DECISIONE-ARCHITETTURA-AUDIO.md`.
 
 Vincoli sul bridge perche' sia "buttabile senza rimpianti":
 
-1. **Stesso contratto OSC** del futuro M4L. Il bridge legge gli stessi
-   `/mod/<group>/<name>` e `/event/...` definiti in
-   `CONTRATTO-MODULAZIONI.md`. Niente address custom solo-per-MIDI.
-2. **Mapping canale -> CC# dichiarativo**, in un dict piccolo nel
-   bridge. E' una tabella di traduzione, non logica musicale: nessun
-   smoothing, nessun re-scaling oltre il cast a 7-bit. La logica
-   musicale resta in Python.
-3. **Nessun nuovo canale** introdotto per far stare le cose nel
-   bridge. Se un canale non si mappa bene a un CC (es. payload
-   evento con testo), il bridge lo lascia perdere e lo recupereremo
-   in M4L. Documentare cosa si perde.
-4. **Zero stato in Ableton "implicito"**: i mapping MIDI Map sono
-   manuali e per loro natura non versionati. Tutto cio' che e'
-   significativo resta su file Python. Ableton fa solo
-   sound-design, non logica.
+1. **Adattatore del prototipo corrente**: il bridge traduce solo i
+  messaggi che il prototipo `/mod/*` sa rappresentare in MIDI. Non
+  definisce ne' vincola il namespace OSC neutrale futuro.
+2. **Mapping canale -> CC# dichiarativo** nel bridge di test. La
+  conversione necessaria al trasporto MIDI (inclusa la codifica di
+  range signed) va dichiarata e testata; il bridge non applica
+  smoothing ne' decide comportamenti musicali.
+3. **Nessun nuovo canale** introdotto solo per far stare i dati nel
+  bridge. Se una metrica o un payload descrittivo non si mappa bene a
+  un CC, il bridge lo omette; il consumer M4L target dovra' leggere il
+  contratto neutrale completo.
+4. **Responsabilita' separate**: Python produce metriche e fatti del
+  viaggio; M4L interpreta quei segnali, contiene i sequencer e decide
+  come generare note. I parametri del sequencer devono essere espliciti
+  e documentati; M4L non duplica parsing e derivazione GPX.
 5. **Codice in `src/desnivel/bridges/osc_to_midi.py` isolato**: non
-   tocca pipeline ne' sink. Quando M4L sara' pronto, si cancella il
-   file e basta.
+  tocca pipeline ne' sink. Il bridge resta solo un tool di test;
+  rimuoverlo in futuro e' una decisione separata, non un requisito
+  per attivare M4L.
 
 ### Passi concreti
 
 - [x] **`OscToMidiBridge` + CLI `desnivel-bridge-midi`** — server
   `python-osc` + `mido`, mapping canali->CC dichiarativo, eventi
   `/event/major/*` -> Note On su canale 16. Stampa mappa all'avvio.
-- [ ] **M4L canarino (target finale)**: device Max for Live che
-  riceve OSC direttamente sui canali della pipeline. Sostituisce il
-  bridge. A quel punto si cancella `bridges/osc_to_midi.py` e
-  l'entry point in `pyproject.toml`. Vincolo: deve consumare
-  **esattamente lo stesso contratto OSC** (`/mod/<group>/<name>`,
-  `/event/<bus>/<kind>`) che useranno anche TD e qualsiasi altro
-  client.
-- [ ] **Patch TD canarino** — *rimandato* su richiesta utente.
-  Si fara' dopo che il sound design Ableton sara' stabile. Vincolo
-  fondamentale: **ogni modulator/detector aggiunto al Binario B deve
-  restare compatibile con TD**, cioe' niente address custom solo per
-  Ableton, niente smoothing dentro il bridge, niente logica musicale
-  asimmetrica fra i due client. La pipeline e' unica.
+- [ ] **M4L canarino (percorso audio scelto)**: device Max for Live che
+  riceve direttamente il contratto neutrale di metriche e genera note con
+  sequencer autonomi. Il primo test usa metriche, non fatti/eventi. Procedere
+  in ordine: ricezione OSC osservabile senza audio; un solo layer autonomo;
+  prova end-to-end senza TD. Ogni default M4L deve essere un parametro
+  esplicito; niente numeri nascosti nel patch. Il bridge MIDI resta
+  strumento di test finche' M4L non e' verificato. Le regole musicali
+  (root, scala, palette, pattern) sono interpretazioni del consumer, non
+  canali prodotti da Python.
+- [ ] **Telemetria M4L -> TD** per visualizzare la musica generata.
+  Definire schema e frequenza quando sara' progettato il primo consumer
+  M4L. TD non deve inoltrare i dati GPX al percorso audio.
+- [x] **Implementare publisher del pilot metrico**: `python -m desnivel.cli.stream_metrics`
+  invia il catalogo neutrale a 1 Hz; metriche e serializzazione hanno test.
+- [ ] **Prova con receiver OSC reale**: verificare indirizzi/argomenti nel
+  receiver M4L prima di implementare la generazione delle note.
 
-## Binario B — Dati (in corso)
+## Binario B — Metriche viaggio (producer neutrale)
 
-Regola fondamentale: ogni canale aggiunto qui deve essere **agnostico
-sul client**. La pipeline emette su OSC, Ableton ascolta tramite
-bridge MIDI, TD ascolter? in futuro direttamente. Non si scrive nulla
-"solo per Ableton" o "solo per TD".
+Regola fondamentale: Python pubblica misure e fatti con semantica di
+viaggio, non mappature sonore. M4L, TD e altri consumer possono
+reinterpretare gli stessi segnali secondo il proprio scopo. Lo stato
+dei canali `/mod/*` musicali gia' implementati e la migrazione sono
+registrati in `doc/STATO-CONTRATTO-OSC.md`.
 
-### Priorita' 1: nuovi modulator (sblocca canali silenti)
+### Priorita' 1: definire il contratto neutrale
 
-- [x] **`MacroModulator`** — sblocca `macro_scale`, `macro_palette`,
+- [x] **Catalogo e publisher metriche OSC** — campi da `Track.samples`;
+  namespace `/desnivel/v1/trip/metric/<nome>`, pacchetto `(elapsed_s, value)`
+  a 1 Hz; codice in `trip_metrics.py` e `sinks/trip_metrics_osc.py`.
+- [ ] **Separare producer e interpretazioni** — migrare root/scale/palette/
+  registro/pattern dai modulatori Python ai consumer appropriati, dopo aver
+  definito il primo mapping M4L e aver mantenuto test di regressione.
+- [ ] **Eventi neutrali** — mantenere fatti geografici e payload descrittivi;
+  non codificare nel producer un gesto audio specifico.
+- [x] **Quota assente nel GPX** — il parser conserva il mancante; il loader
+  interpola buchi isolati tra quote note e omette `ele`, `slope`, `effort`
+  quando la traccia non contiene alcuna quota.
+
+### Prototipo musicale esistente — non estendere il confine `/mod/*`
+
+- [x] **`MacroModulator` (prototipo)** — produce `macro_scale`, `macro_palette`,
   `macro_register`, `macro_space`, `macro_brightness`.
   Decide modalita' musicale e timbro ("mondo sonoro") sezione per
   sezione della tappa, con policy swappabili
   (`config.macro.policy_name`) + override POI -> bells. Vedi
   `doc/DESIGN-MACRO.md`.
-- [x] **`HarmonyModulator`** — sblocca `meso_root`. Cambia la
+- [x] **`HarmonyModulator` (prototipo)** — produce `meso_root`. Cambia la
   fondamentale ogni `km_per_change` km lungo una sequenza modale
   configurabile in `HarmonyConfig`. POI override -> ritorno a
   tonica (se `poi_force_tonic`). Anti-flicker via dwell time.
-- [x] **`BodyModulator`** — sblocca `body_euclid_k`, `body_euclid_rot`.
+- [x] **`BodyModulator` (prototipo)** — produce `body_euclid_k`, `body_euclid_rot`.
   Pattern ritmici euclidei: k cresce con `journey_energy`, rot
   ruota con `journey_phase`. `n` (default 16) e' convenzione lato
   Ableton, non un canale OSC.

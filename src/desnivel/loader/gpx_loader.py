@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
+
 from ..config import DEFAULT_CONFIG, Config
 from ..track import Track
 from ._derive import derive_channels
@@ -35,6 +37,10 @@ def load_track(
     gpx_path = Path(gpx_path)
     raw = parse_gpx_points(gpx_path)
     derived = derive_channels(raw, config.gpx)
+    if not np.isfinite(derived["ele"]).any():
+        derived.pop("ele")
+        derived.pop("slope")
+        derived.pop("effort")
 
     elapsed = derived.pop("elapsed_s")
     t, samples = resample_to_uniform_grid(

@@ -1,7 +1,9 @@
-# DESNIVEL — Contratto delle modulazioni e degli eventi
+# DESNIVEL — Contratto musicale storico (v0.4, transitorio)
 
-> Specifica precisa di ciò che esce dalla pipeline Python e di ciò che entra in Ableton attraverso TouchDesigner.
-> Questo documento è il **contratto** tra i tre stadi del sistema. Finché non viene modificato qui, nessuno dei tre stadi cambia ciò che produce o consuma.
+> Questo documento descrive l'interfaccia musicale `/mod/*` del prototipo precedente. Non e' il contratto target per i dati GPX.
+> La decisione corrente e' che Python espone metriche e fatti di viaggio agnostici; M4L, TouchDesigner e altri consumer li interpretano indipendentemente. Vedi [DECISIONE-ARCHITETTURA-AUDIO.md](DECISIONE-ARCHITETTURA-AUDIO.md) e [STATO-CONTRATTO-OSC.md](STATO-CONTRATTO-OSC.md).
+> Il nuovo schema neutrale (namespace, campi, unita', validita' e cadenze) non e' ancora definito. Non costruire nuovi consumer assumendo che i canali `/mod/*` sotto siano l'interfaccia finale.
+> Il contratto e' modificabile: ogni evoluzione va concordata e propagata a producer, consumer, documentazione e test.
 >
 > Riferimento concettuale: [ARCHITETTURA-MUSICALE.md](ARCHITETTURA-MUSICALE.md)
 
@@ -9,10 +11,9 @@
 
 ## 1. Principi del contratto
 
-1. **Due bus separati.** Le modulazioni continue e gli eventi rari viaggiano su due canali OSC distinti. Non si mescolano mai.
-2. **Tutto è già pronto all'uso.** Ogni valore inviato è già filtrato, già nel range musicalmente utile, già nella scala temporale corretta. Il ricevitore non deve fare smoothing.
-3. **Frequenza coerente con il contenuto.** Una modulazione macro non viene inviata a 60 Hz. Ogni canale ha la sua frequenza di aggiornamento.
-4. **Nessuna nota in questo contratto.** Il contratto descrive condizioni, non note. Le note nascono in Ableton.
+1. **Contesto storico:** i principi e le tabelle seguenti descrivono la precedente interfaccia musicale `/mod/*`, non la separazione neutrale ora scelta.
+2. **Migrazione esplicita:** i consumer audio che mappano questi canali musicali sono prototipi; il consumer target dovra' ricevere metriche e fatti del viaggio e interpretarli localmente.
+3. **Niente mapping silenziosi:** un cambiamento di semantica deve aggiornare la specifica target, producer, consumer e test.
 
 ---
 
@@ -199,23 +200,20 @@ Il volume di traffico OSC complessivo resta basso (poche decine di messaggi al s
 
 ## 6. Responsabilità per stadio
 
-### Stadio Python
-- Calcola tutte le metriche derivate dal GPX.
-- Applica **tutti** gli smoothing macro, meso e di tensione.
-- Produce i canali a tutte le frequenze indicate, in tempo reale o pre-renderizzati su un file di curve.
-- Mantiene lo stato per applicare permanenza minima e cooldown degli eventi.
+### Producer Python target
+- Calcola e pubblica metriche/fatti di viaggio con semantica indipendente dal consumer.
+- Applica pulizia, ricampionamento e filtraggio motivati dalla qualita' delle misure; non costruisce controlli audio come scala, root, palette o pattern.
+- La lista e la cadenza dei dati appartengono al nuovo contratto neutrale da definire.
 
-### Stadio TouchDesigner
-- Riceve i canali Python (o li legge da file di curve).
-- Aggiunge le modulazioni di microtempo (LFO, jitter) se non sono pre-calcolate.
-- Si occupa del **tempo di esecuzione**: scrubbing, pausa, riproduzione di una tappa.
-- Inoltra tutto via OSC ad Ableton.
+### TouchDesigner (visualizzazione)
+- Riceve telemetria musicale da M4L/Ableton quando serve a visualizzare l'attivita' sonora effettiva.
+- Non e' nel percorso di controllo audio e non inoltra i dati GPX ad Ableton.
+- Il formato e la frequenza della telemetria sono da definire con il primo consumer M4L.
 
-### Stadio Ableton / Max for Live
-- Riceve `/mod/*` e `/event/*`.
-- Contiene i quattro sequencer (uno per layer).
-- Non applica smoothing aggiuntivo: si fida del contratto.
-- Non genera mai note a partire da un canale `/mod/*` direttamente. Le note nascono dai sequencer, modulati dai canali.
+### Max for Live / Ableton target
+- Riceve direttamente metriche e fatti dal nuovo contratto neutrale.
+- Interpreta localmente i segnali per sound design e sequencer autonomi.
+- Le mappature di input in scelte musicali appartengono a questo consumer, non al producer GPX.
 
 ---
 

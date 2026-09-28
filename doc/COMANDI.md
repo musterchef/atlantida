@@ -31,10 +31,13 @@ desnivel-plot --stage tappa_04
 
 ---
 
-## Live OSC (per TouchDesigner o M4L futuro)
+## Live OSC — prototipo `/mod/*` (non contratto neutrale target)
 
 ### `desnivel-play`
 Esegue la pipeline e **invia OSC in tempo reale** sulla porta 9000.
+
+Questa CLI invia i canali musicali `/mod/*` del prototipo corrente. Non
+implementa ancora `/desnivel/v1/trip/metric/*`.
 
 ```sh
 desnivel-play --stage tappa_04
@@ -48,9 +51,23 @@ Flag utili:
 - `--loop` riavvia all'infinito (Ctrl+C per uscire).
 - `--osc-host` / `--osc-port` (default `127.0.0.1:9000`).
 
+## Metriche viaggio neutrali — pilot
+
+`desnivel-stream-metrics` legge un file GPX e invia le metriche neutrali
+direttamente via OSC, senza eseguire i modulatori musicali o passare da TD:
+
+```sh
+python -m desnivel.cli.stream_metrics --gpx gpx/tappa04_Levanto_La_Spezia.gpx --dry-run
+python -m desnivel.cli.stream_metrics --gpx gpx/tappa04_Levanto_La_Spezia.gpx --speed 30
+```
+
+Invia a 1 Hz su `/desnivel/v1/trip/metric/<nome>` con argomenti
+`elapsed_s, value`. I fatti/eventi non sono inclusi nel pilot. Specifica:
+`doc/CONTRATTO-DATI-VIAGGIO.md`.
+
 ---
 
-## Bridge OSC → MIDI (per Ableton, provvisorio)
+## Bridge OSC → MIDI — adattatore del prototipo `/mod/*`
 
 ### `desnivel-bridge-midi`
 Riceve OSC dal `desnivel-play` e lo traduce in MIDI CC/Note su una porta MIDI virtuale (es. IAC Bus 1).

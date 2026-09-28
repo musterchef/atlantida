@@ -102,9 +102,17 @@ def _make_config(host: str, port: int) -> Config:
         timing=base.timing,
         smoothing=base.smoothing,
         journey=base.journey,
+        macro=base.macro,
+        harmony=base.harmony,
+        body=base.body,
         gpx=base.gpx,
         events=base.events,
-        osc=OscConfig(host=host, port=port, rates_hz=base.osc.rates_hz),
+        osc=OscConfig(
+            host=host,
+            port=port,
+            rates_hz=base.osc.rates_hz,
+            trip_metrics_rate_hz=base.osc.trip_metrics_rate_hz,
+        ),
         geo=base.geo,
     )
 

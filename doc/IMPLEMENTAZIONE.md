@@ -2,6 +2,7 @@
 
 > Decisioni tecniche per i moduli Python del nuovo sistema musicale.
 > Riferimenti: [ARCHITETTURA-MUSICALE.md](ARCHITETTURA-MUSICALE.md), [CONTRATTO-MODULAZIONI.md](CONTRATTO-MODULAZIONI.md).
+> Stato: specifica del prototipo precedente, in migrazione. Il confine target e' producer Python di metriche/fatti del viaggio agnostici; mapping musicale e sequencer appartengono ai consumer. Decisione: [DECISIONE-ARCHITETTURA-AUDIO.md](DECISIONE-ARCHITETTURA-AUDIO.md); inventario: [STATO-CONTRATTO-OSC.md](STATO-CONTRATTO-OSC.md).
 
 ---
 
@@ -30,12 +31,12 @@ I trasformatori si compongono in una pipeline lineare. Ogni trasformatore è pur
 Tutti i numeri (τ smoothing, soglie, cooldown, frequenze OSC, intensità default) vivono in **un unico file di configurazione tipato**, importabile da qualunque modulo. Niente costanti sparse. Niente magic number nei moduli.
 
 ### 1.4 Output doppio: file e OSC
-Ogni modulo può funzionare in due modalità senza modifiche al proprio codice:
+Il producer di metriche può funzionare in due modalità senza modifiche al proprio codice:
 
-- **offline**: produce un CSV/JSON delle modulazioni e una lista JSON di eventi per l'intera tappa. Permette di ascoltare e analizzare il risultato prima di toccare TouchDesigner.
-- **online**: spinge gli stessi valori via OSC in tempo reale (o in simulazione di tempo reale).
+- **offline**: produce un CSV delle metriche/fatti campionati e un JSON degli eventi di viaggio per l'intera tappa.
+- **online**: pubblica gli stessi segnali via OSC in tempo reale o in replay.
 
-I due output vivono fuori dai trasformatori, come **sink** intercambiabili.
+I due output vivono fuori dai trasformatori, come **sink** intercambiabili. Le interpretazioni audio e visuali sono responsabilita' dei consumer.
 
 ### 1.5 Disaccoppiamento dei clock
 La pipeline lavora sempre su una **griglia temporale uniforme** ricampionata (es. 10 Hz interno), non sui timestamp irregolari del GPX. Questo elimina alla radice tutti i problemi di sample rate variabile e rende deterministici gli smoothing.

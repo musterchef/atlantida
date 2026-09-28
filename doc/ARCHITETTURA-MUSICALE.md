@@ -147,17 +147,16 @@ Queste regole negative sono importanti quanto quelle positive. Il sistema le ris
 Il sistema è organizzato in tre stadi, con responsabilità chiare.
 
 ### Stadio 1 — Python (preparazione)
-Legge il GPX, calcola le metriche del viaggio (velocità, pendenza, terreno, luce, ecc.), applica gli smoothing di lungo periodo e produce tre flussi distinti:
+Legge il GPX, pulisce e ricampiona i dati, deriva metriche con semantica di viaggio (velocità, pendenza, quota, sforzo, distanza e tempo) e produce fatti/eventi geografici. Non sceglie tonalità, scale, palette, registro o pattern. Filtri e aggregazioni restano nel producer solo quando descrivono qualita' o contesto della misura e sono documentati nel contratto neutrale.
 
-- un **flusso continuo di modulazioni** (arco di tappa, macro, meso), già completamente filtrato;
-- un **flusso di eventi maggiori**, al massimo 3–5 per tappa, con payload significativo;
-- un **flusso di eventi minori**, sporadici, con tempo di attesa minimo tra l'uno e l'altro.
+- un **flusso di metriche** con unita', range/validita' e cadenza dichiarati;
+- un **flusso di fatti/eventi del viaggio** con payload descrittivo, senza istruzioni di gesto sonoro.
 
-### Stadio 2 — TouchDesigner (distribuzione)
-Riceve i due flussi, gestisce il tempo di esecuzione e li distribuisce via OSC ad Ableton/Max for Live, eventualmente aggiungendo modulazioni di microtempo (LFO, jitter) che non hanno bisogno di essere calcolate a monte.
+### Stadio 2 — Max for Live / Ableton (suono)
+Riceve direttamente da Python il nuovo contratto di metriche e fatti agnostici. Decide in modo indipendente come reinterpretare i segnali, contiene i sequencer autonomi e genera le note. L'attuale `/mod/*` e' un'interfaccia musicale del prototipo, non il target neutrale. Il protocollo puo' evolvere quando l'implementazione mostra una necessita', aggiornando insieme producer, consumer e test.
 
-### Stadio 3 — Ableton / Max for Live (suono)
-Contiene **tutti i sequencer**. È qui che le note nascono. Riceve solo modulazioni e eventi, mai note pronte. Ogni layer è un dispositivo indipendente con il proprio sequencer interno.
+### Stadio 3 — TouchDesigner (visualizzazione)
+Visualizza la musica. Non inoltra il flusso GPX al motore audio e non e' necessario per generare o ascoltare la tappa. Quando serve visualizzare le note o i layer effettivamente attivi, riceve telemetria separata da M4L/Ableton; il suo formato verra' definito nel lavoro sul consumer audio.
 
 ---
 
@@ -207,7 +206,7 @@ Questo documento è la base. Da qui si costruisce tutto il resto, in questo ordi
    Curve di arco di tappa (`phase`, `energy`, `openness`). Il più semplice e indipendente: valida l'intera pipeline con un canale visibile.
 
 5. **Sink OSC.**
-   `OscSink` e `ReplaySink`. A questo punto i canali `journey` arrivano in TouchDesigner/Ableton.
+   `OscSink` e `ReplaySink`. A questo punto i canali `journey` arrivano direttamente via OSC al consumer M4L/Ableton; TouchDesigner non e' nel percorso audio.
 
 6. **Modulo `tension`.**
    Integratore con carica/decadimento, produce `/mod/meso/tension`.

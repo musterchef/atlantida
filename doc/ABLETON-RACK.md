@@ -1,9 +1,10 @@
-# Rack DESNIVEL — costruzione e mappatura
+# Rack DESNIVEL — prototipo MIDI CC (legacy)
 
-Questa è la **guida ufficiale** per preparare Ableton a ricevere il
-flusso musicale di DESNIVEL. Si costruisce **una volta sola**: dopo,
-qualsiasi preset si lascia cadere dentro la *instrument chain* del
-rack e funziona.
+Questa guida descrive il prototipo che riceve CC MIDI dal bridge OSC→MIDI.
+Non e' il consumer del contratto neutrale `/desnivel/v1/trip/metric/*`.
+Il percorso target e' Python -> OSC con metriche di viaggio -> M4L/Ableton;
+il Rack qui sotto resta un riferimento per le prove del prototipo, non la
+configurazione target.
 
 Fonte di verità del mapping: [src/desnivel/bridges/rack_spec.py](../src/desnivel/bridges/rack_spec.py).
 Tabella tecnica OSC→CC: [src/desnivel/bridges/osc_to_midi.py](../src/desnivel/bridges/osc_to_midi.py).

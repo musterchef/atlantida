@@ -9,6 +9,7 @@ from .osc import (
     UdpOscClient,
     build_schedule,
 )
+from .trip_metrics_osc import TripMetricsOscSink, build_trip_metric_schedule
 
 __all__ = [
     "Sink",
@@ -19,4 +20,6 @@ __all__ = [
     "OscSink",
     "ScheduledMessage",
     "build_schedule",
+    "TripMetricsOscSink",
+    "build_trip_metric_schedule",
 ]
