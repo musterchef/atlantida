@@ -15,14 +15,16 @@
  *   0 — int   : pitch     → makenote inlet 0 (hot, triggers)
  *   1 — int   : velocity  → makenote inlet 1
  *   2 — int   : duration  → makenote inlet 2
- *   3 — int   : channel   → noteout  inlet 2OK
+ *   3 — int   : channel   → noteout  inlet 2
+ *   4 — int   : chord pitch   → second makenote inlet 0
+ *   5 — int   : chord velocity → second makenote inlet 1
  */
 
 var VERSION = "2026-05-10 v7";
 post("[desnivel_notes] loaded — " + VERSION + "\n");
 
 inlets  = 5;
-outlets = 6;   // 0=pitch1 1=vel1 2=dur 3=ch  4=pitch2 5=vel2
+outlets = 6;   // pitch1, velocity1, duration, channel, pitch2, velocity2
 
 // ══════════════════════════════════════════════════════════════════════════
 // CONFIG — tutti i parametri editabili in un posto solo

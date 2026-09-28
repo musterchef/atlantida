@@ -100,8 +100,8 @@
 					"id" : "obj-6",
 					"maxclass" : "newobj",
 					"numinlets" : 5,
-					"numoutlets" : 4,
-					"outlettype" : [ "", "", "", "" ],
+					"numoutlets" : 6,
+					"outlettype" : [ "int", "int", "int", "int", "int", "int" ],
 					"patching_rect" : [ 30.0, 230.0, 165.0, 22.0 ],
 					"saved_object_attributes" : 					{
 						"filename" : "desnivel_notes.js",
@@ -164,6 +164,27 @@
 					"patching_rect" : [ 30.0, 20.0, 320.0, 22.0 ],
 					"text" : "DESNIVEL — GPS to MIDI (TD port 9001)"
 				}
+			},
+			{
+				"box" : {
+					"id" : "obj-12",
+					"maxclass" : "newobj",
+					"numinlets" : 3,
+					"numoutlets" : 2,
+					"outlettype" : [ "float", "float" ],
+					"patching_rect" : [ 220.0, 285.0, 80.0, 22.0 ],
+					"text" : "makenote 100 250"
+				}
+			},
+			{
+				"box" : {
+					"id" : "obj-13",
+					"maxclass" : "newobj",
+					"numinlets" : 3,
+					"numoutlets" : 0,
+					"patching_rect" : [ 220.0, 340.0, 60.0, 22.0 ],
+					"text" : "noteout"
+				}
 			}
 		],
 		"lines" : [
@@ -182,7 +203,13 @@
 			{ "patchline" : { "source" : [ "obj-6", 2 ], "destination" : [ "obj-7", 2 ] } },
 			{ "patchline" : { "source" : [ "obj-6", 3 ], "destination" : [ "obj-8", 2 ] } },
 			{ "patchline" : { "source" : [ "obj-7", 0 ], "destination" : [ "obj-8", 0 ] } },
-			{ "patchline" : { "source" : [ "obj-7", 1 ], "destination" : [ "obj-8", 1 ] } }
+			{ "patchline" : { "source" : [ "obj-7", 1 ], "destination" : [ "obj-8", 1 ] } },
+			{ "patchline" : { "source" : [ "obj-6", 2 ], "destination" : [ "obj-12", 2 ] } },
+			{ "patchline" : { "source" : [ "obj-6", 3 ], "destination" : [ "obj-13", 2 ] } },
+			{ "patchline" : { "source" : [ "obj-6", 4 ], "destination" : [ "obj-12", 0 ] } },
+			{ "patchline" : { "source" : [ "obj-6", 5 ], "destination" : [ "obj-12", 1 ] } },
+			{ "patchline" : { "source" : [ "obj-12", 0 ], "destination" : [ "obj-13", 0 ] } },
+			{ "patchline" : { "source" : [ "obj-12", 1 ], "destination" : [ "obj-13", 1 ] } }
 		]
 	}
 }
