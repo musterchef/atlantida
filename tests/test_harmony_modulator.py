@@ -65,16 +65,15 @@ def test_starts_on_tonic() -> None:
 
 
 def test_changes_after_km_per_change() -> None:
-    """Dopo km_per_change km dovremmo essere su un'altra nota della seq."""
+    """Dopo una soglia di distanza, root assume l'offset della nuova sezione."""
     cfg = DEFAULT_CONFIG
-    # Tappa lunga abbastanza da coprire 3 sezioni: 3 * km_per_change km.
-    total_km = cfg.harmony.km_per_change * 3
+    # Termina a metà della seconda sezione, lontano dal confine successivo.
+    total_km = cfg.harmony.km_per_change * 1.5
     frame = _run(_track_with_dist(total_km, 1800.0), cfg)
     root = frame.channels["meso_root"]
-    # Inizio sezione 0 (tonica). Fine sezione 2 -> seq[2].
-    assert int(root[0]) == cfg.harmony.base_midi
-    expected_last = cfg.harmony.interval_sequence[2]
+    # Inizio sulla tonica; fine nella sezione successiva.
     assert int(root[0]) == 0
+    expected_last = cfg.harmony.interval_sequence[1]
     assert int(root[-1]) == expected_last
 
 
