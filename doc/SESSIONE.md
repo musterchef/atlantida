@@ -1,6 +1,6 @@
 # Passaggio di sessione
 
-Aggiornato: 2026-10-02. Per Codex, Copilot e chi riprende il lavoro.
+Aggiornato: 2026-10-02 (fine sessione). Per Codex, Copilot e chi riprende il lavoro.
 
 ## Obiettivo
 
@@ -35,7 +35,8 @@ L'assegnazione dell'ID a `live.remote~` ha causato crash di Live 12.3.5. Usare i
 - [Guida Snake](INTEGRAZIONE-SNAKE.md)
 - `src/desnivel/trip_metrics.py`: dati neutri.
 - `src/desnivel/cli/stream_metrics.py`: avvio del publisher.
-- `m4l/desnivel_snake_bridge.maxpat`: receiver iniziale, senza le modifiche manuali fatte in Live.
+- `src/desnivel/adapters/snake.py`, `src/desnivel/cli/snake_pattern.py`: adattatore Snake e comando.
+- `m4l/desnivel-bridge.amxd` (device funzionante) e `m4l/desnivel_snake_params.js` (da tenere nella stessa cartella del device). `m4l/desnivel_snake_bridge.maxpat` è il receiver iniziale, solo riferimento.
 
 Il device funzionante è `m4l/desnivel-bridge.amxd`; il `.maxpat` iniziale resta come riferimento.
 
@@ -48,6 +49,17 @@ Controllo di Snake per nome: Python → OSC → M4L → parametro.
 - Gate: `Gate_01..16`, 0/1, griglia 4x4 per righe con `Gate_01` in alto a sinistra (verificato con una diagonale).
 - Note: Snake quantizza `Note_xx` sulla sua scala; con `Scales = 0` (Chromatic) i valori restano quelli inviati (verificato ascoltando). L'adattatore invia `Scales = 0` prima delle note e calcola le scale in Python.
 - File: `src/desnivel/adapters/snake.py` (nomi, gate, scale, funzioni pure), `src/desnivel/cli/snake_pattern.py` (`--gates`, `--gates-random`, `--scale`, `--root`, `--dry-run`), `src/desnivel/cli/snake_test.py` (un parametro), `tests/test_snake_adapter.py`.
+
+Comandi per ripartire:
+
+```sh
+source .venv/bin/activate
+python -m desnivel.cli.snake_pattern --gates "1000 0100 0010 0001"
+python -m desnivel.cli.snake_pattern --scale minor --root 36
+python -m desnivel.cli.snake_test --param Velocity_01 --value 100
+```
+
+Il device `.amxd` va copiato da `~/Music/Ableton/User Library/Presets/Audio Effects/Max Audio Effect/` insieme al `.js`; sulla traccia selezionare Snake non serve, il JS lo trova da solo (cerca "snake" nel nome del device). Errore visto: se la console Max mostra `live.object ... has no attribute 'Note_03'`, `prepend set` è ancora collegato al vecchio `live.object`.
 
 Non verificato: velocity, valori fuori range, corrispondenza esatta note MIDI emesse, associazione dopo riapertura del set.
 
