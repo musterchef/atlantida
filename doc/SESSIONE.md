@@ -37,21 +37,21 @@ L'assegnazione dell'ID a `live.remote~` ha causato crash di Live 12.3.5. Usare i
 - `src/desnivel/cli/stream_metrics.py`: avvio del publisher.
 - `m4l/desnivel_snake_bridge.maxpat`: receiver iniziale, senza le modifiche manuali fatte in Live.
 
-Il device funzionante con `live.object` va ancora salvato nel repository dall'utente. Non sovrascriverlo con il `.maxpat` iniziale.
+Il device funzionante è `m4l/desnivel-bridge.amxd`; il `.maxpat` iniziale resta come riferimento.
 
-## Prossima prova consigliata
+## Ultimo risultato verificato
 
-Prima verificare il tratto Python → OSC → M4L → Snake con un solo valore di controllo, senza aggiungere subito soglie geografiche.
+Python → OSC → M4L → `Note_01` funziona: `python -m desnivel.cli.snake_test --value 12` cambia la manopola.
 
-1. Salvare nel progetto il device M4L funzionante.
-2. Definire un comando OSC minimo per un controllo associato, su una porta distinta dal receiver delle metriche. Documentare indirizzo, argomenti e range; non sono ancora definiti.
-3. Implementare nell'adattatore Python l'invio di un valore di prova configurabile.
-4. Ricevere il comando in M4L e applicarlo tramite `live.object`.
-5. Verificare che il parametro cambi e che la lettura restituisca il valore richiesto.
+- Comando: `/desnivel/v1/control/snake/note_01 <float>`, porta `9001` (le metriche usano `9000`).
+- Device: `m4l/desnivel-bridge.amxd`: `udpreceive 9001` → `route` → `prepend set value` → `live.object`. Prima va selezionata `Note_01` con il messaggio `path live_set view selected_parameter`.
+- Script: `src/desnivel/cli/snake_test.py`, invio di un valore di prova.
 
-Questo prova il trasporto dell'adattatore. Poi aggiungere una sola regola musicale Python alimentata dalle metriche, con output indipendente da Snake. Non assumere che 0–83 corrisponda direttamente alle note MIDI emesse: questa conversione va verificata nell'adattatore.
+Non ancora verificato: lettura del valore dopo `set`, valori fuori 0–83, corrispondenza con le note MIDI emesse, associazione dopo riapertura del set.
 
-Nessun motore musicale separato, protocollo di controllo o nuovo adattatore è già implementato. La richiesta attuale è preparare il passaggio di sessione e scegliere il primo test.
+## Prossimo passo
+
+Una sola regola musicale Python alimentata dalle metriche, con output indipendente da Snake, e un adattatore che la traduca nel comando `note_01`. Compilare prima la scheda in [INTEGRAZIONE-SNAKE.md](INTEGRAZIONE-SNAKE.md).
 
 ## Ambiente e cautele
 
@@ -62,7 +62,7 @@ desnivel-stream-metrics --gpx gpx/tappa04_Levanto_La_Spezia.gpx --speed 30
 
 Destinazione iniziale: `127.0.0.1:9000`. Tenere un solo receiver su quella porta.
 
-Il working tree contiene molte modifiche non committate: documenti riordinati, file archiviati e patch iniziale. Leggere `git status` prima di intervenire; non ripristinare o cancellare modifiche altrui. Vecchia documentazione in `doc/archivio/`, vecchio generatore TD/audio in `old/td_audio/`.
+Leggere `git status` prima di intervenire; non ripristinare o cancellare modifiche altrui. Vecchia documentazione in `doc/archivio/`, vecchio generatore TD/audio in `old/td_audio/`.
 
 ## Metodo di lavoro
 
