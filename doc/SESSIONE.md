@@ -41,17 +41,19 @@ Il device funzionante è `m4l/desnivel-bridge.amxd`; il `.maxpat` iniziale resta
 
 ## Ultimo risultato verificato
 
-Python → OSC → M4L → `Note_01` funziona: `python -m desnivel.cli.snake_test --value 12` cambia la manopola.
+Controllo di Snake per nome: Python → OSC → M4L → parametro.
 
-- Comando: `/desnivel/v1/control/snake/note_01 <float>`, porta `9001` (le metriche usano `9000`).
-- Device: `m4l/desnivel-bridge.amxd`: `udpreceive 9001` → `route` → `prepend set value` → `live.object`. Prima va selezionata `Note_01` con il messaggio `path live_set view selected_parameter`.
-- Script: `src/desnivel/cli/snake_test.py`, invio di un valore di prova.
+- Comando: `/desnivel/v1/control/snake/set <nome> <valore>`, porta `9001` (le metriche usano `9000`).
+- Device `m4l/desnivel-bridge.amxd`: `udpreceive 9001` → `route` → `prepend set` → `js desnivel_snake_params.js`. Il JS trova Snake, indicizza i parametri a nome univoco (`Note_xx`, `Gate_xx`, `Velocity_xx`, `Scales`) e limita i valori al range. Messaggi JS: `dump`, `refresh`, `set`, `get`. Il `.js` va copiato accanto al device.
+- Gate: `Gate_01..16`, 0/1, griglia 4x4 per righe con `Gate_01` in alto a sinistra (verificato con una diagonale).
+- Note: Snake quantizza `Note_xx` sulla sua scala; con `Scales = 0` (Chromatic) i valori restano quelli inviati (verificato ascoltando). L'adattatore invia `Scales = 0` prima delle note e calcola le scale in Python.
+- File: `src/desnivel/adapters/snake.py` (nomi, gate, scale, funzioni pure), `src/desnivel/cli/snake_pattern.py` (`--gates`, `--gates-random`, `--scale`, `--root`, `--dry-run`), `src/desnivel/cli/snake_test.py` (un parametro), `tests/test_snake_adapter.py`.
 
-Non ancora verificato: lettura del valore dopo `set`, valori fuori 0–83, corrispondenza con le note MIDI emesse, associazione dopo riapertura del set.
+Non verificato: velocity, valori fuori range, corrispondenza esatta note MIDI emesse, associazione dopo riapertura del set.
 
 ## Prossimo passo
 
-Una sola regola musicale Python alimentata dalle metriche, con output indipendente da Snake, e un adattatore che la traduca nel comando `note_01`. Compilare prima la scheda in [INTEGRAZIONE-SNAKE.md](INTEGRAZIONE-SNAKE.md).
+Provare le velocity con lo stesso adattatore, poi una regola musicale Python alimentata dalle metriche (scheda in [INTEGRAZIONE-SNAKE.md](INTEGRAZIONE-SNAKE.md)).
 
 ## Ambiente e cautele
 
