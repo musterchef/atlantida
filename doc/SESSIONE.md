@@ -19,53 +19,81 @@ Trasformare un viaggio GPX in musica. Primo esperimento con MDD Snake 3.2.3 in A
 
 ## Cosa funziona
 
-- `desnivel-stream-metrics`: sei metriche neutre, OSC `/desnivel/v1/trip/metric/<nome> elapsed_s value`, 1 Hz nel tempo del viaggio.
-- Ricezione di quota e tempo in Max e nella patch inserita in Ableton, verificata dall'utente.
-- Selezione parametro: messaggio `path live_set view selected_parameter` → `live.path` → ingresso destro di `live.object`.
-- Letture `get name`, `get min`, `get max`, `get value` all'ingresso sinistro di `live.object`.
-- `Note_01`: range osservato 0–83. `set value 12` cambia la manopola.
-- Mappabilità degli altri controlli confermata dall'utente; gate, velocity e pattern completi non ancora provati via API.
+Verificato dall'utente in Live 12.3.5 con MDD Snake 3.2.3, traccia 2.
 
-L'assegnazione dell'ID a `live.remote~` ha causato crash di Live 12.3.5. Usare il percorso verificato con `live.object`; causa del crash non identificata.
+- **Metriche:** `desnivel-stream-metrics`, sei metriche neutre, OSC `/desnivel/v1/trip/metric/<nome> elapsed_s value`, 1 Hz nel tempo del viaggio, porta `9000`. Il device mostra tempo e quota.
+- **Controllo per nome:** `/desnivel/v1/control/snake/set <nome> <valore>`, porta `9001`. Python non conosce ID Live: li risolve M4L.
+- **Gate:** `Gate_01..16`, valori 0/1, griglia 4x4 per righe, `Gate_01` in alto a sinistra (provato con una diagonale).
+- **Note:** `Note_01..16`, range 0–83. Snake quantizza i valori sulla propria scala; con `Scales = 0` (Chromatic) restano quelli inviati, verificato ascoltando. Le scale sono calcolate in Python; l'adattatore invia `Scales = 0` prima delle note.
+- Il valore è limitato al range letto da Live.
+
+Parametri di Snake (152 in totale, letti con `dump`):
+
+| Gruppo | Nomi | Range | Stato |
+|---|---|---|---|
+| Note | `Note_01..16` | 0–83 | provato |
+| Gate | `Gate_01..16` | 0–1, a scalini | provato |
+| Velocity | `Velocity_01..16` | 0–127 | non provato |
+| Scala | `Scales` | 0–36 (0 Chromatic, 1 Major, 36 User) | provato con 0 |
+| Altri unici | `Fondamental` 0–11, `MidiInMode`, `Random All`, `Reset All`, `Swing` 0–100 | | non provati |
+| Ambigui | `Custom_xx`, `Steps`, `Shapes`, `Shift`, `Random`, `Reset`, `Speed`, `Direction` | | compaiono più volte: il JS li ignora |
+
+Per usare i parametri ambigui serve un'altra strategia (per indice o per posizione); non decisa.
+
+## Struttura del codice
+
+```text
+Python: decisione musicale
+  → src/desnivel/adapters/snake.py   nomi, gate, scale; funzioni pure, nessuna rete
+  → src/desnivel/cli/snake_pattern.py  invio OSC (--gates, --gates-random, --scale, --root, --dry-run)
+  → OSC 9001 → m4l/desnivel-bridge.amxd → m4l/desnivel_snake_params.js → parametro Live
+```
+
+- Device: `udpreceive 9001` → `route /desnivel/v1/control/snake/set` → `prepend set` → `js desnivel_snake_params.js`. Ha anche ricezione metriche su 9000 e una catena `live.path`/`live.object` di diagnostica sul parametro selezionato.
+- JS: messaggi `dump` (elenca parametri), `refresh` (rilegge l'indice), `set <nome> <valore>`, `get <nome>`. Cerca il device con "snake" nel nome.
+- `src/desnivel/cli/snake_test.py`: invia un solo parametro. `tests/test_snake_adapter.py`: 5 test sull'adattatore.
+- Il `.amxd` e il `.js` vanno tenuti insieme nella cartella `~/Music/Ableton/User Library/Presets/Audio Effects/Max Audio Effect/`. Dopo aver modificato il `.js`, ricopiarlo lì e ricaricare il device.
+
+## Comandi per ripartire
+
+```sh
+source .venv/bin/activate
+python -m desnivel.cli.snake_pattern --gates "1000 0100 0010 0001"
+python -m desnivel.cli.snake_pattern --gates-random 0.5 --seed 7
+python -m desnivel.cli.snake_pattern --scale minor --root 36
+python -m desnivel.cli.snake_test --param Velocity_01 --value 100
+```
+
+Scale in Python: chromatic, major, minor, dorian, phrygian, lydian, mixolydian, pentatonic_major, pentatonic_minor, blues. Snake ne ha 37 e può aggiungerne: sono due elenchi separati.
+
+## Problemi noti
+
+- `live.remote~` con ID assegnato ha mandato in crash Live 12.3.5: non usarlo.
+- Console Max `live.object ... has no attribute 'Note_03'`: `prepend set` è ancora collegato al vecchio `live.object`; deve andare solo al `js`.
+- `js: findSnake is not a function`: il `.js` copiato è incompleto o vecchio.
+- Un solo receiver per porta (9000 metriche, 9001 controllo).
 
 ## File da leggere
 
 - [Regole di scrittura](AGENTS.md)
 - [Architettura](DECISIONE-ARCHITETTURA-AUDIO.md)
 - [Guida Snake](INTEGRAZIONE-SNAKE.md)
-- `src/desnivel/trip_metrics.py`: dati neutri.
-- `src/desnivel/cli/stream_metrics.py`: avvio del publisher.
-- `src/desnivel/adapters/snake.py`, `src/desnivel/cli/snake_pattern.py`: adattatore Snake e comando.
-- `m4l/desnivel-bridge.amxd` (device funzionante) e `m4l/desnivel_snake_params.js` (da tenere nella stessa cartella del device).
+- `src/desnivel/trip_metrics.py`, `src/desnivel/cli/stream_metrics.py`: metriche neutre e publisher.
+- File della sezione "Struttura del codice".
 
-Il device funzionante è `m4l/desnivel-bridge.amxd`; il `.maxpat` iniziale resta come riferimento.
+## Non verificato
 
-## Ultimo risultato verificato
+- Velocity, valori fuori range, `Fondamental` e altri parametri unici.
+- Corrispondenza esatta tra `Note_xx` e nota MIDI emessa (assunto: semitoni con Chromatic).
+- Associazione dei parametri dopo riapertura del set o spostamento di Snake (il JS indicizza al primo uso; `refresh` rilegge).
+- Comportamento con più istanze di Snake (usa la prima trovata).
 
-Controllo di Snake per nome: Python → OSC → M4L → parametro.
+## Prossimi passi
 
-- Comando: `/desnivel/v1/control/snake/set <nome> <valore>`, porta `9001` (le metriche usano `9000`).
-- Device `m4l/desnivel-bridge.amxd`: `udpreceive 9001` → `route` → `prepend set` → `js desnivel_snake_params.js`. Il JS trova Snake, indicizza i parametri a nome univoco (`Note_xx`, `Gate_xx`, `Velocity_xx`, `Scales`) e limita i valori al range. Messaggi JS: `dump`, `refresh`, `set`, `get`. Il `.js` va copiato accanto al device.
-- Gate: `Gate_01..16`, 0/1, griglia 4x4 per righe con `Gate_01` in alto a sinistra (verificato con una diagonale).
-- Note: Snake quantizza `Note_xx` sulla sua scala; con `Scales = 0` (Chromatic) i valori restano quelli inviati (verificato ascoltando). L'adattatore invia `Scales = 0` prima delle note e calcola le scale in Python.
-- File: `src/desnivel/adapters/snake.py` (nomi, gate, scale, funzioni pure), `src/desnivel/cli/snake_pattern.py` (`--gates`, `--gates-random`, `--scale`, `--root`, `--dry-run`), `src/desnivel/cli/snake_test.py` (un parametro), `tests/test_snake_adapter.py`.
-
-Comandi per ripartire:
-
-```sh
-source .venv/bin/activate
-python -m desnivel.cli.snake_pattern --gates "1000 0100 0010 0001"
-python -m desnivel.cli.snake_pattern --scale minor --root 36
-python -m desnivel.cli.snake_test --param Velocity_01 --value 100
-```
-
-Il device `.amxd` va copiato da `~/Music/Ableton/User Library/Presets/Audio Effects/Max Audio Effect/` insieme al `.js`; sulla traccia selezionare Snake non serve, il JS lo trova da solo (cerca "snake" nel nome del device). Errore visto: se la console Max mostra `live.object ... has no attribute 'Note_03'`, `prepend set` è ancora collegato al vecchio `live.object`.
-
-Non verificato: velocity, valori fuori range, corrispondenza esatta note MIDI emesse, associazione dopo riapertura del set.
-
-## Prossimo passo
-
-Provare le velocity con lo stesso adattatore, poi una regola musicale Python alimentata dalle metriche (scheda in [INTEGRAZIONE-SNAKE.md](INTEGRAZIONE-SNAKE.md)).
+1. **Velocity:** `snake_test --param Velocity_01 --value 100`, poi estendere l'adattatore come per le note.
+2. **Prima regola musicale** alimentata dalle metriche, con output indipendente da Snake: compilare la scheda in [INTEGRAZIONE-SNAKE.md](INTEGRAZIONE-SNAKE.md). Per esempio quota → scala/densità dei gate. Il riarmo di soglie va deciso (attraversamento contro permanenza).
+3. **Motore musicale** separato dall'adattatore, con configurazione dei parametri.
+4. Poi: timing a battuta/step, altri parametri, secondo adattatore.
 
 ## Ambiente e cautele
 
