@@ -1,17 +1,17 @@
-# Contratto OSC dei dati di viaggio — bozza per il primo test
+# Contratto OSC dei dati di viaggio — pilot metrico implementato
 
 - Stato: metriche approvate e producer OSC implementato; fatti puntuali fuori dalla prima prova
-- Data: 2026-09-28
+- Aggiornato: 2026-10-02
 - Decisione di architettura collegata: [DECISIONE-ARCHITETTURA-AUDIO.md](DECISIONE-ARCHITETTURA-AUDIO.md)
 - Inventario dei dati sorgente: [STATO-CONTRATTO-OSC.md](STATO-CONTRATTO-OSC.md)
 
 ## Scopo
 
-Python pubblica misure e fatti relativi alla tappa. Non decide come questi segnali diventino musica o immagini. Max for Live, TouchDesigner e altri consumer possono leggere gli stessi messaggi e applicare interpretazioni indipendenti.
+Il producer Python pubblica misure relative alla tappa; la pubblicazione dei fatti neutrali è ancora da definire. Non decide come questi segnali diventino musica o immagini. Il motore musicale Python, Max for Live, TouchDesigner e altri consumer possono leggere gli stessi messaggi e applicare interpretazioni indipendenti.
 
 Questo sostituisce come interfaccia target il contratto musicale `/mod/*` e `/event/major|minor/*`, che resta documentazione del prototipo corrente finche' la migrazione non e' completata.
 
-## Nomi OSC proposti
+## Namespace metrico approvato e namespace fattuale proposto
 
 ```text
 /desnivel/v1/trip/metric/<nome>
@@ -41,7 +41,7 @@ La frequenza OSC iniziale e' **1 Hz** per tutte le metriche qui elencate. La gri
 - `slope_ratio`: variazione della quota filtrata nell'intervallo divisa per `distance_delta_m`; se la distanza e' zero, la metrica non e' disponibile per quell'intervallo.
 - `effort_estimate`: stima calcolata da velocita' e pendenza dell'intervallo con riferimenti e pesi `GpxConfig`; non e' una misura fisiologica.
 
-Formula proposta per `effort_estimate`, usando i parametri centralizzati in `GpxConfig`:
+Formula implementata per `effort_estimate`, usando i parametri centralizzati in `GpxConfig`:
 
 ```text
 speed_norm = clip(speed_kmh / speed_reference_kmh, 0, 1)
@@ -67,7 +67,7 @@ Al tempo `elapsed_s=0` possono essere inviati solo campi definibili senza interv
 
 - Non inviare `NaN` o infinito come valore di una metrica.
 - Un campione non disponibile viene omesso; la mancanza di un messaggio non equivale a zero.
-- Se il GPX non contiene quota, `elevation_m`, `slope_ratio` ed `effort_estimate` sono assenti; buchi isolati tra quote presenti vengono interpolati dal loader.
+- Se il GPX non contiene quota, `elevation_m`, `slope_ratio` ed `effort_estimate` sono assenti; quando esistono quote valide il loader interpola le lacune sull'indice e prolunga i valori estremi ai bordi. Non viene attualmente trasmesso un flag che distingua quote misurate e ricostruite.
 - Il consumer mantiene l'ultimo valore solo per un timeout configurato localmente; scaduto il timeout, il dato e' non disponibile.
 - Il timeout con cui un consumer considera stale un dato e' configurazione locale del consumer; non viene imposto dal producer.
 
@@ -103,7 +103,7 @@ La corrispondenza esatta dei tipi fattuali e dei payload va definita insieme all
 ### Consumer
 
 - Ogni consumer decide autonomamente come combinare i segnali, quali ignorare e come gestire dati mancanti o stale.
-- M4L/Ableton decide mapping sonoro e generazione note.
+- Il motore musicale Python decide i mapping sonori; l’adattatore traduce le decisioni per il device e la destinazione esegue i controlli e il timing musicale (M4L/Ableton nel primo esperimento Snake).
 - TouchDesigner decide mapping visivo.
 - Le impostazioni del singolo consumer sono locali al consumer e non cambiano il significato OSC.
 
@@ -129,4 +129,4 @@ Restano da decidere/implementare:
 2. Frequenze superiori, solo se richieste da una prova concreta.
 3. Schema dei fatti/eventi neutrali; non e' incluso nella prima prova audio.
 
-Questa specifica e' implementata dal publisher `python -m desnivel.cli.stream_metrics`; prima di collegare M4L resta da fare una prova con receiver OSC reale e verificare la gestione dei dati stale dal lato consumer.
+Questa specifica e' implementata dal publisher `python -m desnivel.cli.stream_metrics`; la ricezione in M4L è stata verificata dall’utente. Restano da verificare la gestione dei dati stale e il nuovo flusso di comandi musicali separato dalle metriche.

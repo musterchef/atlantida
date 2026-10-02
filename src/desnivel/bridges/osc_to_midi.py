@@ -1,9 +1,6 @@
-"""Bridge OSC -> MIDI: ponte provvisorio verso Ableton (Binario A).
+"""Bridge OSC -> MIDI per la pipeline /mod/* esistente.
 
-**Status**: provvisorio dichiarato. Destinazione finale = patch
-Max for Live nativo che riceve OSC. Questo modulo esiste solo per
-arrivare all'ascolto in mezz'ora senza scrivere Max. Vedi `TODO.md`
-sezione "Contratto Ableton" per i vincoli.
+Istruzioni: doc/archivio/COMANDI-PROTOTIPO.md.
 
 Architettura modulare (stesso stile di `sinks.osc`):
 
@@ -24,7 +21,7 @@ Convenzioni:
   per general purpose nella spec MIDI).
 - Eventi -> Note On (+ Note Off immediato) sul canale 16, note 60+.
   E' un trigger grezzo: tutti i metadati dell'evento si perdono.
-  Quando passeremo a M4L recupereremo location e source_id.
+  Questo trasporto non conserva location e source_id.
 - Canali OSC non mappati: ignorati silenziosamente. La tabella e'
   intenzionalmente minima.
 """
@@ -60,7 +57,7 @@ class CcMapping:
 
 
 #: Mappa address OSC -> CC. Volutamente piccola: solo i canali che
-#: vogliamo sentire subito. Tutto il resto si recupera in M4L.
+#: sono rappresentati dal trasporto MIDI di questo bridge.
 CHANNEL_TO_CC: dict[str, CcMapping] = {
     "/mod/journey/phase":    CcMapping(cc=20),
     "/mod/journey/energy":   CcMapping(cc=21),
@@ -322,7 +319,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="desnivel-bridge-midi",
         description=(
-            "Bridge OSC -> MIDI (provvisorio, Binario A). "
+            "Bridge OSC -> MIDI per la pipeline /mod/*. "
             "Riceve OSC da desnivel-play e lo ribattezza in CC/Note "
             "su una porta MIDI virtuale (es. IAC Bus 1)."
         ),

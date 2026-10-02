@@ -1,4 +1,6 @@
-# **DESNIVEL**  
+# **DESNIVEL**
+
+> Architettura corrente (2026-10-02): producer di dati agnostici → motore musicale Python indipendente dalla destinazione → adattatori estensibili → strumenti/sequencer. Snake via M4L/Live è il primo adattatore. Vedi [decisione tecnica](doc/DECISIONE-ARCHITETTURA-AUDIO.md) e [prototipo Snake](doc/INTEGRAZIONE-SNAKE.md). Le sezioni seguenti conservano la descrizione concettuale del progetto.
 ### *dal viaggio al suono, dal terreno al gesto audiovisivo*  
 
 ---
@@ -106,7 +108,7 @@ Suono e luce procedono insieme come due fluidi che si inseguono, generando una n
 | Fase | Descrizione | Stato |
 |------|--------------|-------|
 | **Fase 1** | Design concettuale e definizione mappature | ✅ completata |
-| **Fase 2** | Implementazione Ableton ↔ TouchDesigner via OSC/MIDI | 🔄 in corso |
+| **Fase 2** | Motore musicale Python e adattatori estensibili; primo prototipo Snake/M4L | 🔄 ricezione e controllo manuale verificati, integrazione completa da fare |
 | **Fase 3** | Composizione audiovisiva (Torino → Castel del Monte) | ⏳ pianificata |
 | **Fase 4** | Installazione / performance live interattiva | 🌀 futura espansione |
 
@@ -114,7 +116,7 @@ Suono e luce procedono insieme come due fluidi che si inseguono, generando una n
 
 ## **VIII. Appendice tecnica**
 
-Il documento tecnico di riferimento è **`GPX_to_Sound_Design_Map_v0.1.md`**, che definisce i livelli di interpretazione e le formule di derivazione dei parametri musicali.  
+I riferimenti correnti sono [architettura](doc/DECISIONE-ARCHITETTURA-AUDIO.md), [contratto metrico](doc/CONTRATTO-DATI-VIAGGIO.md) e [indice della documentazione](doc/README.md). Le mappature sensoriali descritte sopra sono esempi compositivi, non formule obbligatorie né un inventario delle funzioni implementate.
 
 Le estensioni previste includono:
 - **Dizionario JSON di mappature parametriche**.  

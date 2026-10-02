@@ -1,13 +1,16 @@
 # DESNIVEL — Dati estraibili dai GPX per TouchDesigner
 
-## Stato attuale
+> Inventario storico del percorso CSV/TouchDesigner e proposte di metriche future. I 16 canali e i 30 fps sotto non descrivono il publisher neutrale attuale (sei metriche, 1 Hz sorgente). Per dati implementati vedere [STATO-CONTRATTO-OSC.md](../STATO-CONTRATTO-OSC.md); per nuove metriche verificare utilità, unità e qualità prima di estendere il contratto.
+
+
+## Stato del prototipo storico
 
 I 12 file GPX (Strava, tipo `cycling`) contengono **solo dati base**: `lat`, `lon`, `ele`, `time`.  
 Nessuna estensione Strava (HR, cadence, power, temperatura).
 
-Lo script `src/desnivel_gpx_to_td.py` estrae **16 canali per frame** a 30 fps, esportati in CSV (`output/tappa_XX.csv`).
+Lo script `old/desnivel_gpx_to_td.py` estrae **16 canali per frame** a 30 fps, esportati in CSV (`output/tappa_XX.csv`).
 
-### Canali attuali
+### Canali del prototipo storico
 
 | Canale | Tipo | Range | Uso in TD |
 |---|---|---|---|
@@ -182,19 +185,19 @@ I canali più impattanti per TouchDesigner con il minimo sforzo di implementazio
 
 ---
 
-## Struttura file
+## Struttura storica (percorsi riordinati)
 
 ```
 Desnivel/
 ├── gpx/                  ← 12 GPX Strava (lat, lon, ele, time)
-├── src/
+├── old/
 │   └── desnivel_gpx_to_td.py   ← pipeline GPX → CSV
 ├── output/
 │   ├── tappa_01..12.csv         ← CSV a 30fps per TD
 │   └── desnivel_summary.json    ← metadati globali
 ├── td/
 │   ├── desnivel_loader.py       ← loader per TD (Table DAT → CHOP)
-│   ├── frame_execute.py         ← aggiorna shader ogni frame
+│   ├── frame_execute.py         ← storico, spostato in old/td_audio/frame_execute.py
 │   ├── trail_pixel.glsl         ← shader scia GPS
 │   ├── terrain_pixel.glsl       ← shader terreno noise
 │   └── primordiale.toe          ← progetto TD
@@ -202,7 +205,7 @@ Desnivel/
     └── dati_estraibili_gpx.md   ← questo file
 ```
 
-## Note tecniche
+## Note tecniche del prototipo storico
 
 - I GPX sono registrati a **~1 punto/secondo** da Strava
 - Il resample a **30 fps** usa interpolazione lineare (con wrap-around per bearing)

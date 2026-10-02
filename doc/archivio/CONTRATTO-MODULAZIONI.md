@@ -1,8 +1,8 @@
 # DESNIVEL — Contratto musicale storico (v0.4, transitorio)
 
 > Questo documento descrive l'interfaccia musicale `/mod/*` del prototipo precedente. Non e' il contratto target per i dati GPX.
-> La decisione corrente e' che Python espone metriche e fatti di viaggio agnostici; M4L, TouchDesigner e altri consumer li interpretano indipendentemente. Vedi [DECISIONE-ARCHITETTURA-AUDIO.md](DECISIONE-ARCHITETTURA-AUDIO.md) e [STATO-CONTRATTO-OSC.md](STATO-CONTRATTO-OSC.md).
-> Il nuovo schema neutrale (namespace, campi, unita', validita' e cadenze) non e' ancora definito. Non costruire nuovi consumer assumendo che i canali `/mod/*` sotto siano l'interfaccia finale.
+> La decisione corrente separa producer neutrale, motore musicale Python e adattatori estensibili; Snake/M4L è il primo adattatore. Vedi [DECISIONE-ARCHITETTURA-AUDIO.md](../DECISIONE-ARCHITETTURA-AUDIO.md) e [STATO-CONTRATTO-OSC.md](../STATO-CONTRATTO-OSC.md).
+> Lo schema metrico neutrale è definito e implementato in [CONTRATTO-DATI-VIAGGIO.md](../CONTRATTO-DATI-VIAGGIO.md). Restano da definire fatti neutrali e contratto delle decisioni musicali. Non costruire nuovi consumer assumendo che i canali `/mod/*` sotto siano l'interfaccia finale.
 > Il contratto e' modificabile: ogni evoluzione va concordata e propagata a producer, consumer, documentazione e test.
 >
 > Riferimento concettuale: [ARCHITETTURA-MUSICALE.md](ARCHITETTURA-MUSICALE.md)
@@ -12,7 +12,7 @@
 ## 1. Principi del contratto
 
 1. **Contesto storico:** i principi e le tabelle seguenti descrivono la precedente interfaccia musicale `/mod/*`, non la separazione neutrale ora scelta.
-2. **Migrazione esplicita:** i consumer audio che mappano questi canali musicali sono prototipi; il consumer target dovra' ricevere metriche e fatti del viaggio e interpretarli localmente.
+2. **Migrazione esplicita:** i consumer audio che mappano questi canali musicali sono prototipi; il motore musicale Python interpreta i dati del viaggio; gli adattatori traducono le decisioni per le destinazioni.
 3. **Niente mapping silenziosi:** un cambiamento di semantica deve aggiornare la specifica target, producer, consumer e test.
 
 ---
@@ -203,17 +203,17 @@ Il volume di traffico OSC complessivo resta basso (poche decine di messaggi al s
 ### Producer Python target
 - Calcola e pubblica metriche/fatti di viaggio con semantica indipendente dal consumer.
 - Applica pulizia, ricampionamento e filtraggio motivati dalla qualita' delle misure; non costruisce controlli audio come scala, root, palette o pattern.
-- La lista e la cadenza dei dati appartengono al nuovo contratto neutrale da definire.
+- Lista e cadenza delle metriche sono nel contratto neutrale implementato; i fatti sono ancora da definire.
 
 ### TouchDesigner (visualizzazione)
 - Riceve telemetria musicale da M4L/Ableton quando serve a visualizzare l'attivita' sonora effettiva.
 - Non e' nel percorso di controllo audio e non inoltra i dati GPX ad Ableton.
 - Il formato e la frequenza della telemetria sono da definire con il primo consumer M4L.
 
-### Max for Live / Ableton target
-- Riceve direttamente metriche e fatti dal nuovo contratto neutrale.
-- Interpreta localmente i segnali per sound design e sequencer autonomi.
-- Le mappature di input in scelte musicali appartengono a questo consumer, non al producer GPX.
+### Motore musicale e adattatori target
+- Il motore Python interpreta metriche e fatti producendo decisioni musicali indipendenti dalla destinazione.
+- Gli adattatori traducono le decisioni nei comandi supportati dai rispettivi strumenti.
+- M4L applica i comandi nel percorso Snake; non è obbligatorio per gli altri adattatori.
 
 ---
 
@@ -224,7 +224,7 @@ Per chiarezza, queste cose non viaggiano sui bus `/mod/` e `/event/`:
 - Note MIDI di alcun tipo.
 - Coordinate geografiche grezze.
 - Heading, bearing, curvatura istantanea.
-- Timestamp assoluti del viaggio (sono gestiti da TouchDesigner come tempo di esecuzione).
+- Timestamp assoluti del viaggio. Nel nuovo contratto metrico si usa `elapsed_s`; il replay è gestito dal producer, non da TouchDesigner.
 - Dati per la visualizzazione video (vivono su un bus separato non oggetto di questo documento).
 
 ---

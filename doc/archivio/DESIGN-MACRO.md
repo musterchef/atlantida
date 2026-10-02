@@ -1,9 +1,9 @@
 # DESIGN — MacroModulator
 
-**Status**: design proposto, non ancora implementato.
-**Obiettivo**: sbloccare i canali `/mod/macro/*` (oggi silenti).
+**Stato (2026-10-02)**: design del prototipo già implementato in `src/desnivel/modulators/macro.py` e `macro_policies.py`. Il testo seguente conserva le scelte di quel prototipo, non definisce il futuro contratto musicale.
+**Collocazione target**: regole riutilizzabili nel motore musicale Python, separate dal producer del viaggio. Vedi [decisione corrente](../DECISIONE-ARCHITETTURA-AUDIO.md).
 **Vincolo trasversale**: gli output devono essere **client-agnostici**
-(stessi valori per Ableton, TouchDesigner, qualunque altro client OSC).
+(decisioni musicali indipendenti dallo strumento). Questo non le rende metriche neutre del viaggio: scala e palette restano interpretazioni musicali.
 
 ---
 

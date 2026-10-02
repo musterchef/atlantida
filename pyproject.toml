@@ -16,7 +16,7 @@ dependencies = [
 plot = ["matplotlib>=3.7"]
 # OSC live (OscSink + bridge MIDI).
 osc = ["python-osc>=1.8"]
-# Bridge MIDI provvisorio verso Ableton (Binario A, si butta con M4L).
+# Dipendenze del bridge OSC -> MIDI esistente.
 midi = ["mido>=1.3", "python-rtmidi>=1.5"]
 # Geometria (SeaDetector, CoastalClassifier: shapefile costa + distanze).
 geo = ["shapely>=2.0", "pyshp>=2.3"]

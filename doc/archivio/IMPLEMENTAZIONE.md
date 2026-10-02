@@ -1,8 +1,8 @@
 # DESNIVEL — Specifica di implementazione (Python)
 
-> Decisioni tecniche per i moduli Python del nuovo sistema musicale.
+> Specifica storica del prototipo `/mod/*`: include implementazioni presenti e proposte non completate. Non è una checklist per costruire il nuovo motore/adattatore.
 > Riferimenti: [ARCHITETTURA-MUSICALE.md](ARCHITETTURA-MUSICALE.md), [CONTRATTO-MODULAZIONI.md](CONTRATTO-MODULAZIONI.md).
-> Stato: specifica del prototipo precedente, in migrazione. Il confine target e' producer Python di metriche/fatti del viaggio agnostici; mapping musicale e sequencer appartengono ai consumer. Decisione: [DECISIONE-ARCHITETTURA-AUDIO.md](DECISIONE-ARCHITETTURA-AUDIO.md); inventario: [STATO-CONTRATTO-OSC.md](STATO-CONTRATTO-OSC.md).
+> Stato: specifica del prototipo precedente, in migrazione. Il confine target e' producer Python di metriche/fatti del viaggio agnostici; mapping musicale nel consumer Python indipendente dalla destinazione; adattatori estensibili traducono le decisioni per gli strumenti. Decisione: [DECISIONE-ARCHITETTURA-AUDIO.md](../DECISIONE-ARCHITETTURA-AUDIO.md); inventario: [STATO-CONTRATTO-OSC.md](../STATO-CONTRATTO-OSC.md).
 
 ---
 
@@ -27,14 +27,14 @@ Ogni modulo è una **classe trasformatore** con un'interfaccia uniforme:
 
 I trasformatori si compongono in una pipeline lineare. Ogni trasformatore è puro: stesso input → stesso output. Questo rende **tutto testabile** in isolamento.
 
-### 1.3 Una sola configurazione, in un solo posto
-Tutti i numeri (τ smoothing, soglie, cooldown, frequenze OSC, intensità default) vivono in **un unico file di configurazione tipato**, importabile da qualunque modulo. Niente costanti sparse. Niente magic number nei moduli.
+### 1.3 Configurazione esplicita per responsabilità
+Il prototipo usa `config.py`. Nel nuovo percorso tenere separate configurazione del producer, regole musicali e associazioni specifiche degli adattatori. I parametri devono essere dichiarati e verificabili; non accorpare i dettagli Snake alla configurazione delle misure GPX.
 
 ### 1.4 Output doppio: file e OSC
-Il producer di metriche può funzionare in due modalità senza modifiche al proprio codice:
+Il prototipo musicale dispone di output file e OSC. Il publisher metrico neutrale dispone oggi di OSC e `--dry-run`, non di un export file equivalente già implementato:
 
-- **offline**: produce un CSV delle metriche/fatti campionati e un JSON degli eventi di viaggio per l'intera tappa.
-- **online**: pubblica gli stessi segnali via OSC in tempo reale o in replay.
+- **offline del prototipo**: `FileSink` produce `<stage>_modulations.csv` e `<stage>_events.json`, con interpretazioni musicali e categorie del prototipo.
+- **online del prototipo**: `OscSink` pubblica `/mod/*` e `/event/*`. Il publisher neutrale separato usa `TripMetricsOscSink` e `/desnivel/v1/trip/metric/*`.
 
 I due output vivono fuori dai trasformatori, come **sink** intercambiabili. Le interpretazioni audio e visuali sono responsabilita' dei consumer.
 

@@ -1,4 +1,11 @@
-"""
+# Visualizzazione sonic — riferimento storico
+
+Questa guida descrive gli script archiviati in `old/`, non il contratto metrico corrente. I comandi storici sotto richiedono i vecchi dati sonic e non sono stati rieseguiti in questo audit; tempi e dimensioni sono stime storiche. Le formule musicali illustrate non sono vincoli del nuovo motore. La proposta finale `src/osc_sender.py` non è stata implementata con quel percorso.
+
+Per visualizzare i canali del prototipo Python esistente usare `desnivel-run --stage tappa_04`, poi `desnivel-plot --stage tappa_04 --save output/viz/tappa_04.png`. Questo visualizza modulazioni musicali, non le sei metriche neutre. Vedi [COMANDI.md](../COMANDI.md) e [architettura corrente](../DECISIONE-ARCHITETTURA-AUDIO.md).
+
+---
+
 README — Sonic Timeline Visualization
 ======================================
 
@@ -10,17 +17,17 @@ QUICK START
 
 1. Genera visualizzazione per UNA tappa:
    
-   .venv/bin/python src/visualize_sonic.py 1
+   .venv/bin/python old/visualize_sonic.py 1
    → output/viz/tappa_01_sonic.png
 
 2. Genera ALL 12 tappe:
    
-   .venv/bin/python src/visualize_all_sonic.py
+   .venv/bin/python old/visualize_all_sonic.py
    → output/viz/tappa_NN_sonic.png (×12)
 
 3. Genera indice HTML interattivo:
    
-   .venv/bin/python src/generate_sonic_index.py
+   .venv/bin/python old/generate_sonic_index.py
    → output/viz/index.html (apri nel browser)
 
 COSA VEDI NEI PLOT
@@ -90,17 +97,17 @@ OPZIONI AVANZATE
 ================
 
 Visualizza una tappa con MOSTRA (plt.show()):
-  .venv/bin/python src/visualize_sonic.py 3 --show
+  .venv/bin/python old/visualize_sonic.py 3 --show
 
 Salva con DPI diverso (più veloce per preview, più nitido per stampa):
-  .venv/bin/python src/visualize_sonic.py 5 --dpi 100    # veloce
-  .venv/bin/python src/visualize_sonic.py 5 --dpi 300    # stampa
+  .venv/bin/python old/visualize_sonic.py 5 --dpi 100    # veloce
+  .venv/bin/python old/visualize_sonic.py 5 --dpi 300    # stampa
 
 Salva in cartella custom:
-  .venv/bin/python src/visualize_sonic.py 2 --output /tmp/tappa02.png
+  .venv/bin/python old/visualize_sonic.py 2 --output /tmp/tappa02.png
 
 Batch con DPI custom:
-  .venv/bin/python src/visualize_all_sonic.py --dpi 100 --start 1 --end 6
+  .venv/bin/python old/visualize_all_sonic.py --dpi 100 --start 1 --end 6
 
 DIPENDENZE
 ==========
@@ -147,6 +154,3 @@ sonori in tempo reale ad Ableton Live via OSC.
 Autore: Marco Musto
 Data: 2026-05-09
 Versione: 0.1
-"""
-# Questo file è documentazione, non codice.
-# Salva come: doc/VISUALIZATION_README.md

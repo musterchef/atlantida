@@ -1,7 +1,7 @@
 # DESNIVEL — Architettura musicale
 
 > Documento fondativo del sistema audio generativo.
-> È la base concettuale e operativa su cui si costruiscono tutti gli sviluppi successivi (codice Python, patch TouchDesigner, strumenti Ableton/Max for Live).
+> Le sezioni estetiche descrivono un profilo compositivo possibile, non vincoli universali del motore o degli adattatori. Architettura e stato operativo: [DECISIONE-ARCHITETTURA-AUDIO.md](../DECISIONE-ARCHITETTURA-AUDIO.md). Aggiornato il 2026-10-02.
 
 ---
 
@@ -12,13 +12,13 @@
 Il paesaggio è inteso come **organismo musicale**, non come sorgente di eventi da convertire in MIDI.
 Il sistema sonoro è un ecosistema autonomo: ha un proprio ritmo, una propria armonia, un proprio silenzio. I dati del viaggio entrano come **clima**, non come spartito.
 
-Da questo principio derivano tutte le decisioni progettuali del documento.
+Il principio operativo condiviso è separare il tempo del viaggio dal clock musicale. Il motore Python può anche calcolare note e pattern o attivarli su attraversamento di soglie: il profilo continuo qui descritto non esclude queste regole configurabili.
 
 ---
 
 ## 2. Caratteristiche del sistema
 
-Il sistema musicale che vogliamo costruire ha queste qualità distintive:
+Il profilo compositivo continuo proposto ha queste qualità:
 
 - **Sequencer autonomo modulato dal paesaggio**, non sequencer pilotato dal CSV.
 - **Stato più che evento**: il sistema vive in una *condizione* che evolve, non in una sequenza di trigger.
@@ -26,7 +26,7 @@ Il sistema musicale che vogliamo costruire ha queste qualità distintive:
 - **Note rare e pensate**, mai una nota per ogni dato.
 - **Continuità percettiva** garantita da un layer texture sempre presente.
 - **BPM stabile per lunghi tratti**, evolve a scatti rari e morbidi.
-- **Una sorgente, una destinazione**: niente mappature multiple sovrapposte.
+- **Mapping espliciti**: una metrica può alimentare più regole e destinazioni; eventuali conflitti sullo stesso controllo devono essere risolti deliberatamente.
 
 ---
 
@@ -131,45 +131,39 @@ Esiste inoltre un quinto meccanismo, di natura compositiva:
 
 ## 6. Cosa non si fa
 
-Queste regole negative sono importanti quanto quelle positive. Il sistema le rispetta sempre.
+Queste limitazioni descrivono il profilo continuo storico, salvo la separazione dei clock che resta un vincolo architetturale. Non vietano ad altri profili di attivare pattern o calcolare note in Python.
 
 - Latitudine e longitudine non diventano mai note.
 - Direzione e curvatura istantanea non diventano mai trigger.
 - La frequenza di campionamento del GPX non è la frequenza del sequencer. I due orologi sono separati.
 - Nessun parametro del GPX viene passato al sistema musicale senza essere prima filtrato.
-- Una sorgente di dato controlla **una sola** destinazione musicale. Niente mappature multiple sovrapposte.
+- Nel profilo storico si privilegiavano mapping uno-a-uno; il motore estensibile non impone questo limite.
 - Nessuna nota viene generata da un singolo campione di dato.
 
 ---
 
 ## 7. Il flusso del segnale
 
-Il sistema è organizzato in tre stadi, con responsabilità chiare.
+Il flusso corrente separa tre responsabilità:
 
-### Stadio 1 — Python (preparazione)
-Legge il GPX, pulisce e ricampiona i dati, deriva metriche con semantica di viaggio (velocità, pendenza, quota, sforzo, distanza e tempo) e produce fatti/eventi geografici. Non sceglie tonalità, scale, palette, registro o pattern. Filtri e aggregazioni restano nel producer solo quando descrivono qualita' o contesto della misura e sono documentati nel contratto neutrale.
+1. **Producer Python:** metriche neutre del viaggio (pilot implementato) e in futuro fatti geografici. Nessuna decisione musicale nel contratto del viaggio.
+2. **Motore musicale Python:** stato e regole configurabili, incluse soglie, note e pattern. Produce decisioni indipendenti dal dispositivo; il contratto condiviso è ancora da definire.
+3. **Adattatori e destinazioni:** traducono le decisioni nei controlli supportati e ne eseguono il timing musicale. Snake via OSC/M4L è il primo esperimento, non una dipendenza del motore. Altre destinazioni possono usare altri protocolli.
 
-- un **flusso di metriche** con unita', range/validita' e cadenza dichiarati;
-- un **flusso di fatti/eventi del viaggio** con payload descrittivo, senza istruzioni di gesto sonoro.
-
-### Stadio 2 — Max for Live / Ableton (suono)
-Riceve direttamente da Python il nuovo contratto di metriche e fatti agnostici. Decide in modo indipendente come reinterpretare i segnali, contiene i sequencer autonomi e genera le note. L'attuale `/mod/*` e' un'interfaccia musicale del prototipo, non il target neutrale. Il protocollo puo' evolvere quando l'implementazione mostra una necessita', aggiornando insieme producer, consumer e test.
-
-### Stadio 3 — TouchDesigner (visualizzazione)
-Visualizza la musica. Non inoltra il flusso GPX al motore audio e non e' necessario per generare o ascoltare la tappa. Quando serve visualizzare le note o i layer effettivamente attivi, riceve telemetria separata da M4L/Ableton; il suo formato verra' definito nel lavoro sul consumer audio.
+TouchDesigner resta un consumer visuale indipendente. La futura telemetria dell'esecuzione musicale è distinta dai dati del viaggio e non è ancora definita. Vedi la [decisione architetturale](../DECISIONE-ARCHITETTURA-AUDIO.md).
 
 ---
 
 ## 8. Criteri di verifica
 
-Il sistema è considerato musicalmente valido quando supera questi test:
+Per valutare il profilo continuo, si propongono queste prove di ascolto:
 
 1. **Test del silenzio dati.** Spegnendo il flusso GPX (valori fermi), il sistema continua a suonare in modo musicalmente coerente per diversi minuti.
 2. **Test del congelamento.** Bloccando un singolo parametro per un minuto, la musica continua a evolvere ma in modo riconoscibilmente stabile.
 3. **Test dell'accelerazione.** Riproducendo il GPX a velocità 10x, la musica non accelera in modo caotico: gli smoothing assorbono la variazione.
 4. **Test della densità.** Nei layer melodici, il numero di note al minuto rientra in una fascia ambient/cinematografica (indicativamente 10–30 note al minuto). Il layer corpo può essere più denso ma con pattern ripetitivo.
 
-Se uno qualunque di questi test fallisce, il sistema è ancora troppo event-driven.
+Questi criteri non misurano la correttezza universale del motore. Per altri profili, inclusi quelli basati su soglie, definire risultati attesi propri. Il timeout e il comportamento senza dati vanno configurati esplicitamente.
 
 ---
 
@@ -191,52 +185,15 @@ Glossario dei termini ricorrenti, usati nello stesso senso in tutto il progetto.
 
 ## 10. Come procediamo
 
-Questo documento è la base. Da qui si costruisce tutto il resto, in questo ordine:
+Il producer metrico e la prima ricezione M4L sono già presenti. Non ricreare lo scaffolding o i modulatori esistenti. Il prossimo passo è una regola configurabile nel motore Python, una decisione indipendente dal device e un adattatore minimo per Snake.
 
-1. **Contratto delle modulazioni e degli eventi.** — *Fatto, v0.2.*
-   Definito in [CONTRATTO-MODULAZIONI.md](CONTRATTO-MODULAZIONI.md).
-
-2. **Specifica di implementazione.** — *Fatto.*
-   Definita in [IMPLEMENTAZIONE.md](IMPLEMENTAZIONE.md).
-
-3. **Scaffolding minimo.**
-   Struttura della cartella `src/desnivel/`, `config.py`, `track.py`, `events.py` con registry, `pipeline.py`, `FileSink`, CLI `run_stage.py`. End-to-end vuoto, ma eseguibile.
-
-4. **Modulo `journey`.**
-   Curve di arco di tappa (`phase`, `energy`, `openness`). Il più semplice e indipendente: valida l'intera pipeline con un canale visibile.
-
-5. **Sink OSC.**
-   `OscSink` e `ReplaySink`. A questo punto i canali `journey` arrivano direttamente via OSC al consumer M4L/Ableton; TouchDesigner non e' nel percorso audio.
-
-6. **Modulo `tension`.**
-   Integratore con carica/decadimento, produce `/mod/meso/tension`.
-
-7. **Modulo `state`.**
-   Macchina a stati con dwell time, produce i canali `/mod/macro/*`.
-
-8. **Detector degli eventi.**
-   Maggiori (con limite globale per tappa) e minori (con cooldown derivato dalla durata). Include `ExternalEventDetector` per gli eventi dichiarati nel JSON.
-
-9. **Moduli `meso`, `body`, `micro`.**
-   Si chiudono i canali rimanenti del contratto.
-
-10. **Adeguamento della patch Ableton/Max for Live.**
-    Trasformare i dispositivi in sequencer autonomi, riceventi solo modulazioni ed eventi secondo il contratto.
+La guida operativa è [INTEGRAZIONE-SNAKE.md](../INTEGRAZIONE-SNAKE.md); il lavoro residuo è in [TODO.md](../../TODO.md). Il contratto storico `/mod/*` resta un riferimento per riuso, non il contratto finale delle decisioni musicali.
 
 ---
 
-## 11. Consiglio per partire
+## Appendice A — Proposta storica di modalità Live (non implementata)
 
-Le basi documentali sono pronte:
-[CONTRATTO-MODULAZIONI.md](CONTRATTO-MODULAZIONI.md) v0.2 + [IMPLEMENTAZIONE.md](IMPLEMENTAZIONE.md).
-
-Il prossimo passo è il **branch git dedicato** (es. `feat/musical-architecture`) e lo **scaffolding minimo**: cartella `src/desnivel/`, `config.py`, `track.py`, `events.py` con registry, `pipeline.py`, `FileSink`, CLI `run_stage.py`. Eseguibile end-to-end ma vuoto: produce un CSV con la sola colonna `t`.
-
-Subito dopo: il modulo `journey`. È il più semplice, è indipendente dagli altri, e permette di validare l'intera catena (Python → file → OSC → ricezione) con un singolo canale che si muove in modo lento e prevedibile. Una volta che `journey/phase` arriva correttamente in Ableton, tutto il resto si aggancia con sicurezza.
-
----
-
-## Appendice A — Modalità Live (interazione utente)
+I namespace e i vincoli di questa appendice sono ipotesi del prototipo precedente, da rivalutare nel consumer musicale. Non sono un protocollo attivo né richiedono ora un framework multiutente.
 
 Il sistema è progettato per due modalità operative coesistenti:
 
