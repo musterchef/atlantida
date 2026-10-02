@@ -26,7 +26,10 @@ Il viaggio evolve indipendentemente dal clock musicale. Accelerare il replay non
 | `src/desnivel/config.py` | Frequenza e parametri del producer; non aggiungere mapping Snake qui. |
 | `src/desnivel/sinks/trip_metrics_osc.py` | Invio OSC e replay delle metriche. |
 | `src/desnivel/cli/stream_metrics.py` | Comando di avvio del producer. |
-| `m4l/desnivel_snake_bridge.maxpat` | Receiver iniziale di quota e timestamp; non contiene ancora le modifiche fatte manualmente in Live. |
+| `m4l/desnivel-bridge.amxd` | Device funzionante: riceve le metriche (9000) e i comandi di controllo (9001). |
+| `m4l/desnivel_snake_params.js` | Trova Snake e imposta i parametri per nome; va tenuto nella cartella del device. |
+| `src/desnivel/adapters/snake.py` | Nomi, gate, scale e conversioni per Snake. |
+| `src/desnivel/cli/snake_pattern.py` | Invio di gate e note. |
 | `src/desnivel/bridges/osc_to_midi.py` | Bridge `/mod/*` esistente, conservato; non è il nuovo adattatore Snake. |
 | `tests/test_trip_metrics*.py` | Test del contratto metrico esistente. |
 
@@ -53,7 +56,7 @@ python -m desnivel.cli.stream_metrics --gpx gpx/tappa04_Levanto_La_Spezia.gpx --
 
 Formato: `/desnivel/v1/trip/metric/<nome> elapsed_s value`. Il primo argomento è il tempo, il secondo il valore. Il pilot produce metriche a 1 Hz nel tempo del viaggio; il replay accelerato aumenta la frequenza reale. Contratto: [CONTRATTO-DATI-VIAGGIO.md](CONTRATTO-DATI-VIAGGIO.md).
 
-Aprire [la patch](../m4l/desnivel_snake_bridge.maxpat) in Max. Bloccarla con Cmd+E per usare i controlli. Il messaggio locale di test mostra 12.5 secondi e 345 metri: non prova la rete. Tenere un solo receiver sulla porta scelta; nella prova un altro receiver impediva l'aggiornamento in Max.
+Caricare in Live [il device](../m4l/desnivel-bridge.amxd), copiandolo con il `.js` nella cartella User Library dei Max Audio Effect. Per provarlo in Max, aprirlo e bloccare la patch con Cmd+E. Il messaggio locale di test mostra 12.5 secondi e 345 metri: non prova la rete. Tenere un solo receiver sulla porta scelta; nella prova un altro receiver impediva l'aggiornamento in Max.
 
 Per usarla in Live, copiare gli oggetti nel template di un Max MIDI Effect sostituendo il pass-through MIDI del template, senza duplicarlo. Salvare il device `.amxd` nel progetto. La ricezione diretta delle metriche resta utile come diagnostica; il nuovo flusso operativo porterà a M4L comandi già elaborati, con protocollo e porta da definire separatamente.
 

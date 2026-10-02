@@ -36,7 +36,7 @@ L'assegnazione dell'ID a `live.remote~` ha causato crash di Live 12.3.5. Usare i
 - `src/desnivel/trip_metrics.py`: dati neutri.
 - `src/desnivel/cli/stream_metrics.py`: avvio del publisher.
 - `src/desnivel/adapters/snake.py`, `src/desnivel/cli/snake_pattern.py`: adattatore Snake e comando.
-- `m4l/desnivel-bridge.amxd` (device funzionante) e `m4l/desnivel_snake_params.js` (da tenere nella stessa cartella del device). `m4l/desnivel_snake_bridge.maxpat` è il receiver iniziale, solo riferimento.
+- `m4l/desnivel-bridge.amxd` (device funzionante) e `m4l/desnivel_snake_params.js` (da tenere nella stessa cartella del device).
 
 Il device funzionante è `m4l/desnivel-bridge.amxd`; il `.maxpat` iniziale resta come riferimento.
 

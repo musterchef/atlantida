@@ -17,7 +17,7 @@ Aggiornato il 2026-10-02.
 
 Il producer usa `src/desnivel/trip_metrics.py` e `src/desnivel/sinks/trip_metrics_osc.py`. Il comando è `desnivel-stream-metrics`.
 
-`m4l/desnivel_snake_bridge.maxpat` contiene il receiver iniziale. Le modifiche fatte manualmente in Live, compreso il controllo del parametro, devono ancora essere salvate nel repository.
+`m4l/desnivel-bridge.amxd` riceve le metriche (porta 9000) e i comandi di controllo `/desnivel/v1/control/snake/set <nome> <valore>` (porta 9001).
 
 ## Limiti
 
