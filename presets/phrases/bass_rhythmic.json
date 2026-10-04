@@ -1,0 +1,7 @@
+{"length_beats": 8, "notes": [
+  {"beat": 0, "pitch": 33, "duration": 0.5, "velocity": 95},
+  {"beat": 1.5, "pitch": 33, "duration": 0.25, "velocity": 75},
+  {"beat": 3, "pitch": 40, "duration": 0.75, "velocity": 85},
+  {"beat": 4, "pitch": 33, "duration": 1, "velocity": 95},
+  {"beat": 6.5, "pitch": 45, "duration": 0.5, "velocity": 80}
+]}

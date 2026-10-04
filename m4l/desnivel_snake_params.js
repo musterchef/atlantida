@@ -82,7 +82,38 @@ function refresh() {
     post("indice: " + Object.keys(paramPaths).length + " parametri univoci\n");
 }
 
+// Parametro 90: Shape Gates confermata in Live su Snake 3.2.3.
+function testShape90(value) {
+    var devicePath = findSnake();
+    if (devicePath === null) {
+        post("Snake non trovato\n");
+        return;
+    }
+    if (new LiveAPI(null, devicePath).getcount("parameters") <= 90) {
+        post("Shape test: indice 90 assente\n");
+        return;
+    }
+    var p = new LiveAPI(null, devicePath + " parameters 90");
+    if (String(get1(p, "name")) !== "Shapes" ||
+        Number(get1(p, "min")) !== 0 || Number(get1(p, "max")) !== 13) {
+        post("Shape test: parametro 90 diverso dal dump, invio annullato\n");
+        return;
+    }
+    var v = Number(value);
+    if (!isFinite(v) || Math.floor(v) !== v || v < 0 || v > 13) {
+        post("Shape test: serve un intero 0..13\n");
+        return;
+    }
+    var before = get1(p, "value");
+    p.set("value", v);
+    post("Shape test: parametro 90, precedente=" + before + ", richiesto=" + v + "\n");
+}
+
 function set(name, value) {
+    if (name === "gate_shape" || name === "test_shape_90") {
+        testShape90(value);
+        return;
+    }
     if (paramPaths === null) {
         buildIndex();
     }

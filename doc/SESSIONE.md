@@ -1,113 +1,49 @@
 # Passaggio di sessione
 
-Aggiornato: 2026-10-02 (fine sessione). Per Codex, Copilot e chi riprende il lavoro.
+Aggiornato il 2026-10-04.
 
-## Obiettivo
+## Direzione
 
-Trasformare un viaggio GPX in musica. Primo esperimento con MDD Snake 3.2.3 in Ableton; deve essere possibile aggiungere altri adattatori senza cambiare il producer o le regole musicali.
+`GPX → metriche neutre → regole musicali Python → adattatori → strumenti`
 
-## Decisioni
+Python decide la musica; le destinazioni eseguono sul clock di Live. Il tempo del replay è distinto dal BPM. Il motore non conosce parametri Snake, ID Live o synth. Timbri e impostazioni di Ableton sono scelte dell'utente.
 
-`GPX → dati agnostici → motore musicale Python → adattatori → strumenti`
+## Implementato
 
-- Python interpreta i dati con regole configurabili e produce decisioni musicali indipendenti dallo strumento.
-- Ogni adattatore gestisce nomi, range e protocollo della propria destinazione.
-- Per Snake: comandi OSC → piccola patch M4L → parametri del device.
-- Live/Snake esegue il ritmo. Velocità del replay e BPM sono indipendenti.
-- Niente ID Live hardcoded, regole Snake nel producer o framework generico anticipato.
-- Conservare le altre implementazioni: archiviazione documentale non significa cancellazione del codice.
+- Producer: sei metriche neutre, `desnivel-stream-metrics`, OSC 9000.
+- Regola quota con isteresi: `music.py`, `presets/quota.json`.
+- Movimento, sforzo e misto: `journey_music.py`, preset pesati e configurazione della tappa. Motivo stabile, densità dei gate, tre sezioni armoniche per distanza.
+- Adattatore Snake: note, gate e Shape casuale 0–13 all'ingresso di ogni sezione. `--seed` rende ripetibili le estrazioni. Indice parametro 90 confermato dall'utente per Gates; alias `gate_shape`, alias diagnostico precedente conservato.
+- Secondo adattatore: `phrases.py`, `adapters/phrase_player.py`, CLI `send_phrase`. Frasi complete con posizione, altezza MIDI, durata e velocity; due esempi di basso in `presets/phrases/`.
+- Player M4L: JS prepara eventi, `pipe` li esegue in tick, `flush` gestisce note-off. Nessun polling. Frase successiva applicata al ciclo seguente.
 
-## Cosa funziona
+## Risultato verificato
 
-Verificato dall'utente in Live 12.3.5 con MDD Snake 3.2.3, traccia 2.
+L'utente conferma che il player suona in Live. Confermate ricezione OSC e notifiche Stop/Play dell'osservatore. Correzioni presenti nella patch del progetto e nel device salvato: `pipe 0 0 0 @delaytime 0 ticks`, `live.thisdevice`, `live.observer is_playing`.
 
-- **Metriche:** `desnivel-stream-metrics`, sei metriche neutre, OSC `/desnivel/v1/trip/metric/<nome> elapsed_s value`, 1 Hz nel tempo del viaggio, porta `9000`. Il device mostra tempo e quota.
-- **Controllo per nome:** `/desnivel/v1/control/snake/set <nome> <valore>`, porta `9001`. Python non conosce ID Live: li risolve M4L.
-- **Gate:** `Gate_01..16`, valori 0/1, griglia 4x4 per righe, `Gate_01` in alto a sinistra (provato con una diagonale).
-- **Note:** `Note_01..16`, range 0–83. Snake quantizza i valori sulla propria scala; con `Scales = 0` (Chromatic) restano quelli inviati, verificato ascoltando. Le scale sono calcolate in Python; l'adattatore invia `Scales = 0` prima delle note.
-- Il valore è limitato al range letto da Live.
+194 test Python passati: 193 nella suite in sandbox e il test UDP separatamente fuori sandbox. Test JS simulato passato per ordinamento eventi, confine ciclo, cambio frase, stop, ripartenza, panic e silenzio. La prova Live non equivale a una validazione completa del timing.
 
-Parametri di Snake (152 in totale, letti con `dump`):
+## File e comandi
 
-| Gruppo | Nomi | Range | Stato |
-|---|---|---|---|
-| Note | `Note_01..16` | 0–83 | provato |
-| Gate | `Gate_01..16` | 0–1, a scalini | provato |
-| Velocity | `Velocity_01..16` | 0–127 | non provato |
-| Scala | `Scales` | 0–36 (0 Chromatic, 1 Major, 36 User) | provato con 0 |
-| Altri unici | `Fondamental` 0–11, `MidiInMode`, `Random All`, `Reset All`, `Swing` 0–100 | | non provati |
-| Ambigui | `Custom_xx`, `Steps`, `Shapes`, `Shift`, `Random`, `Reset`, `Speed`, `Direction` | | compaiono più volte: il JS li ignora |
-
-Per usare i parametri ambigui serve un'altra strategia (per indice o per posizione); non decisa.
-
-## Struttura del codice
-
-```text
-Python: decisione musicale
-  → src/desnivel/adapters/snake.py   nomi, gate, scale; funzioni pure, nessuna rete
-  → src/desnivel/cli/snake_pattern.py  invio OSC (--gates, --gates-random, --scale, --root, --dry-run)
-  → OSC 9001 → m4l/desnivel-bridge.amxd → m4l/desnivel_snake_params.js → parametro Live
-```
-
-- Device: `udpreceive 9001` → `route /desnivel/v1/control/snake/set` → `prepend set` → `js desnivel_snake_params.js`. Ha anche ricezione metriche su 9000 e una catena `live.path`/`live.object` di diagnostica sul parametro selezionato.
-- JS: messaggi `dump` (elenca parametri), `refresh` (rilegge l'indice), `set <nome> <valore>`, `get <nome>`. Cerca il device con "snake" nel nome.
-- `src/desnivel/cli/snake_test.py`: invia un solo parametro. `tests/test_snake_adapter.py`: 5 test sull'adattatore.
-- Il `.amxd` e il `.js` vanno tenuti insieme nella cartella `~/Music/Ableton/User Library/Presets/Audio Effects/Max Audio Effect/`. Dopo aver modificato il `.js`, ricopiarlo lì e ricaricare il device.
-
-## Comandi per ripartire
-
-```sh
-source .venv/bin/activate
-python -m desnivel.cli.snake_pattern --gates "1000 0100 0010 0001"
-python -m desnivel.cli.snake_pattern --gates-random 0.5 --seed 7
-python -m desnivel.cli.snake_pattern --scale minor --root 36
-python -m desnivel.cli.snake_test --param Velocity_01 --value 100
-```
-
-Scale in Python: chromatic, major, minor, dorian, phrygian, lydian, mixolydian, pentatonic_major, pentatonic_minor, blues. Snake ne ha 37 e può aggiungerne: sono due elenchi separati.
-
-## Problemi noti
-
-- `live.remote~` con ID assegnato ha mandato in crash Live 12.3.5: non usarlo.
-- Console Max `live.object ... has no attribute 'Note_03'`: `prepend set` è ancora collegato al vecchio `live.object`; deve andare solo al `js`.
-- `js: findSnake is not a function`: il `.js` copiato è incompleto o vecchio.
-- Un solo receiver per porta (9000 metriche, 9001 controllo).
-
-## File da leggere
-
-- [Regole di scrittura](AGENTS.md)
+- [Comandi](COMANDI.md)
+- [Preset musicali](TEST-PRESET-MUSICALI.md)
+- [Player M4L: patch e prova](PLAYER-M4L.md)
+- [Test quota](TEST-VIAGGIO-SNAKE.md)
 - [Architettura](DECISIONE-ARCHITETTURA-AUDIO.md)
-- [Guida Snake](INTEGRAZIONE-SNAKE.md)
-- `src/desnivel/trip_metrics.py`, `src/desnivel/cli/stream_metrics.py`: metriche neutre e publisher.
-- File della sezione "Struttura del codice".
 
-## Non verificato
+Il player si costruisce da `m4l/desnivel_phrase_player.maxpat`, con il JS omonimo accanto al device. Il device dell'utente è in `~/Music/Ableton/User Library/Presets/MIDI Effects/Max MIDI Effect/desnivel-send-phrase.amxd`. Il repository conserva sorgenti editabili; nessuna modifica diretta al device installato durante la pulizia.
 
-- Velocity, valori fuori range, `Fondamental` e altri parametri unici.
-- Corrispondenza esatta tra `Note_xx` e nota MIDI emessa (assunto: semitoni con Chromatic).
-- Associazione dei parametri dopo riapertura del set o spostamento di Snake (il JS indicizza al primo uso; `refresh` rilegge).
-- Comportamento con più istanze di Snake (usa la prima trovata).
+Porta player 9002, indirizzo `/desnivel/v1/player/bass/phrase`; porta Snake 9001, indirizzo `/desnivel/v1/control/snake/set`. Una sola ricezione per porta. Dopo modifiche al JS aggiornare la copia accanto al device e ricaricare.
 
-## Prossimi passi
+## Limiti e prossimi passi
 
-1. **Velocity:** `snake_test --param Velocity_01 --value 100`, poi estendere l'adattatore come per le note.
-2. **Prima regola musicale** alimentata dalle metriche, con output indipendente da Snake: compilare la scheda in [INTEGRAZIONE-SNAKE.md](INTEGRAZIONE-SNAKE.md). Per esempio quota → scala/densità dei gate. Il riarmo di soglie va deciso (attraversamento contro permanenza).
-3. **Motore musicale** separato dall'adattatore, con configurazione dei parametri.
-4. Poi: timing a battuta/step, altri parametri, secondo adattatore.
+1. Verificare cambio frase durante la riproduzione e note-off durante note lunghe.
+2. Misurare almeno 32 cicli: deferlow/JS al confine può introdurre ritardo. Quantizzazione iniziale e riallineamento a seek/loop non implementati.
+3. Collegare regole del basso e armonia condivisa al viaggio, dopo la verifica del player.
+4. Destinazioni multiple Snake e controllo effetti ancora da implementare. Snake trova la prima istanza per nome.
 
-## Ambiente e cautele
+Player: massimo 32 note, nessuna sovrapposizione della stessa altezza e nessuna nota oltre il ciclo. UDP senza ACK. Velocity Snake e ottava MIDI effettiva dei suoi parametri restano da verificare. Non usare `live.remote~`: ha causato crash nelle prove precedenti.
 
-```sh
-source .venv/bin/activate
-desnivel-stream-metrics --gpx gpx/tappa04_Levanto_La_Spezia.gpx --speed 30
-```
+## Metodo
 
-Destinazione iniziale: `127.0.0.1:9000`. Tenere un solo receiver su quella porta.
-
-Leggere `git status` prima di intervenire; non ripristinare o cancellare modifiche altrui. Vecchia documentazione in `doc/archivio/`, vecchio generatore TD/audio in `old/td_audio/`.
-
-## Metodo di lavoro
-
-L'utente vuole scrivere parte del codice, usando autocomplete e aiuto mirato. Risposte e documentazione brevi, chiare, senza cronache o parentesi difensive. Leggere solo i file necessari. Aggiornare la documentazione quando cambia una decisione.
-
-A fine sessione aggiornare questo file con: ultimo risultato verificato, file modificati, eventuale problema e prossimo passo. Distinguere sempre prove eseguite da ipotesi.
+Documentazione concisa, stato attuale e limiti espliciti. Trattare l'utente come collaboratore esperto. Diagnosticare dal device salvato e dai dati, senza far ripetere verifiche generiche. Non alterare il percorso funzionante durante pulizie. Conservare implementazioni precedenti; documentazione storica in `doc/archivio/`.

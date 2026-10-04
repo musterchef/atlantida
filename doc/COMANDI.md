@@ -35,7 +35,11 @@ I messaggi contengono tempo e misure del viaggio, indipendenti dallo strumento m
 
 La [guida Snake](INTEGRAZIONE-SNAKE.md) descrive la ricezione in Max e il controllo manuale di un parametro in Live.
 
-Il motore musicale Python e i nuovi adattatori sono ancora da implementare. I loro comandi di avvio verranno documentati quando disponibili.
+Prima prova dal viaggio: [quota e pattern](TEST-VIAGGIO-SNAKE.md).
+
+```sh
+python -m desnivel.cli.trip_music --gpx gpx/tappa04_Levanto_La_Spezia.gpx --rules presets/quota.json --speed 50
+```
 
 ## Eseguire i test
 
@@ -44,3 +48,15 @@ pytest -q
 ```
 
 Le istruzioni della pipeline precedente sono nei [comandi archiviati](archivio/COMANDI-PROTOTIPO.md).
+
+## Preset del viaggio
+
+Disponibili movimento, sforzo e misto, con percorso armonico per tappa. [Comandi e configurazione](TEST-PRESET-MUSICALI.md). Test Python e generazione verificati; ascolto in Live da eseguire.
+
+## Inviare una frase al player
+
+```sh
+python -m desnivel.cli.send_phrase --phrase presets/phrases/bass_sustained.json --voice bass
+```
+
+Richiede il [player M4L](PLAYER-M4L.md); `--dry-run` prova il formato senza rete.

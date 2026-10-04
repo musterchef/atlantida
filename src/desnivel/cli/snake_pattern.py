@@ -13,7 +13,7 @@ import random
 from desnivel.adapters import snake
 from desnivel.sinks.osc import UdpOscClient
 
-ADDRESS = "/desnivel/v1/control/snake/set"
+ADDRESS = snake.ADDRESS
 
 
 def main(argv: list[str] | None = None) -> int:

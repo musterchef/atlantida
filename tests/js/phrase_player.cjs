@@ -1,0 +1,17 @@
+const vm=require('vm'),fs=require('fs'),assert=require('assert');
+let events=[];
+const c={outlet:(...a)=>events.push(a),arrayfromargs:a=>Array.from(a)};
+vm.createContext(c);vm.runInContext(fs.readFileSync('m4l/desnivel_phrase_player.js','utf8'),c);
+c.phrase(1,4,2,0,33,2,90,2,33,2,80);
+assert(!c.scheduled);c.running(1);
+let queue=events.filter(x=>x[0]===0).map(x=>Array.from(x[1]));
+assert.deepStrictEqual(queue,[[33,90,0],[33,0,960],[33,80,960],[33,0,1920],[-1,0,1920]]);
+c.phrase(1,8,1,0,40,1,80);assert(c.active.length===4);
+events=[];c.cycle();assert(c.active.length===8);
+assert(events.some(x=>x[0]===0&&x[1][0]===40));
+events=[];c.running(0);assert.deepStrictEqual(events,[[1,'clear'],[1,'flush']]);
+c.running(1);assert(c.scheduled);
+c.panic();assert(c.active===null&&c.pending===null&&!c.scheduled);
+c.phrase(1,4,1,0,999,1,80);assert(c.pending===null);
+c.running(0);c.phrase(1,4,0);c.running(1);assert(c.active.notes.length===0);
+console.log('OK: eventi ordinati, off prima di on, sentinel, cambio frase, stop, restart, panic, silenzio');

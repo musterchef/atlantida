@@ -16,7 +16,7 @@ GPX → producer Python → dati del viaggio agnostici
 
 Sono responsabilità separate, non processi obbligatoriamente separati. Il producer resta indipendente dai consumer e dal sequencer. Snake è il primo esperimento, non una dipendenza del modello del viaggio.
 
-Anche il motore musicale è indipendente da Snake: espone decisioni musicali condivise a una famiglia estensibile di adattatori. Aggiungere o sostituire una destinazione non richiede modificare il producer o introdurre condizioni specifiche del device nelle regole musicali. M4L, Live e OSC appartengono al percorso Snake scelto, non sono requisiti per ogni adattatore. La struttura concreta del contratto musicale va definita con la prima implementazione; non esiste ancora un framework di adattatori.
+Anche il motore musicale è indipendente da Snake: espone decisioni musicali condivise a una famiglia estensibile di adattatori. Aggiungere o sostituire una destinazione non richiede modificare il producer o introdurre condizioni specifiche del device nelle regole musicali. M4L, Live e OSC appartengono al percorso Snake scelto, non sono requisiti per ogni adattatore. La prima implementazione usa pattern con note e gate e cambi con timestamp e stato; non esiste un framework di adattatori.
 
 ## Responsabilità
 
@@ -31,7 +31,7 @@ Soglie, intervalli, scale e comportamenti vanno configurati esplicitamente. Ness
 
 ## Interfacce
 
-Il [contratto dati](CONTRATTO-DATI-VIAGGIO.md) descrive le metriche del viaggio. Il contratto delle decisioni musicali e i comandi degli adattatori sono separati e ancora da definire.
+Il [contratto dati](CONTRATTO-DATI-VIAGGIO.md) descrive le metriche del viaggio. Le decisioni musicali e i comandi degli adattatori sono separati: la [prima prova](TEST-VIAGGIO-SNAKE.md) implementa pattern e traduzione per Snake.
 
 Il tempo del replay stabilisce quanto rapidamente attraversiamo il viaggio. Il clock della destinazione stabilisce quando eseguire le note. Le regole devono dichiarare se operano sul tempo del viaggio o sul tempo musicale.
 

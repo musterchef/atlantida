@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import random
 
+from desnivel.music import SCALES, Pattern, scale_notes as musical_scale_notes
+
+ADDRESS = "/desnivel/v1/control/snake/set"
 STEPS = 16
 COLUMNS = 4
 NOTE_MIN, NOTE_MAX = 0, 83
@@ -17,19 +20,6 @@ VELOCITY_MIN, VELOCITY_MAX = 0, 127
 SCALES_PARAM = "Scales"
 SCALE_CHROMATIC = 0
 
-#: Intervalli in semitoni dalla tonica.
-SCALES: dict[str, tuple[int, ...]] = {
-    "chromatic": tuple(range(12)),
-    "major": (0, 2, 4, 5, 7, 9, 11),
-    "minor": (0, 2, 3, 5, 7, 8, 10),
-    "dorian": (0, 2, 3, 5, 7, 9, 10),
-    "phrygian": (0, 1, 3, 5, 7, 8, 10),
-    "lydian": (0, 2, 4, 6, 7, 9, 11),
-    "mixolydian": (0, 2, 4, 5, 7, 9, 10),
-    "pentatonic_major": (0, 2, 4, 7, 9),
-    "pentatonic_minor": (0, 3, 5, 7, 10),
-    "blues": (0, 3, 5, 6, 7, 10),
-}
 
 
 def param_name(kind: str, step: int) -> str:
@@ -72,16 +62,8 @@ def scale_notes(scale: str, root: int, count: int = STEPS) -> list[int]:
     al range di Snake. La corrispondenza con le note MIDI emesse resta
     da verificare ascoltando.
     """
-    try:
-        intervals = SCALES[scale]
-    except KeyError:
-        raise ValueError(f"scala sconosciuta: {scale}. Disponibili: {', '.join(SCALES)}")
-    notes = []
-    for i in range(count):
-        octave, degree = divmod(i, len(intervals))
-        note = root + 12 * octave + intervals[degree]
-        notes.append(max(NOTE_MIN, min(NOTE_MAX, note)))
-    return notes
+    return [max(NOTE_MIN, min(NOTE_MAX, n))
+            for n in musical_scale_notes(scale, root, count)]
 
 
 def note_messages(notes: list[int]) -> list[tuple[str, float]]:
@@ -91,3 +73,24 @@ def note_messages(notes: list[int]) -> list[tuple[str, float]]:
     return [(SCALES_PARAM, float(SCALE_CHROMATIC))] + [
         (param_name("Note", i + 1), float(n)) for i, n in enumerate(notes)
     ]
+
+
+def pattern_messages(pattern: Pattern) -> list[tuple[str, float]]:
+    """Traduzione del pattern; rifiuta note non rappresentabili da Snake.
+
+    Offset di ottava tra parametro e MIDI emesso ancora da verificare.
+    """
+    if any(not NOTE_MIN <= n <= NOTE_MAX for n in pattern.notes):
+        raise ValueError("Snake supporta valori nota da 0 a 83")
+    return note_messages(list(pattern.notes)) + gate_messages(list(pattern.gates))
+
+
+def section_pattern_messages(changes, rng):
+    """Shape Gates casuale una volta per sezione, compresa la prima."""
+    previous_section = None
+    for change in changes:
+        messages = pattern_messages(change.pattern)
+        if change.section_index is not None and change.section_index != previous_section:
+            messages.append(("gate_shape", float(rng.randint(0, 13))))
+            previous_section = change.section_index
+        yield change, messages
