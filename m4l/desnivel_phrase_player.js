@@ -1,4 +1,4 @@
-// JS prepara eventi; pipe in ticks li esegue. Nessun polling.
+m// JS prepara eventi; pipe in ticks li esegue. Nessun polling.
 // Out 0: pitch velocity ritardo_ticks; out 1: clear/flush; out 2: diagnostica.
 inlets = 1;
 outlets = 3;
