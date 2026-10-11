@@ -39,7 +39,7 @@ A 50× il filtro di 60 s equivale a 1,2 s reali e l'intervallo di 200 s a 4 s. I
 ## Limiti e verifica
 
 - Gli ingressi attivi mancanti o scaduti conservano l'ultimo pattern; il primo invio attende dati validi. Una sosta riduce la densità verso il minimo, non impone silenzio.
-- I cambi arrivano subito, senza sincronizzazione a ciclo e senza applicazione atomica. Il bridge M4L non è stato modificato.
+- I cambi arrivano subito, senza sincronizzazione a ciclo e senza applicazione atomica. Il bridge applica i parametri uno alla volta.
 - Snake richiede 16 celle; lunghezza eseguita e percorso restano impostazioni dell'utente. Non vengono imposti dal comando.
 - Echo e Reverb non sono ancora controllati. L'ottava MIDI effettiva di Snake resta da verificare.
 - Fine replay e Ctrl+C lasciano attivo l'ultimo pattern in Live.
@@ -50,10 +50,38 @@ Codice: `src/desnivel/journey_music.py` per le regole; `music.py` per pattern e 
 
 ## Shape dei Gates per sezione
 
-Il parametro 90 è stato confermato dall'utente come Shape dei Gates. Il bridge ora accetta `gate_shape`, mantenendo anche `test_shape_90`.
+Il bridge accetta `gate_shape` e l’alias precedente `test_shape_90`. Nella mod per il basso risolve il parametro per nome univoco `Gate_Shape`, senza dipendere dall’ordine dei parametri. L’indice 90 resta un ripiego soltanto per il vanilla a 152 parametri.
 
 A ogni ingresso di sezione, inclusa la prima, l'adattatore Snake estrae un intero uniforme 0–13. Il valore può ripetersi. Gli aggiornamenti nella stessa sezione non estraggono altre Shape. Il motore musicale emette solo l'indice della sezione; nomi e range Snake restano nell'adattatore.
 
 Aggiornare `desnivel_snake_params.js` accanto al device e ricaricare il bridge. Il comando del replay resta uguale; `--seed 7` rende ripetibili le estrazioni. Senza seed cambiano a ogni avvio. I messaggi Shape vengono applicati immediatamente, senza sincronizzazione a battuta.
 
-Verificati 15 test su motore e adattatore e dry-run sul GPX: tre estrazioni, valori 5, 2, 6 con seed 7. Automazione dei cambi di sezione ancora da ascoltare in Live.
+Verificati 15 test su motore e adattatore e dry-run sul GPX: tre estrazioni, valori 5, 2, 6 con seed 7. L’11 ottobre 2026 l’utente ha confermato il funzionamento dei launcher Shape 0 e 13 e del replay Firenze a 150×.
+
+## Altre tappe
+
+Tre preset con quattro sezioni, ai progressi 0%, 25%, 55% e 80% della distanza. Sono scelte compositive per l'ascolto, non armonie dedotte dal paesaggio. Ogni sezione modifica più celle; il motivo torna riconoscibile senza ripetere esattamente la prima versione.
+
+| Tappa | Carattere | Percorso delle scale | Gate |
+|---|---|---|---|
+| Firenze–San Gimignano | Più mobile, con salti e cambi di colore | Re dorico → misolidio → minore → dorico | 4–11 |
+| Sabaudia–Formia | Più aperto e meno denso | Do pentatonico maggiore → maggiore → lidio → pentatonico maggiore | 3–8 |
+| Peschici–Mattinata | Più teso e denso | Mi minore → frigio → dorico → minore | 4–12 |
+
+Le toniche sono classi di altezza; il registro dipende dai parametri e dalla conversione di Snake. Le Shape dei Gates sono ripetibili con `--seed 7`. Nessun controllo di velocità, direzione, durata o effetto viene aggiunto da questi preset.
+
+```sh
+python -m desnivel.cli.trip_music --gpx gpx/tappa05_Firenze_San_Gimignano.gpx --stage-music presets/tappe/firenze_san_gimignano.json --preset presets/misto.json --speed 50 --seed 7
+```
+
+```sh
+python -m desnivel.cli.trip_music --gpx gpx/tappa08_Sabaudia_Formia.gpx --stage-music presets/tappe/sabaudia_formia.json --preset presets/misto.json --speed 50 --seed 7
+```
+
+```sh
+python -m desnivel.cli.trip_music --gpx gpx/tappa11_Peschici_Mattinata.gpx --stage-music presets/tappe/peschici_mattinata.json --preset presets/misto.json --speed 50 --seed 7
+```
+
+Eseguire un replay alla volta. Per accompagnarlo, lasciare `python -m desnivel.cli.live_bass --strategy responsive` in un secondo terminale. Alla fine Snake mantiene l'ultimo pattern: interrompere il replay precedente prima di avviare una tappa diversa.
+
+L'intervallo minimo fra decisioni è 150 secondi di viaggio, pari a 3 secondi a 50×. Verificare le decisioni senza inviare aggiungendo `--dry-run`.

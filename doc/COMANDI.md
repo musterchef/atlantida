@@ -1,5 +1,11 @@
 # Comandi
 
+## Avvio con doppio clic
+
+La cartella [comandi](../comandi/) contiene launcher macOS `.command` per impostare la Shape dei Gates a 0 o 13 e avviare Firenze–San Gimignano a 150×. Usano automaticamente `.venv` del progetto. Tenere la cartella dentro il progetto.
+
+Aprire il Set funzionante con Snake e bridge; per ascoltare, avviare il trasporto Live. Eseguire un solo viaggio alla volta; Ctrl+C interrompe il replay e lascia a Snake l’ultimo pattern. Non serve `stream_metrics`.
+
 ## Preparare il terminale
 
 Dalla cartella del progetto:
@@ -51,7 +57,7 @@ Le istruzioni della pipeline precedente sono nei [comandi archiviati](archivio/C
 
 ## Preset del viaggio
 
-Disponibili movimento, sforzo e misto, con percorso armonico per tappa. [Comandi e configurazione](TEST-PRESET-MUSICALI.md). Test Python e generazione verificati; ascolto in Live da eseguire.
+Disponibili movimento, sforzo e misto, con percorso armonico per tappa. [Comandi e configurazione](TEST-PRESET-MUSICALI.md). Confermati dall’utente i due launcher Shape e il replay Firenze a 150×. Gli altri preset restano da valutare all’ascolto.
 
 ## Inviare una frase al player
 
@@ -60,3 +66,13 @@ python -m desnivel.cli.send_phrase --phrase presets/phrases/bass_sustained.json 
 ```
 
 Richiede il [player M4L](PLAYER-M4L.md); `--dry-run` prova il formato senza rete.
+
+## Basso da Snake
+
+Con i due device descritti in [Player M4L](PLAYER-M4L.md#basso-collegato-a-snake) e Export attivo:
+
+```sh
+python -m desnivel.cli.live_bass
+```
+
+Il comando resta in ascolto e prepara le frasi future. Non richiede `stream_metrics`; il replay del viaggio può continuare a modificare Snake attraverso il bridge esistente.

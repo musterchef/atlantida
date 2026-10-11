@@ -112,6 +112,28 @@ Per una soglia distinguere permanenza sopra soglia da attraversamento: decidere 
 
 Usare autocomplete per piccoli blocchi di comportamento già deciso. Per una revisione indicare file, input, risultato atteso e osservato; chiedere di leggere solo il frammento o diff necessario. Per gli oggetti Max usare l'help installato. Salvare un punto funzionante e aggiornare questa guida a fine sessione.
 
-## Prossimo passo minimo
+## Stato corrente
 
-Salvare nel progetto il device M4L funzionante, poi scegliere e implementare una sola conversione configurabile nel consumer Python.
+La base confermata e le verifiche ancora aperte sono in [Stato del progetto](SESSIONE.md).
+
+## Leggere le Shape
+
+Il messaggio Max `shapes`, collegato all’ingresso di `js desnivel_snake_params.js`, elenca le Shape e i relativi indici e valori. Nella mod per il basso, Gates è identificato dal nome univoco `Gate_Shape`; il comando `gate_shape` lo cerca per nome a ogni invio. `shapes <indice>` legge un singolo parametro senza modificarlo. Il bridge cerca la prima istanza di Snake.
+
+Aggiornare il JS accanto al device e ricaricarlo. Selezionare una forma in Snake, cliccare il messaggio e associare il numero stampato al percorso visibile. Sospendere il replay Python durante la mappatura perché può cambiare la Shape. La numerazione delle celle è per righe, da 1 a 16.
+
+## Banco Length dedicato
+
+`tools/build_snake_length.py` genera una copia del vanilla 3.2.3 con un banco Length che segue Notes. Conserva Notes, Gates, Velocities e i tre Custom. Il builder accetta soltanto la versione sorgente ispezionata, verificata tramite SHA256.
+
+```bash
+python3 tools/build_snake_length.py \
+  --source "$HOME/Music/Ableton/User Library/MaxForLive/MDD___SNAKE_V3.2.3.amxd" \
+  --output /tmp/desnivel-snake-length/MDD_SNAKE_LengthBank.amxd
+```
+
+L'output deve essere un file nuovo. Il device generato resta fuori dalla repository.
+
+Length ha 16 valori da 0 a 127, convertiti linearmente fra Min e Max in millisecondi. Ogni durata appartiene alla corrispondente cella Notes. Il motore Notes seleziona insieme altezza e durata; Length non ha un sequencer autonomo. I limiti iniziali sono 50–500 ms. La durata corrente viene acquisita all'attacco di ogni nota; cambiarla non modifica le note già iniziate. `makenote` gestisce i note-off e chiude la nota precedente quando viene ripetuta la stessa altezza.
+
+Verificati struttura, collegamenti e conservazione delle risorse incorporate. L’utente ha confermato suono, controllo Shape e replay Firenze nella configurazione installata. Restano da misurare durate, retrigger e corrispondenza con la previsione Python. Il bridge risolve Gates per nome nella mod; gli indici non sono stabili tra versioni.

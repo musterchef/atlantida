@@ -1,49 +1,53 @@
-# Passaggio di sessione
+# Stato del progetto
 
-Aggiornato il 2026-10-04.
+Aggiornato l’11 ottobre 2026.
 
-## Direzione
+## Base verificata in Live
 
-`GPX → metriche neutre → regole musicali Python → adattatori → strumenti`
+L’utente ha confermato i tre launcher in `comandi/`: Shape Gates 0, Shape Gates 13 e Firenze–San Gimignano a 150×. Snake suona e il replay funziona nella configurazione attuale. Questa conferma non misura la corrispondenza della previsione Python con il MIDI reale né la sincronizzazione del basso.
 
-Python decide la musica; le destinazioni eseguono sul clock di Live. Il tempo del replay è distinto dal BPM. Il motore non conosce parametri Snake, ID Live o synth. Timbri e impostazioni di Ableton sono scelte dell'utente.
+Usare il Set funzionante dell’utente. Il consolidamento non modifica Set, device installati o impostazioni di Ableton.
 
-## Implementato
+## Architettura e sorgenti
 
-- Producer: sei metriche neutre, `desnivel-stream-metrics`, OSC 9000.
-- Regola quota con isteresi: `music.py`, `presets/quota.json`.
-- Movimento, sforzo e misto: `journey_music.py`, preset pesati e configurazione della tappa. Motivo stabile, densità dei gate, tre sezioni armoniche per distanza.
-- Adattatore Snake: note, gate e Shape casuale 0–13 all'ingresso di ogni sezione. `--seed` rende ripetibili le estrazioni. Indice parametro 90 confermato dall'utente per Gates; alias `gate_shape`, alias diagnostico precedente conservato.
-- Secondo adattatore: `phrases.py`, `adapters/phrase_player.py`, CLI `send_phrase`. Frasi complete con posizione, altezza MIDI, durata e velocity; due esempi di basso in `presets/phrases/`.
-- Player M4L: JS prepara eventi, `pipe` li esegue in tick, `flush` gestisce note-off. Nessun polling. Frase successiva applicata al ciclo seguente.
+`GPX → metriche neutre → motore musicale Python → adattatori → strumenti`
 
-## Risultato verificato
+- `journey_music.py` e i preset di tappa decidono motivo, armonia e densità. Il tempo del replay è distinto dal BPM di Live.
+- `adapters/snake.py` traduce i pattern; `m4l/desnivel_snake_params.js` controlla il primo Snake trovato. Gates è risolto per nome `Gate_Shape` nella mod; l’indice 90 resta un ripiego per il vanilla a 152 parametri.
+- `tools/build_snake_length.py` aggiunge Length al vanilla senza togliere Custom. Ogni durata segue la corrispondente cella Notes.
+- `tools/build_live_bass.py` aggiunge la lettura dello stato e genera il player del basso. I device generati restano fuori dalla repository.
+- `adapters/snake_sequence.py` ricostruisce una `Phrase`; `bass.py` genera il basso da una frase indipendente dalla sorgente; il player esegue piani sul trasporto Live.
 
-L'utente conferma che il player suona in Live. Confermate ricezione OSC e notifiche Stop/Play dell'osservatore. Correzioni presenti nella patch del progetto e nel device salvato: `pipe 0 0 0 @delaytime 0 ticks`, `live.thisdevice`, `live.observer is_playing`.
+## Confronto con i file installati
 
-194 test Python passati: 193 nella suite in sandbox e il test UDP separatamente fuori sandbox. Test JS simulato passato per ordinamento eventi, confine ciclo, cambio frase, stop, ripartenza, panic e silenzio. La prova Live non equivale a una validazione completa del timing.
+Cartella: `~/Music/Ableton/User Library/MaxForLive/desnivel`.
 
-## File e comandi
+- `MDD_SNAKE_LengthBank.amxd`: oggetti, collegamenti e parametri coincidono con il builder, confrontati per ID indipendentemente dall’ordine nel JSON. Il JS incorporato coincide con il sorgente.
+- `Desnivel_Bass.amxd`: documento generato e JS incorporato coincidono con i sorgenti.
+- `desnivel_snake_params.js`: copia installata identica al sorgente.
+- Bridge: il file installato aggiunge soltanto il messaggio diagnostico manuale `shapes 90` e relativo collegamento, oltre a metadati di finestra e percorso. Il sorgente mantiene la dipendenza JS relativa alla propria cartella; il messaggio diagnostico non viene importato.
+- Vecchio player di frasi: eliminato dal sorgente un carattere iniziale spurio, allineandolo al JS installato. Il player assoluto del basso è un percorso distinto.
 
-- [Comandi](COMANDI.md)
+Il confronto riguarda i file su disco, non eventuali modifiche non salvate nel Set aperto.
+
+## Implementato, da verificare
+
+Previsione Snake e basso live sono conservati con i test pertinenti, ma non fanno parte delle tre prove confermate. La previsione supporta clock e Shape indipendenti, forwards/backwards, Shift visualizzato 1 e Swing 0. La telemetria legge le altezze già quantizzate e le fasi effettive; non anticipa modifiche future dello stato.
+
+Il basso offre `responsive` e `follow`. Non deduce accordi certi dalla scala e non dispone ancora di un’armonia condivisa esplicita con il viaggio. I test automatici verificano il comportamento del modello; confronto con MIDI registrato, timing reale e qualità musicale restano aperti.
+
+Sabaudia–Formia e Peschici–Mattinata sono preset d’uso richiesti dall’utente, verificati in generazione ma ancora da valutare all’ascolto.
+
+## Verifiche e prossimo passo
+
+Suite Python: 212 test passati, incluso il test UDP locale eseguito fuori dal sandbox. Quattro test JavaScript e sintassi dei tre launcher verificati. Nessun comando musicale inviato a Live durante il consolidamento.
+
+Prossimo passo, quando richiesto: confrontare una breve registrazione MIDI di Snake con la previsione Python. Solo dopo valutare il basso sulla sequenza verificata.
+
+## Istruzioni
+
+- [Comandi e launcher](COMANDI.md)
 - [Preset musicali](TEST-PRESET-MUSICALI.md)
-- [Player M4L: patch e prova](PLAYER-M4L.md)
-- [Test quota](TEST-VIAGGIO-SNAKE.md)
+- [Integrazione Snake e Length](INTEGRAZIONE-SNAKE.md)
+- [Player e basso](PLAYER-M4L.md)
 - [Architettura](DECISIONE-ARCHITETTURA-AUDIO.md)
-
-Il player si costruisce da `m4l/desnivel_phrase_player.maxpat`, con il JS omonimo accanto al device. Il device dell'utente è in `~/Music/Ableton/User Library/Presets/MIDI Effects/Max MIDI Effect/desnivel-send-phrase.amxd`. Il repository conserva sorgenti editabili; nessuna modifica diretta al device installato durante la pulizia.
-
-Porta player 9002, indirizzo `/desnivel/v1/player/bass/phrase`; porta Snake 9001, indirizzo `/desnivel/v1/control/snake/set`. Una sola ricezione per porta. Dopo modifiche al JS aggiornare la copia accanto al device e ricaricare.
-
-## Limiti e prossimi passi
-
-1. Verificare cambio frase durante la riproduzione e note-off durante note lunghe.
-2. Misurare almeno 32 cicli: deferlow/JS al confine può introdurre ritardo. Quantizzazione iniziale e riallineamento a seek/loop non implementati.
-3. Collegare regole del basso e armonia condivisa al viaggio, dopo la verifica del player.
-4. Destinazioni multiple Snake e controllo effetti ancora da implementare. Snake trova la prima istanza per nome.
-
-Player: massimo 32 note, nessuna sovrapposizione della stessa altezza e nessuna nota oltre il ciclo. UDP senza ACK. Velocity Snake e ottava MIDI effettiva dei suoi parametri restano da verificare. Non usare `live.remote~`: ha causato crash nelle prove precedenti.
-
-## Metodo
-
-Documentazione concisa, stato attuale e limiti espliciti. Trattare l'utente come collaboratore esperto. Diagnosticare dal device salvato e dai dati, senza far ripetere verifiche generiche. Non alterare il percorso funzionante durante pulizie. Conservare implementazioni precedenti; documentazione storica in `doc/archivio/`.

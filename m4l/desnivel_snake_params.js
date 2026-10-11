@@ -109,9 +109,32 @@ function testShape90(value) {
     post("Shape test: parametro 90, precedente=" + before + ", richiesto=" + v + "\n");
 }
 
+function setGateShape(value) {
+    var v=Number(value);
+    if(!isFinite(v) || Math.floor(v)!==v || v<0 || v>13) {
+        post('Gate Shape: serve un intero 0..13\n');return;
+    }
+    buildIndex();
+    var path=paramPaths['Gate_Shape'] || paramPaths['Gates_Sequencer_Snake_Shape'];
+    if(path) {
+        var p=new LiveAPI(null,path);
+        if(Number(get1(p,'min'))!==0 || Number(get1(p,'max'))!==13) {
+            post('Gate Shape: range inatteso, invio annullato\n');return;
+        }
+        p.set('value',v);
+        post('Gate Shape = '+get1(p,'value')+'\n');return;
+    }
+    var device=findSnake();
+    // Compatibilità limitata al vanilla verificato: mai indice 90 sulle mod.
+    if(device && new LiveAPI(null,device).getcount('parameters')===152) {
+        testShape90(v);return;
+    }
+    post('Gate Shape: parametro univoco assente; aggiornare la mod Snake\n');
+}
+
 function set(name, value) {
     if (name === "gate_shape" || name === "test_shape_90") {
-        testShape90(value);
+        setGateShape(value);
         return;
     }
     if (paramPaths === null) {
@@ -138,4 +161,27 @@ function get(name) {
         return;
     }
     post(name + " = " + get1(new LiveAPI(null, path), "value") + "\n");
+}
+
+// "shapes": tutte le Shape; "shapes 90": solo il parametro indicato.
+// Lettura senza modifiche. Gli indici identificano parametri, non ID Live.
+function shapes(index) {
+    var devicePath = findSnake();
+    if (devicePath === null) {post("Snake non trovato\n"); return;}
+    var count = new LiveAPI(null, devicePath).getcount("parameters");
+    var single = arguments.length > 0;
+    var selected = Number(index);
+    if (single && (!isFinite(selected) || Math.floor(selected) !== selected || selected < 0 || selected >= count)) {
+        post("shapes: indice parametro non valido\n"); return;
+    }
+    post("Shape di " + devicePath + "\n");
+    for (var i = 0; i < count; i++) {
+        if (single && i !== selected) continue;
+        var p = new LiveAPI(null, devicePath + " parameters " + i);
+        if (["Shapes", "Gate_Shape", "Gates_Sequencer_Snake_Shape"].indexOf(String(get1(p, "name"))) === -1) {
+            if (single) post("shapes: il parametro " + i + " non si chiama Shapes\n");
+            continue;
+        }
+        post("Shape parametro " + i + " = " + get1(p, "value") + "\n");
+    }
 }
