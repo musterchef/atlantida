@@ -52,7 +52,15 @@ class Lane:
             raise ValueError('phase_beats deve essere finita e non negativa')
 
     def cell_at(self, beat):
-        position = (Fraction(str(beat)) + Fraction(str(self.phase_beats))) // SPEEDS[self.speed]
+        position_beats = Fraction(str(beat)) + Fraction(str(self.phase_beats))
+        step_position = position_beats / SPEEDS[self.speed]
+        nearest_step = round(step_position)
+        # Fasi esportate come float possono differire dopo il modulo del ciclo.
+        # Riconcilia solo il rumore numerico sul confine, non il timing musicale.
+        if abs(position_beats - nearest_step * SPEEDS[self.speed]) <= Fraction(1, 10**9):
+            position = nearest_step
+        else:
+            position = step_position // 1
         index = int(position) % self.steps
         if self.direction == 'backwards':
             index = self.steps - 1 - index

@@ -43,3 +43,19 @@ def test_unknown_behavior_is_rejected():
         Lane(1,'16n',16,'random',0)
     with pytest.raises(ValueError, match='swing'):
         state(swing=.2)
+
+
+def test_exported_phases_do_not_delay_simultaneous_lane_steps():
+    # Stesso istante esportato dopo modulo su cicli differenti (2.5 e 4 beat).
+    melody = predict(state(
+        notes_lane=Lane(3, '8n', 5, 'backwards', .9559032501910809),
+        gates_lane=Lane(1, '16n', 16, 'forwards', 3.455903250191081),
+    ), 1)
+    assert [n.pitch for n in melody.notes] == [48, 48, 44, 44]
+
+
+def test_boundary_tolerance_preserves_real_before_and_after_positions():
+    lane = Lane(1, '16n', 16, 'forwards', 0)
+    assert lane.cell_at(.25 - 1e-7) == 0
+    assert lane.cell_at(.25) == 1
+    assert lane.cell_at(.25 + 1e-7) == 1

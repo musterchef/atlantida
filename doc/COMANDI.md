@@ -6,6 +6,18 @@ La cartella [comandi](../comandi/) contiene launcher macOS `.command` per impost
 
 Aprire il Set funzionante con Snake e bridge; per ascoltare, avviare il trasporto Live. Eseguire un solo viaggio alla volta; Ctrl+C interrompe il replay e lascia a Snake l’ultimo pattern. Non serve `stream_metrics`.
 
+## Sequenza di riferimento Snake
+
+Il launcher `04 - Snake - sequenza di riferimento.command` imposta 16 valori Note distinti da 36 a 51, scala Chromatic, fondamentale C, gate tutti attivi, velocity 64, Swing 0 e Min/Max Length a 100 ms. Imposta Gates Shape a 0 e lascia invariata Notes Shape. Serve al confronto con una registrazione MIDI; nella configurazione verificata i valori 36–51 producono le altezze MIDI 60–75.
+
+Fermare il replay del viaggio prima dell’invio. Verificare manualmente, nei banchi Notes, Gates e Velocities: Speed 16n, Steps 16, Direction forwards e Shift 1. Il launcher non modifica BPM, Custom o synth. L’invio OSC non conferma l’applicazione dei valori in Live.
+
+Per controllare i messaggi senza inviarli:
+
+```sh
+bash 'comandi/04 - Snake - sequenza di riferimento.command' --dry-run
+```
+
 ## Preparare il terminale
 
 Dalla cartella del progetto:
@@ -76,3 +88,11 @@ python -m desnivel.cli.live_bass
 ```
 
 Il comando resta in ascolto e prepara le frasi future. Non richiede `stream_metrics`; il replay del viaggio può continuare a modificare Snake attraverso il bridge esistente.
+
+## Acquisire Export Snake
+
+Aprire `comandi/05 - Acquisisci Export Snake.command`. Ascolta la porta locale 9003, senza generare il basso o modificare Live. Chiudere prima `live_bass`, che usa la stessa porta.
+
+Con Live fermo e Export attivo, attendere «Export ricevuto». Registrare il MIDI da 1.1.1 con loop disattivato, poi premere Stop: l’acquisizione termina automaticamente. Il terminale mostra il percorso `snake-state.jsonl` in una nuova cartella temporanea esterna alla repository. Conservare insieme MIDI esportato, BPM e posizione iniziale della clip per il confronto. I messaggi grezzi includono beat, fase e stato; il tempo locale di ricezione è aggiunto senza alterare il contenuto.
+
+Il limite predefinito è 180 secondi, inclusa l’attesa; Ctrl+C chiude e conserva i dati ricevuti. Da terminale: `python -m desnivel.cli.capture_snake --seconds 180`. Un file vuoto non è un’acquisizione valida; gli errori trasmessi da Export sono conservati e mostrati.

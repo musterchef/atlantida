@@ -1,6 +1,6 @@
 # Stato del progetto
 
-Aggiornato l’11 ottobre 2026.
+Aggiornato il 12 ottobre 2026.
 
 ## Base verificata in Live
 
@@ -32,17 +32,17 @@ Il confronto riguarda i file su disco, non eventuali modifiche non salvate nel S
 
 ## Implementato, da verificare
 
-Previsione Snake e basso live sono conservati con i test pertinenti, ma non fanno parte delle tre prove confermate. La previsione supporta clock e Shape indipendenti, forwards/backwards, Shift visualizzato 1 e Swing 0. La telemetria legge le altezze già quantizzate e le fasi effettive; non anticipa modifiche future dello stato.
+La previsione Snake è stata confrontata con registrazioni MIDI e stati Export nelle configurazioni descritte sotto. La sincronizzazione del basso live resta da verificare. La previsione supporta clock e Shape indipendenti, forwards/backwards, Shift visualizzato 1 e Swing 0. La telemetria legge le altezze già quantizzate e le fasi effettive; non anticipa modifiche future dello stato.
 
-Il basso offre `responsive` e `follow`. Non deduce accordi certi dalla scala e non dispone ancora di un’armonia condivisa esplicita con il viaggio. I test automatici verificano il comportamento del modello; confronto con MIDI registrato, timing reale e qualità musicale restano aperti.
+Il basso offre `responsive` e `follow`. Non deduce accordi certi dalla scala e non dispone ancora di un’armonia condivisa esplicita con il viaggio. Per il basso restano aperti il confronto con MIDI registrato, il timing reale e la qualità musicale.
 
 Sabaudia–Formia e Peschici–Mattinata sono preset d’uso richiesti dall’utente, verificati in generazione ma ancora da valutare all’ascolto.
 
 ## Verifiche e prossimo passo
 
-Suite Python: 212 test passati, incluso il test UDP locale eseguito fuori dal sandbox. Quattro test JavaScript e sintassi dei tre launcher verificati. Nessun comando musicale inviato a Live durante il consolidamento.
+Al consolidamento dell’11 ottobre: 212 test Python passati, incluso il test UDP locale eseguito fuori dal sandbox. Quattro test JavaScript e sintassi dei tre launcher verificati. Nessun comando musicale inviato a Live durante il consolidamento.
 
-Prossimo passo, quando richiesto: confrontare una breve registrazione MIDI di Snake con la previsione Python. Solo dopo valutare il basso sulla sequenza verificata.
+Prossime verifiche: cambi di stato, stop/ripartenza e seek nel collegamento live; poi sincronizzazione del basso.
 
 ## Istruzioni
 
@@ -51,3 +51,13 @@ Prossimo passo, quando richiesto: confrontare una breve registrazione MIDI di Sn
 - [Integrazione Snake e Length](INTEGRAZIONE-SNAKE.md)
 - [Player e basso](PLAYER-M4L.md)
 - [Architettura](DECISIONE-ARCHITETTURA-AUDIO.md)
+
+## Verifica Export e MIDI del 12 ottobre
+
+Confrontati 85 snapshot Export con la registrazione simultanea MIDI a 94 BPM: Notes Shape 3, 5 Steps, backwards a 8n; Gates Shape 1 a 16n con seconda cella spenta; Velocities Shape 1 a 8n con quattro livelli; Length 265 ms.
+
+Il confronto ha rilevato un errore numerico nel modello ai confini di step: il modulo dei cicli produceva fasi float differenti di circa 1e-16 beat. `Lane.cell_at` ora riconosce un confine entro 1e-9 beat; un test verifica che gli istanti realmente precedenti restino nella cella precedente. Nessuna modifica ai device o ai dati registrati.
+
+Dopo la correzione, 585 confronti su finestre future coprono 60 note distinte senza differenze di attacco, altezza o velocity; durate entro un tick del MIDI a 96 PPQ. La prima nota precede il primo snapshot e l’ultima, al bordo dello stop, è esclusa dal confronto. Nessun riallineamento della fase ricavato dal MIDI. Passati 19 test pertinenti di acquisizione, previsione e basso. Questa prova verifica Export nella configurazione indicata, non ancora cambi di stato, seek o sincronizzazione del player del basso.
+
+Le prove MIDI precedenti confermano Shape Notes 1 e 3, pause dei Gates, clock indipendenti Notes/Velocities a 8n e Gates a 16n, Length per cella, velocity variabili, Notes con 5 Steps forwards/backwards e riattacchi con durata 265 ms. La deriva temporale della prima registrazione resta non spiegata e non riprodotta. File MIDI, acquisizioni e script di confronto temporanei restano fuori dalla repository.
