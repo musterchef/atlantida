@@ -22,7 +22,7 @@ def main(argv=None):
     parser.add_argument('--articulation', type=float, default=0.9)
     parser.add_argument('--velocity-ratio', type=float, default=0.9)
     parser.add_argument('--previous-pitch', type=int)
-    parser.add_argument('--strategy', choices=['responsive','follow'], default='responsive')
+    parser.add_argument('--strategy', choices=['responsive','follow','slap'], default='responsive')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--variation-period', type=int, default=4)
     parser.add_argument('--max-hold', type=float, default=2)

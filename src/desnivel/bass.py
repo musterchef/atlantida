@@ -23,7 +23,7 @@ class BassSettings:
     grid: float = 0.5
 
     def __post_init__(self):
-        if self.strategy not in ('responsive', 'follow'):
+        if self.strategy not in ('responsive', 'follow', 'slap'):
             raise ValueError('strategia basso sconosciuta')
         if type(self.seed) is not int or type(self.variation_period) is not int or self.variation_period < 1:
             raise ValueError('seed intero e variation_period positivo richiesti')
@@ -148,6 +148,70 @@ def _responsive(melody, settings, previous_pitch, phrase_index):
     return Phrase(melody.length_beats,tuple(result))
 
 
+def _slap(melody, settings, previous_pitch, phrase_index):
+    """Alterna colpi bassi sugli appoggi e risposte acute sincopate."""
+    if not melody.notes:
+        return Phrase(melody.length_beats, ())
+
+    weights = _salience(melody)
+    anchor = max(weights, key=lambda pc: (weights[pc], -pc))
+    paired_lows = defaultdict(list)
+    for pitch in range(settings.lowest, settings.highest - 11):
+        if pitch % 12 in weights:
+            paired_lows[pitch % 12].append(pitch)
+
+    groove = (
+        (0, 1, 2, 3),
+        (1, 3),
+        (0, 2),
+        (1, 2, 3),
+    )[phrase_index % 4]
+    onsets = []
+    for index in range(math.ceil(melody.length_beats / 0.5)):
+        beat = index * 0.5
+        if beat >= melody.length_beats:
+            break
+        if abs(beat - round(beat)) < 1e-9:
+            onsets.append(beat)
+        elif int((beat % 4) - 0.5) in groove:
+            onsets.append(beat)
+
+    result = []
+    for index, beat in enumerate(onsets):
+        thumb = abs(beat - round(beat)) < 1e-9
+        nearby = min(melody.notes, key=lambda n: (abs(n.beat - beat), -n.velocity))
+        anchor_beat = thumb and int(round(beat)) % 4 in (0, 2)
+        source = nearby
+        if anchor_beat:
+            source = min(
+                (n for n in melody.notes if n.pitch % 12 == anchor),
+                key=lambda n: (abs(n.beat - beat), -n.velocity),
+            )
+
+        candidates = paired_lows.get(source.pitch % 12, [])
+        if candidates:
+            target_low = source.pitch - 24
+            if index == 0 and previous_pitch is not None:
+                target_low = previous_pitch - 12
+            low_pitch = min(candidates, key=lambda p: (abs(p - target_low), p))
+            pitch = low_pitch if thumb else low_pitch + 12
+        else:
+            candidates = [p for p in range(settings.lowest, settings.highest + 1)
+                          if p % 12 == source.pitch % 12]
+            target = source.pitch - (24 if thumb else 12)
+            pitch = min(candidates, key=lambda p: (abs(p - target), p))
+
+        next_beat = onsets[index + 1] if index + 1 < len(onsets) else melody.length_beats
+        hold = min(next_beat - beat, settings.max_hold)
+        duration = hold * settings.articulation * (0.7 if thumb else 0.45)
+        velocity = max(1, min(127, round(
+            source.velocity * settings.velocity_ratio * (1.0 if thumb else 0.95)
+        )))
+        result.append(Note(beat, pitch, duration, velocity))
+
+    return Phrase(melody.length_beats, tuple(result))
+
+
 def generate_bass(melody: Phrase, settings: BassSettings = BassSettings(),
                   previous_pitch: int | None = None, *, phrase_index: int = 0) -> Phrase:
     """Compone una frase; indice musicale esplicito per variazioni ripetibili.
@@ -162,4 +226,6 @@ def generate_bass(melody: Phrase, settings: BassSettings = BassSettings(),
         raise ValueError('previous_pitch deve essere una nota MIDI')
     if settings.strategy == 'follow':
         return _follow(melody,settings,previous_pitch)
+    if settings.strategy == 'slap':
+        return _slap(melody, settings, previous_pitch, phrase_index)
     return _responsive(melody,settings,previous_pitch,phrase_index)

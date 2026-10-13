@@ -91,8 +91,26 @@ Il comando resta in ascolto e prepara le frasi future. Non richiede `stream_metr
 
 ## Acquisire Export Snake
 
+[Funzionamento, formato dei dati e piano delle verifiche](EXPORT-SNAKE.md).
+
 Aprire `comandi/05 - Acquisisci Export Snake.command`. Ascolta la porta locale 9003, senza generare il basso o modificare Live. Chiudere prima `live_bass`, che usa la stessa porta.
 
-Con Live fermo e Export attivo, attendere «Export ricevuto». Registrare il MIDI da 1.1.1 con loop disattivato, poi premere Stop: l’acquisizione termina automaticamente. Il terminale mostra il percorso `snake-state.jsonl` in una nuova cartella temporanea esterna alla repository. Conservare insieme MIDI esportato, BPM e posizione iniziale della clip per il confronto. I messaggi grezzi includono beat, fase e stato; il tempo locale di ricezione è aggiunto senza alterare il contenuto.
+Con Live fermo e Export attivo, attendere «Export ricevuto». Registrare il MIDI da 1.1.1 con loop disattivato, poi premere Stop: l’acquisizione termina automaticamente. Il terminale mostra il percorso `snake-state.jsonl` in una nuova cartella temporanea esterna alla repository. Conservare insieme MIDI esportato, BPM e posizione iniziale della clip per il confronto. Il file versionato contiene metadati di sessione, snapshot decodificati con beat/fase/stato e motivo di chiusura. I messaggi non decodificabili sono conservati per la diagnosi.
 
-Il limite predefinito è 180 secondi, inclusa l’attesa; Ctrl+C chiude e conserva i dati ricevuti. Da terminale: `python -m desnivel.cli.capture_snake --seconds 180`. Un file vuoto non è un’acquisizione valida; gli errori trasmessi da Export sono conservati e mostrati.
+Il limite predefinito è 180 secondi, inclusa l’attesa; Ctrl+C chiude e conserva i dati ricevuti. Da terminale: `python -m desnivel.cli.capture_snake --seconds 180 --label "prova Export"`. Un file vuoto non è un’acquisizione valida; gli errori trasmessi da Export sono conservati e mostrati.
+
+
+## Stop e ripartenza
+
+Il launcher `06 - Export stop e ripartenza.command` riusa il ricevitore con `--keep-open`, limite di 600 secondi ed etichetta della prova. Non termina allo Stop di Live: chiudere con Ctrl+C nel terminale dopo aver completato le registrazioni. Il launcher 05 conserva la chiusura automatica precedente.
+
+Lasciare invariata la configurazione Snake ed Export attivo. Registrare quattro battute da 1.1.1 senza loop, fermare Live ed esportare la clip come `MIDI-prima-stop.mid`. Riportare il trasporto a 1.1.1, registrare altre quattro battute ed esportare `MIDI-dopo-stop.mid`. Conservare il primo MIDI prima della seconda registrazione. I due file e il JSONL della stessa sessione permettono di confrontare separatamente le epoche prima e dopo Stop.
+
+
+## Verificare il basso completo
+
+Il launcher `07 - Basso e acquisizione.command` avvia `live_bass --capture`: suona il basso e salva in `bass-session.jsonl`, fuori dalla repository, gli stati Snake e i piani inviati al player. Riusa l’archivio JSONL versionato; l’indirizzo OSC distingue ingresso e uscita. L’invio UDP registrato non certifica la ricezione del player.
+
+Chiudere gli altri ricevitori sulla porta 9003. Usare il device `Desnivel_Bass.amxd` prima del synth sulla traccia basso, Export attivo su Snake e la configurazione già verificata. Registrare il MIDI Post FX della traccia basso da 1.1.1 senza loop per almeno quattro battute. Il basso entra dopo l’anticipo di pianificazione: il silenzio iniziale va conservato nella clip esportata. Per verificare anche la ripartenza, esportare la prima clip, tornare a 1.1.1 e ripetere mantenendo aperto il launcher. Chiudere con Ctrl+C; conservare i due MIDI e il JSONL.
+
+Il test automatico verifica che l’archivio conservi lo stato ricevuto, il piano effettivamente passato al client UDP e il reset finale. Il confronto MIDI del player già concluso è descritto in [Sessione](SESSIONE.md#confronto-del-player-del-basso).

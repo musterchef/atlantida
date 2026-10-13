@@ -62,3 +62,36 @@ def test_responsive_density_and_dynamics_are_controls():
     dense=generate_bass(melody,BassSettings(min_spacing=.5))
     assert len(dense.notes)>len(sparse.notes)
     assert len({n.velocity for n in dense.notes})>1
+
+
+def test_slap_adds_syncopation_and_octave_pop_notes():
+    melody = Phrase(4, tuple(
+        Note(beat, pitch, .2, 100)
+        for beat, pitch in zip((0, .5, 1, 1.5, 2, 2.5, 3, 3.5),
+                               (60, 64, 67, 62, 60, 64, 67, 62))
+    ))
+    settings = BassSettings(highest=59, strategy='slap')
+    bass = generate_bass(melody, settings)
+    responsive = generate_bass(melody, BassSettings(highest=59))
+
+    assert [note.beat for note in bass.notes] == [i * .5 for i in range(8)]
+    assert len(bass.notes) > len(responsive.notes)
+    assert all(28 <= note.pitch <= 59 for note in bass.notes)
+    assert all(note.pitch % 12 in {0, 2, 4, 7} for note in bass.notes)
+    assert all(note.duration < .5 for note in bass.notes)
+
+    repeated = Phrase(4, tuple(Note(i * .5, 60, .2, 100) for i in range(8)))
+    octave_bass = generate_bass(repeated, settings)
+    assert all(high.pitch - low.pitch == 12
+               for low, high in zip(octave_bass.notes[::2], octave_bass.notes[1::2]))
+
+
+def test_slap_varies_groove_repeats_and_preserves_silence():
+    melody = Phrase(4, tuple(Note(i * .5, 60 + i % 3, .2, 90) for i in range(8)))
+    settings = BassSettings(highest=59, strategy='slap')
+    first = generate_bass(melody, settings, phrase_index=0)
+    second = generate_bass(melody, settings, phrase_index=1)
+
+    assert first == generate_bass(melody, settings, phrase_index=4)
+    assert [n.beat for n in first.notes] != [n.beat for n in second.notes]
+    assert generate_bass(Phrase(4, ()), settings).notes == ()

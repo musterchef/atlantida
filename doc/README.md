@@ -6,6 +6,7 @@
 | [Dati del viaggio](CONTRATTO-DATI-VIAGGIO.md) | Metriche, unità e formato OSC. |
 | [Stato](STATO-CONTRATTO-OSC.md) | Cosa funziona e cosa manca. |
 | [Comandi](COMANDI.md) | Avvio del producer e test. |
+| [Export Snake](EXPORT-SNAKE.md) | Stato, fase, acquisizione, previsione e piano delle verifiche live. |
 | [Snake](INTEGRAZIONE-SNAKE.md) | Collegamento M4L e prove del primo adattatore. |
 | [Prossimi passi](../TODO.md) | Lavoro da completare. |
 

@@ -89,7 +89,21 @@ Riferimenti ufficiali: [pipe](https://docs.cycling74.com/reference/pipe/) per co
 
 ## Generare il basso
 
-`desnivel.bass.generate_bass` riceve una `Phrase` da qualunque sorgente. La regola predefinita `responsive` costruisce appoggi e risposte ritmiche, usa le classi di altezza presenti nella melodia e mantiene la continuità di registro. Sceglie una nota di appoggio dalla durata e dagli accenti osservati, senza dichiararla tonica o dedurre accordi certi. Una frase melodica vuota produce silenzio. La regola `follow` conserva il comportamento iniziale, con attacchi e durate derivati dalla melodia. Registro, distanza minima fra attacchi, articolazione e rapporto di velocity sono configurabili. Una regola diversa può usare lo stesso contratto `Phrase → Phrase`, senza modificare il player o Snake.
+`desnivel.bass.generate_bass` riceve una `Phrase` da qualunque sorgente. La regola predefinita `responsive` costruisce appoggi e risposte ritmiche, usa le classi di altezza presenti nella melodia e mantiene la continuità di registro. Sceglie una nota di appoggio dalla durata e dagli accenti osservati, senza dichiararla tonica o dedurre accordi certi. Una frase melodica vuota produce silenzio. La regola `follow` conserva il comportamento iniziale, con attacchi e durate derivati dalla melodia.
+
+La strategia aggiuntiva `slap` mantiene i due comportamenti e aggiunge un groove più fitto: colpi bassi sui beat, risposte sincopate agli ottavi e, quando il registro lo consente, note di risposta un'ottava sopra. Il disegno varia ogni battuta di quattro beat. Per provare un registro abbastanza ampio da ottenere le ottave:
+
+```sh
+python -m desnivel.cli.live_bass --strategy slap --highest 59
+```
+
+Nel launcher di acquisizione si possono passare le stesse opzioni:
+
+```sh
+./comandi/07\ -\ Basso\ e\ acquisizione.command --strategy slap --highest 59
+```
+
+Il MIDI definisce ritmo, altezza, durata e velocity, non il timbro: per sentire un vero suono slap serve una patch o uno strumento con quel timbro. Il basso resta ricavato dalla frase prevista da Snake. Registro, distanza minima fra attacchi, articolazione e rapporto di velocity sono configurabili nelle altre strategie. Una frase melodica vuota produce silenzio. Una regola diversa può usare lo stesso contratto `Phrase → Phrase`, senza modificare il player o Snake.
 
 Da una melodia JSON nel formato del player:
 
