@@ -109,7 +109,7 @@ La corrispondenza esatta dei tipi fattuali e dei payload va definita insieme all
 
 ## Sorgente unica e test
 
-Il catalogo implementato in `src/desnivel/trip_metrics.py` e la frequenza in `OscConfig.trip_metrics_rate_hz` sono le fonti operative per nomi, unita' e rate. Test dedicati verificano route, timestamp, aggregazione e validita'; sink e CLI consumano questo catalogo invece di mantenere mapping separati.
+Il catalogo implementato in `src/desnivel/trip/metrics.py` e la frequenza in `OscConfig.trip_metrics_rate_hz` sono le fonti operative per nomi, unita' e rate. Test dedicati verificano route, timestamp, aggregazione e validita'; sink e CLI consumano questo catalogo invece di mantenere mapping separati.
 
 Test minimi del producer:
 

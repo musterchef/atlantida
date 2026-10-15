@@ -4,14 +4,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from desnivel.config import Config, GpxConfig, OscConfig
+from desnivel.trip.config import Config, GpxConfig, OscConfig
 from desnivel.sinks.osc import FakeOscClient
 from desnivel.sinks.trip_metrics_osc import (
     TripMetricsOscSink,
     build_trip_metric_schedule,
 )
-from desnivel.track import Track
-from desnivel.trip_metrics import MetricName
+from desnivel.trip.track import Track
+from desnivel.trip.metrics import MetricName
 
 
 def _track(duration_s: float = 2.0) -> Track:

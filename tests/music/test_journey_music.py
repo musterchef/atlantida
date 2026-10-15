@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from desnivel.journey_music import compose
-from desnivel.trip_metrics import MetricName as M, MetricSample as S
+from desnivel.music.journey import compose
+from desnivel.trip.metrics import MetricName as M, MetricSample as S
 
 
 def config():
@@ -72,7 +72,7 @@ def test_identical_patterns_still_emit_section_entry():
 
 def test_snake_shape_only_on_section_entry():
     import random
-    from desnivel.music import Pattern, PatternChange
+    from desnivel.music.patterns import Pattern, PatternChange
     from desnivel.adapters.snake import section_pattern_messages
     p = Pattern((33,) * 16, (1,) * 16)
     changes = [PatternChange(i, 'state', p, section) for i, section in enumerate([0, 0, 1, 1, 2])]

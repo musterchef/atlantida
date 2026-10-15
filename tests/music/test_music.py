@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from desnivel.music import Pattern, ThresholdRule, rule_from_dict, scale_notes
-from desnivel.trip_metrics import MetricName, MetricSample
+from desnivel.music.patterns import Pattern, ThresholdRule, rule_from_dict, scale_notes
+from desnivel.trip.metrics import MetricName, MetricSample
 from desnivel.adapters.snake import pattern_messages
 
 

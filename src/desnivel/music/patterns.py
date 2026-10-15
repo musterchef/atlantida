@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-from desnivel.trip_metrics import MetricName, MetricSample
+from desnivel.trip.metrics import MetricName, MetricSample
 
 #: Intervalli in semitoni dalla tonica.
 SCALES: dict[str, tuple[int, ...]] = {

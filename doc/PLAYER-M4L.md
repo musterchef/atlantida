@@ -77,7 +77,7 @@ Limite del player: 32 note per datagramma, MIDI 0–127, velocity 1–127. Accor
 
 ## Codice e verifica
 
-- `src/desnivel/phrases.py`: modello musicale.
+- `src/desnivel/music/phrases.py`: modello musicale.
 - `src/desnivel/adapters/phrase_player.py`: protocollo e limiti della destinazione.
 - `src/desnivel/cli/send_phrase.py`: invio di una frase JSON.
 - `m4l/desnivel_phrase_player.js`: validazione, buffer e preparazione eventi.
@@ -91,7 +91,7 @@ Riferimenti ufficiali: [pipe](https://docs.cycling74.com/reference/pipe/) per co
 
 ## Generare il basso
 
-`desnivel.bass.generate_bass` riceve una `Phrase` da qualunque sorgente e restituisce una frase di basso. Un solo percorso seleziona gli attacchi, sceglie le altezze e determina durate e velocity. Snake, OSC e player restano fuori dal generatore.
+`desnivel.music.bass.generator.generate_bass` riceve una `Phrase` da qualunque sorgente e restituisce una frase di basso. Un solo percorso seleziona gli attacchi, sceglie le altezze e determina durate e velocity. Snake, OSC e player restano fuori dal generatore.
 
 `--preset responsive`, `follow` e `slap` forniscono valori iniziali; `--strategy` resta un alias. I controlli espliciti prevalgono sul preset. Il MIDI non definisce il timbro slap dello strumento.
 

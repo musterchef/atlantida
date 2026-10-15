@@ -5,8 +5,8 @@ import argparse
 from dataclasses import replace
 from pathlib import Path
 
-from desnivel.config import DEFAULT_CONFIG
-from desnivel.loader import load_track
+from desnivel.trip.config import DEFAULT_CONFIG
+from desnivel.trip.loader import load_track
 from desnivel.sinks.osc import UdpOscClient
 from desnivel.sinks.trip_metrics_osc import (
     TripMetricsOscSink,

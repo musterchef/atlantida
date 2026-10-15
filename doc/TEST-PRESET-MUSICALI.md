@@ -46,7 +46,7 @@ A 50× il filtro di 60 s equivale a 1,2 s reali e l'intervallo di 200 s a 4 s. I
 
 La generazione sul GPX Levanto–La Spezia produce 36 cambi per movimento, 32 per sforzo e 31 per misto, attraversando le tre sezioni. Il replay Firenze è stato confermato in Live; gli altri preset restano da valutare all’ascolto.
 
-Codice: `src/desnivel/journey_music.py` per le regole; `music.py` per pattern e scale; `adapters/snake.py` per la traduzione; `cli/trip_music.py` per il replay. La regola a soglia è descritta in [Quota e pattern](TEST-VIAGGIO-SNAKE.md).
+Codice: `src/desnivel/music/journey.py` per le regole; `music/patterns.py` per pattern e scale; `adapters/snake.py` per la traduzione; `cli/trip_music.py` per il replay. La regola a soglia è descritta in [Quota e pattern](TEST-VIAGGIO-SNAKE.md).
 
 ## Shape dei Gates per sezione
 

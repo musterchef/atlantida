@@ -4,8 +4,8 @@ from __future__ import annotations
 from itertools import groupby
 import math
 
-from desnivel.music import Pattern, PatternChange, SCALES
-from desnivel.trip_metrics import MetricName
+from desnivel.music.patterns import Pattern, PatternChange, SCALES
+from desnivel.trip.metrics import MetricName
 
 
 def compose(samples, config, weights):

@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, fields, replace
 import math
 
-from desnivel.bass import BassSettings
+from desnivel.music.bass.generator import BassSettings
 
 PARAMETERS = frozenset(field.name for field in fields(BassSettings) if field.name != 'strategy')
 INTEGER_PARAMETERS = frozenset(('lowest', 'highest', 'seed', 'variation_period'))

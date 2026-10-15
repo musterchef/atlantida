@@ -2,8 +2,8 @@ from dataclasses import asdict
 
 import pytest
 
-from desnivel.bass_analysis import recommend_bass
-from desnivel.music import Pattern, PatternChange
+from desnivel.music.bass.analysis import recommend_bass
+from desnivel.music.patterns import Pattern, PatternChange
 
 
 def change(t, opened):
@@ -50,7 +50,7 @@ def test_manual_cli_prints_a_valid_bass_command_without_network(monkeypatch, tmp
     import shlex
     from desnivel.cli import analyze_bass
     from desnivel.cli.bass_options import add_bass_options, bass_settings
-    from desnivel.trip_metrics import MetricSample, MetricName
+    from desnivel.trip.metrics import MetricSample, MetricName
     import argparse
     config = tmp_path / 'stage.json'
     config.write_text('{}')

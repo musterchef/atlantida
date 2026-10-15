@@ -1,7 +1,7 @@
 """Opzioni musicali comuni alla composizione offline e al basso live."""
 from dataclasses import fields
 
-from desnivel.bass import BassSettings, PRESETS
+from desnivel.music.bass.generator import BassSettings, PRESETS
 
 
 def add_bass_options(parser):

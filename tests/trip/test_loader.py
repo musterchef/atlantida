@@ -6,11 +6,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from desnivel.config import DEFAULT_CONFIG
-from desnivel.loader import load_track
-from desnivel.loader._derive import derive_channels
-from desnivel.loader._parse import parse_gpx_points, stage_id_from_path
-from desnivel.loader._resample import resample_to_uniform_grid
+from desnivel.trip.config import DEFAULT_CONFIG
+from desnivel.trip.loader import load_track
+from desnivel.trip.loader._derive import derive_channels
+from desnivel.trip.loader._parse import parse_gpx_points, stage_id_from_path
+from desnivel.trip.loader._resample import resample_to_uniform_grid
 
 
 def _make_minimal_gpx(tmp_path: Path) -> Path:

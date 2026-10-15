@@ -6,7 +6,7 @@ import math
 import uuid
 
 from desnivel.adapters.snake_sequence import SnakeState, SPEEDS, predict
-from desnivel.bass import BassSettings, generate_bass, interpolate_settings
+from desnivel.music.bass.generator import BassSettings, generate_bass, interpolate_settings
 
 
 class BassSession:

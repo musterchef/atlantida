@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 import math
 import random
 
-from desnivel.phrases import Note, Phrase
+from desnivel.music.phrases import Note, Phrase
 
 # I preset forniscono solo valori: il percorso musicale è unico.
 PRESETS = {

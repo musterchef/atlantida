@@ -1,8 +1,8 @@
 import pytest
 from dataclasses import replace
 
-from desnivel.bass import BassSettings, generate_bass
-from desnivel.phrases import Note, Phrase
+from desnivel.music.bass.generator import BassSettings, generate_bass
+from desnivel.music.phrases import Note, Phrase
 from desnivel.cli.compose_bass import main
 
 
@@ -145,7 +145,7 @@ def test_cli_accepts_preset_alias_and_overrides(tmp_path):
 
 
 def test_interpolated_controls_preserve_register_and_endpoints():
-    from desnivel.bass import interpolate_settings
+    from desnivel.music.bass.generator import interpolate_settings
     first = BassSettings(lowest=29, highest=40, density=.5, mobility=0)
     last = BassSettings(lowest=37, highest=48, density=1.5, mobility=1)
     assert interpolate_settings(first, last, 0) == first

@@ -9,7 +9,7 @@ import tempfile
 from desnivel.sinks.capture_log import JsonlCaptureStore
 
 from desnivel.adapters.snake_live import BassSession
-from desnivel.bass_control import BassControl
+from desnivel.music.bass.control import BassControl
 from desnivel.cli.bass_options import add_bass_options, bass_settings
 
 

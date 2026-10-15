@@ -17,11 +17,11 @@ pytest.importorskip("pythonosc")
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import BlockingOSCUDPServer
 
-from desnivel.config import Config, GpxConfig, OscConfig
+from desnivel.trip.config import Config, GpxConfig, OscConfig
 from desnivel.sinks.osc import UdpOscClient
 from desnivel.sinks.trip_metrics_osc import build_trip_metric_schedule
-from desnivel.track import Track
-from desnivel.trip_metrics import TRIP_METRIC_ROOT
+from desnivel.trip.track import Track
+from desnivel.trip.metrics import TRIP_METRIC_ROOT
 
 
 def _track() -> Track:

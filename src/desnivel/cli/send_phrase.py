@@ -3,7 +3,7 @@ import argparse
 import json
 from pathlib import Path
 
-from desnivel.phrases import Phrase
+from desnivel.music.phrases import Phrase
 from desnivel.adapters.phrase_player import encode
 from desnivel.sinks.osc import UdpOscClient
 

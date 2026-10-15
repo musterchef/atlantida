@@ -5,9 +5,9 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from ..config import DEFAULT_CONFIG, Config
-from ..track import Track
-from ..trip_metrics import build_metric_samples
+from ..trip.config import DEFAULT_CONFIG, Config
+from ..trip.track import Track
+from ..trip.metrics import build_metric_samples
 from .osc import OscClient
 from .schedule import ScheduledMessage, play_schedule
 

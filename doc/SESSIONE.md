@@ -12,11 +12,11 @@ Per le prove usare il Set con bridge, Snake con Export e player del basso descri
 
 `GPX → metriche neutre → motore musicale Python → adattatori → strumenti`
 
-- `journey_music.py` e i preset di tappa decidono motivo, armonia e densità. Il tempo del replay è distinto dal BPM di Live.
+- `music/journey.py` e i preset di tappa decidono motivo, armonia e densità. Il tempo del replay è distinto dal BPM di Live.
 - `adapters/snake.py` traduce i pattern; `m4l/desnivel_snake_params.js` controlla il primo Snake trovato. Gates è risolto per nome `Gate_Shape` nella mod; l’indice 90 resta un ripiego per il vanilla a 152 parametri.
 - `tools/build_snake_length.py` aggiunge Length al vanilla senza togliere Custom. Ogni durata segue la corrispondente cella Notes.
 - `tools/build_live_bass.py` aggiunge la lettura dello stato e genera il player del basso. I device generati restano fuori dalla repository.
-- `adapters/snake_sequence.py` ricostruisce una `Phrase`; `bass.py` genera il basso da una frase indipendente dalla sorgente; il player esegue piani sul trasporto Live.
+- `adapters/snake_sequence.py` ricostruisce una `Phrase`; `music/bass/generator.py` genera il basso da una frase indipendente dalla sorgente; il player esegue piani sul trasporto Live.
 
 ## Confronto dei file dell’11 ottobre
 
@@ -99,3 +99,11 @@ La pipeline `/mod/*`, il bridge MIDI CC, le utility geografiche, i prototipi GoP
 Dopo il riordino passano 119 test Python: 118 nel sandbox e il test UDP locale eseguito separatamente con i permessi necessari. Passano anche i quattro controlli JavaScript in `tests/js/`. I 156 test della pipeline precedente sono conservati nell’archivio, esclusi dalla suite corrente. Director e Coordinator restano da implementare; nessuna nuova prova in Live.
 
 Verificati senza invii di rete il producer su Levanto–La Spezia e il replay Firenze con il preset misto: 99 pattern e 3271 comandi OSC generati. I 151 file versionati spostati coincidono byte per byte con gli originali.
+
+## Organizzazione dei moduli attivi
+
+I dati e il producer sono raccolti in `desnivel.trip`; i modelli e la composizione in `desnivel.music`; generatore, controlli e analisi del basso in `desnivel.music.bass`. Adattatori, sink e CLI mantengono package distinti. I test seguono i componenti. La [struttura del codice](TODO-ARCHITECTURE.md#organizzazione-del-codice) descrive le responsabilità.
+
+Gli import e i riferimenti della documentazione corrente usano i nuovi percorsi; i nomi dei comandi CLI e i launcher restano invariati.
+
+Verifiche della struttura: 118 test Python nel sandbox e un test UDP locale con i permessi necessari, quattro controlli JavaScript, import di tutti i moduli e sintassi degli otto launcher. La logica dei moduli spostati è invariata; cambiano i percorsi di import.

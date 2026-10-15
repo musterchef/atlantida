@@ -1,6 +1,6 @@
 # Scelte del basso
 
-Questo documento spiega le regole presenti in [bass.py](../src/desnivel/bass.py) e dove modificarle. Per comandi, intervalli dei parametri e confronti all'ascolto usare [Regolare il basso](PLAYER-M4L.md#regolare-il-basso-allascolto).
+Questo documento spiega le regole presenti in [generator.py](../src/desnivel/music/bass/generator.py) e dove modificarle. Per comandi, intervalli dei parametri e confronti all'ascolto usare [Regolare il basso](PLAYER-M4L.md#regolare-il-basso-allascolto).
 
 ## Percorso musicale
 
@@ -119,7 +119,7 @@ Nel live, [BassSession](../src/desnivel/adapters/snake_live.py) espone `set_sett
 
 | Esigenza | Punto del codice |
 |---|---|
-| Cambiare il carattere iniziale di un preset | `PRESETS` in [bass.py](../src/desnivel/bass.py). |
+| Cambiare il carattere iniziale di un preset | `PRESETS` in [generator.py](../src/desnivel/music/bass/generator.py). |
 | Cambiare priorità di beat, spazi e ingresso | `_rhythm`. |
 | Cambiare quali note diventano appoggi | `_salience`. |
 | Cambiare compatibilità, salti o ripetizioni | `_pitches`. |
@@ -127,7 +127,7 @@ Nel live, [BassSession](../src/desnivel/adapters/snake_live.py) espone `set_sett
 | Aggiungere un controllo | `BassSettings`, la funzione musicale interessata e [bass_options.py](../src/desnivel/cli/bass_options.py); valutare anche `interpolate_settings`. |
 | Cambiare progressione delle transizioni live | `set_settings` e `_settings_at` in [snake_live.py](../src/desnivel/adapters/snake_live.py). |
 
-La regolazione musicale non richiede modifiche a Export o al player M4L. Conservare il contratto `Phrase → Phrase` e aggiungere test del comportamento realmente cambiato. I riferimenti sono [test_bass.py](../tests/test_bass.py) per generazione e [test_snake_live.py](../tests/test_snake_live.py) per transizioni e piani.
+La regolazione musicale non richiede modifiche a Export o al player M4L. Conservare il contratto `Phrase → Phrase` e aggiungere test del comportamento realmente cambiato. I riferimenti sono [test_bass.py](../tests/music/bass/test_bass.py) per generazione e [test_snake_live.py](../tests/adapters/test_snake_live.py) per transizioni e piani.
 
 ## Stato delle prove
 
@@ -135,7 +135,7 @@ I test verificano parametri, limiti, ripetibilità e transizioni. Le verifiche a
 
 ## Suggerimento automatico dalla tappa
 
-[bass_analysis.recommend_bass](../src/desnivel/bass_analysis.py) genera automaticamente un suggerimento dai cambi musicali già composti e dal tempo finale della tappa. L'utente avvia l'analisi su richiesta tramite la CLI [analyze_bass](../src/desnivel/cli/analyze_bass.py), che carica il GPX, riusa il producer e `journey_music.compose`, poi stampa un comando. L'applicazione del suggerimento resta manuale: l'utente decide se eseguire quel comando. L'analisi non viene chiamata dal basso live né dai launcher; gli assetti esistenti restano il percorso principale.
+[analysis.recommend_bass](../src/desnivel/music/bass/analysis.py) genera automaticamente un suggerimento dai cambi musicali già composti e dal tempo finale della tappa. L'utente avvia l'analisi su richiesta tramite la CLI [analyze_bass](../src/desnivel/cli/analyze_bass.py), che carica il GPX, riusa il producer e `music.journey.compose`, poi stampa un comando. L'applicazione del suggerimento resta manuale: l'utente decide se eseguire quel comando. L'analisi non viene chiamata dal basso live né dai launcher; gli assetti esistenti restano il percorso principale.
 
 Ogni pattern viene pesato per il tempo durante il quale rimane attivo, fino al cambio successivo o alla fine dei campioni del viaggio. L'attesa prima del primo pattern è esclusa. Questo evita che tanti aggiornamenti brevi contino più di una lunga sezione stabile. Gli intervalli senza nuove decisioni conservano il pattern precedente, come il replay.
 

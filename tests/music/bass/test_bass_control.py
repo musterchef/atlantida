@@ -2,8 +2,8 @@ from dataclasses import asdict
 
 import pytest
 
-from desnivel.bass import BassSettings
-from desnivel.bass_control import BassControl
+from desnivel.music.bass.generator import BassSettings
+from desnivel.music.bass.control import BassControl
 
 
 def command(parameters, **extra):

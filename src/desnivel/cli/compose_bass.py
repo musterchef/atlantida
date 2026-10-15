@@ -4,9 +4,9 @@ from dataclasses import asdict
 import json
 from pathlib import Path
 
-from desnivel.bass import generate_bass
+from desnivel.music.bass.generator import generate_bass
 from desnivel.cli.bass_options import add_bass_options, bass_settings
-from desnivel.phrases import Phrase
+from desnivel.music.phrases import Phrase
 from desnivel.adapters.snake_sequence import SnakeState, predict
 
 

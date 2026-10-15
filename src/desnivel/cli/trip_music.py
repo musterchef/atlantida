@@ -7,10 +7,10 @@ import math
 import random
 from pathlib import Path
 
-from desnivel.loader import load_track
-from desnivel.trip_metrics import build_metric_samples
-from desnivel.music import rule_from_dict
-from desnivel.journey_music import compose
+from desnivel.trip.loader import load_track
+from desnivel.trip.metrics import build_metric_samples
+from desnivel.music.patterns import rule_from_dict
+from desnivel.music.journey import compose
 from desnivel.adapters.snake import ADDRESS, pattern_messages, section_pattern_messages
 from desnivel.sinks.osc import UdpOscClient
 from desnivel.sinks.schedule import ScheduledMessage, play_schedule

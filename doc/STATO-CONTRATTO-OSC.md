@@ -18,7 +18,7 @@ Riepilogo dei percorsi implementati. Per risultati e configurazioni delle prove 
 
 ## File disponibili
 
-Il producer usa `src/desnivel/trip_metrics.py` e `src/desnivel/sinks/trip_metrics_osc.py`. Il comando è `desnivel-stream-metrics`.
+Il producer usa `src/desnivel/trip/metrics.py` e `src/desnivel/sinks/trip_metrics_osc.py`. Il comando è `desnivel-stream-metrics`.
 
 `m4l/desnivel-bridge.amxd` riceve le metriche (porta 9000) e i comandi di controllo `/desnivel/v1/control/snake/set <nome> <valore>` (porta 9001).
 

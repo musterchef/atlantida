@@ -82,10 +82,10 @@ A un cambio di epoca del trasporto, la transizione riparte dall'ultimo valore pi
 
 | File | Responsabilità |
 |---|---|
-| [bass_control.py](../src/desnivel/bass_control.py) | Contratto e validazione dei cambi parziali, senza dipendenze da OSC o Snake. |
+| [control.py](../src/desnivel/music/bass/control.py) | Contratto e validazione dei cambi parziali, senza dipendenze da OSC o Snake. |
 | [live_bass.py](../src/desnivel/cli/live_bass.py) | Ricezione OSC, ordine dei comandi e acquisizione. |
 | [snake_live.py](../src/desnivel/adapters/snake_live.py) | Destinazione dei controlli, transizioni e pianificazione. |
-| [bass.py](../src/desnivel/bass.py) | Interpolazione dei valori e composizione da una frase. |
+| [generator.py](../src/desnivel/music/bass/generator.py) | Interpolazione dei valori e composizione da una frase. |
 
 Con `--capture`, i controlli accettati e quelli rifiutati vengono conservati nel JSONL insieme agli stati e ai piani. I rifiuti hanno `decode_error` e `raw_args`; per argomenti non testuali si conserva la rappresentazione diagnostica. Duplicati e comandi superati vengono segnalati nel terminale e non aggiunti all'archivio. Le acquisizioni restano fuori dalla repository.
 

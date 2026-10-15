@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 import math
 
-from desnivel.phrases import Note, Phrase
+from desnivel.music.phrases import Note, Phrase
 
 
 # Celle per righe 0..15; ID Shape dell'interfaccia 1..14, Live 0..13.

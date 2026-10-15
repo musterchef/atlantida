@@ -22,8 +22,8 @@ Il viaggio evolve indipendentemente dal clock musicale. Accelerare il replay non
 
 | File | Ruolo |
 |---|---|
-| `src/desnivel/trip_metrics.py` | Catalogo e calcolo delle metriche neutre; già implementato. |
-| `src/desnivel/config.py` | Frequenza e parametri del producer; non aggiungere mapping Snake qui. |
+| `src/desnivel/trip/metrics.py` | Catalogo e calcolo delle metriche neutre; già implementato. |
+| `src/desnivel/trip/config.py` | Frequenza e parametri del producer; non aggiungere mapping Snake qui. |
 | `src/desnivel/sinks/trip_metrics_osc.py` | Invio OSC e replay delle metriche. |
 | `src/desnivel/cli/stream_metrics.py` | Comando di avvio del producer. |
 | `m4l/desnivel-bridge.amxd` | Device funzionante: riceve le metriche (9000) e i comandi di controllo (9001). |
@@ -31,9 +31,9 @@ Il viaggio evolve indipendentemente dal clock musicale. Accelerare il replay non
 | `src/desnivel/adapters/snake.py` | Nomi, gate, scale e conversioni per Snake. |
 | `src/desnivel/cli/snake_pattern.py` | Invio di gate e note. |
 | `archivio/src/desnivel/bridges/osc_to_midi.py` | Bridge storico `/mod/*`, escluso dal pacchetto corrente. |
-| `tests/test_trip_metrics*.py` | Test del contratto metrico esistente. |
+| `tests/trip/test_trip_metrics*.py` e `tests/sinks/test_trip_metrics_osc.py` | Test del contratto metrico esistente. |
 
-Il motore a pattern e l’adattatore Snake sono implementati in `music.py`, `journey_music.py` e `adapters/snake.py`. Comandi e configurazioni sono descritti in [Comandi](COMANDI.md) e [Preset musicali](TEST-PRESET-MUSICALI.md). Prima di modificare il device M4L, salvare nel progetto la versione funzionante usata in Live: il `.maxpat` iniziale non si aggiorna da solo.
+Il motore a pattern e l’adattatore Snake sono implementati in `music/patterns.py`, `music/journey.py` e `adapters/snake.py`. Comandi e configurazioni sono descritti in [Comandi](COMANDI.md) e [Preset musicali](TEST-PRESET-MUSICALI.md). Prima di modificare il device M4L, salvare nel progetto la versione funzionante usata in Live: il `.maxpat` iniziale non si aggiorna da solo.
 
 ## Risultati verificati dall'utente
 

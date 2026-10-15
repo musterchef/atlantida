@@ -1,7 +1,7 @@
 """Protocollo OSC v1 del player M4L, un datagramma per frase."""
 import re
 
-from desnivel.phrases import Phrase
+from desnivel.music.phrases import Phrase
 
 
 def encode(phrase: Phrase, voice: str):

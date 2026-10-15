@@ -25,7 +25,7 @@ BPM e avanzamento di Snake restano in Live. I comandi aggiornano subito i parame
 ## Modifiche
 
 - `presets/quota.json`: metrica, soglia, margine, scala, tonica, gradi e gate dei due pattern. I gradi partono da 0; possono estendersi su più ottave.
-- `src/desnivel/music.py`: regola e pattern indipendenti dal device; calcolo delle scale.
+- `src/desnivel/music/patterns.py`: regola e pattern indipendenti dal device; calcolo delle scale.
 - `src/desnivel/adapters/snake.py`: traduce note e gate in parametri Snake, richiede 16 elementi e note 0–83.
 - `src/desnivel/cli/trip_music.py`: carica il viaggio e riproduce i cambi attraverso l'adattatore.
 

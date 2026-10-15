@@ -24,6 +24,19 @@ Il motore musicale Python comprende Director, generatori e Coordinator. Queste s
 
 Gli adattatori contengono protocolli, nomi, range e limiti della destinazione. Le funzioni non supportate devono essere dichiarate. Snake è il primo adattatore; Ableton Live è la destinazione attuale. TouchDesigner resta un consumer visuale indipendente del producer.
 
+## Organizzazione del codice
+
+| Package | Responsabilità |
+|---|---|
+| `desnivel.trip` | Modello `Track`, configurazione del producer, loader GPX e metriche neutrali. |
+| `desnivel.music` | Pattern, scale, frasi e composizione della voce melodica dal viaggio. |
+| `desnivel.music.bass` | Generatore del basso, contratto dei controlli e analisi dei pattern per suggerire un assetto. |
+| `desnivel.adapters` | Traduzione verso Snake e player M4L, previsione dello stato Snake e sessione live del basso. |
+| `desnivel.sinks` | Client e pianificazione OSC, pubblicazione delle metriche e acquisizioni JSONL. |
+| `desnivel.cli` | Comandi eseguibili e opzioni condivise dei comandi. |
+
+I test Python seguono gli stessi gruppi in `tests/`; `tests/devices/` verifica i builder dei device e `tests/js/` gli script Max. I builder restano in `tools/`, i sorgenti Max in `m4l/` e i launcher macOS in `comandi/`.
+
 ## Direzione musicale
 
 Il Music Director costruisce un contesto condiviso composto da:
@@ -80,9 +93,9 @@ Il Coordinator gestisce le finestre temporali e gli aggiornamenti. Il Music Dire
 
 ## Interfacce presenti
 
-`music.Pattern` contiene note e gate; `PatternChange` associa un pattern al tempo del viaggio. `journey_music.compose` interpreta movimento e sforzo e produce questi cambi per il percorso Snake.
+`music.patterns.Pattern` contiene note e gate; `PatternChange` associa un pattern al tempo del viaggio. `music.journey.compose` interpreta movimento e sforzo e produce questi cambi per il percorso Snake.
 
-`phrases.Phrase` contiene note con attacco relativo in beat, altezza MIDI, durata e velocity. Ogni nota termina entro la frase. Sessione, posizione assoluta e revisione appartengono al piano esterno.
+`music.phrases.Phrase` contiene note con attacco relativo in beat, altezza MIDI, durata e velocity. Ogni nota termina entro la frase. Sessione, posizione assoluta e revisione appartengono al piano esterno.
 
 Il basso riceve una `Phrase`, i propri controlli, l’eventuale altezza precedente e l’indice musicale. Rimane indipendente dalla sorgente melodica. Attualmente l’adattatore Snake prevede la frase dagli snapshot e `BassSession` prepara i piani del basso; il beat del trasporto arriva dagli snapshot Snake. Una frase melodica vuota produce basso silenzioso.
 

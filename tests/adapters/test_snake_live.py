@@ -54,7 +54,7 @@ def test_new_python_process_has_new_session():
 
 
 def test_controls_transition_on_musical_windows_not_snapshot_count():
-    from desnivel.bass import BassSettings
+    from desnivel.music.bass.generator import BassSettings
     session = BassSession(BassSettings(density=.5))
     first = session.update(snapshot())
     session.set_settings(BassSettings(density=1.5), transition_windows=2)
@@ -71,7 +71,7 @@ def test_controls_transition_on_musical_windows_not_snapshot_count():
 
 
 def test_settings_transition_rebases_after_transport_epoch_changes():
-    from desnivel.bass import BassSettings
+    from desnivel.music.bass.generator import BassSettings
     session = BassSession(BassSettings(density=.5))
     session.update(snapshot(1, 20.125))
     session.set_settings(BassSettings(density=1.5), transition_windows=2)

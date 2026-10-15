@@ -4,9 +4,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from desnivel.config import Config, GpxConfig, OscConfig
-from desnivel.track import Track
-from desnivel.trip_metrics import MetricName, build_metric_samples
+from desnivel.trip.config import Config, GpxConfig, OscConfig
+from desnivel.trip.track import Track
+from desnivel.trip.metrics import MetricName, build_metric_samples
 
 
 def _track(duration_s: float = 2.0, rate_hz: float = 10.0) -> Track:

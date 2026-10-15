@@ -1,5 +1,5 @@
 import pytest
-from desnivel.phrases import Note, Phrase
+from desnivel.music.phrases import Note, Phrase
 from desnivel.adapters.phrase_player import encode
 from desnivel.cli.send_phrase import main
 

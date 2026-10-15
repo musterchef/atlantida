@@ -5,10 +5,10 @@ import json
 from pathlib import Path
 import shlex
 
-from desnivel.bass_analysis import recommend_bass
-from desnivel.journey_music import compose
-from desnivel.loader import load_track
-from desnivel.trip_metrics import build_metric_samples
+from desnivel.music.bass.analysis import recommend_bass
+from desnivel.music.journey import compose
+from desnivel.trip.loader import load_track
+from desnivel.trip.metrics import build_metric_samples
 
 
 def main(argv=None):

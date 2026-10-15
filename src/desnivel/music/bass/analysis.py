@@ -5,8 +5,8 @@ from dataclasses import dataclass
 import math
 from typing import Iterable
 
-from desnivel.bass import BassSettings
-from desnivel.music import PatternChange
+from desnivel.music.bass.generator import BassSettings
+from desnivel.music.patterns import PatternChange
 
 
 @dataclass(frozen=True)

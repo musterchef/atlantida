@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import random
 
-from desnivel.music import SCALES, Pattern, scale_notes as musical_scale_notes
+from desnivel.music.patterns import SCALES, Pattern, scale_notes as musical_scale_notes
 
 ADDRESS = "/desnivel/v1/control/snake/set"
 STEPS = 16

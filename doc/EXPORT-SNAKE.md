@@ -170,5 +170,5 @@ Le altre Shape, direzioni nei banchi Gates/Velocities e combinazioni di Steps am
 | [capture_log.py](../src/desnivel/sinks/capture_log.py) | Interfaccia di salvataggio e archivio JSONL versionato. |
 | [snake_sequence.py](../src/desnivel/adapters/snake_sequence.py) | Converte lo stato in una frase prevista. |
 | [snake_live.py](../src/desnivel/adapters/snake_live.py) | Proietta le fasi e pianifica il basso futuro. |
-| [bass.py](../src/desnivel/bass.py) | Genera il basso da una frase, indipendentemente da Snake. |
+| [generator.py](../src/desnivel/music/bass/generator.py) | Genera il basso da una frase, indipendentemente da Snake. |
 | [desnivel_transport_player.js](../m4l/desnivel_transport_player.js) | Programma gli eventi MIDI sul trasporto Live. |

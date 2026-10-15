@@ -5,7 +5,7 @@ from pathlib import Path
 import struct
 import sys
 
-TOOLS=Path(__file__).resolve().parents[1]/'tools'
+TOOLS=Path(__file__).resolve().parents[2]/'tools'
 spec=importlib.util.spec_from_file_location('build_snake_length',TOOLS/'build_snake_length.py')
 base=importlib.util.module_from_spec(spec);spec.loader.exec_module(base)
 sys.modules['build_snake_length']=base
