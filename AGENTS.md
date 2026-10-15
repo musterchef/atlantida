@@ -31,6 +31,17 @@
 - Mantenere espliciti i flussi di dati e le dipendenze tra componenti. Evitare accoppiamenti nascosti, effetti collaterali non evidenti e modifiche implicite dello stato condiviso.
 - Considerare le prestazioni quando sono rilevanti per il comportamento reale del sistema. Evitare ottimizzazioni premature e complessità aggiuntiva senza benefici verificabili.
 
+## Organizzazione di file e package
+
+- Prima di creare un file, individuare la responsabilità che svolge e il componente a cui appartiene. Leggere la struttura esistente e l’architettura documentata, quindi collocarlo nel package appropriato.
+- Raggruppare i moduli della stessa funzionalità e separare componenti con responsabilità distinte. La struttura delle directory deve rendere riconoscibile questa separazione: non accumulare file nella radice del package e non usare prefissi ripetuti come sostituto di un package dedicato.
+- Ogni strumento deve avere una propria sottocartella in `src/desnivel/music/`, denominata con il nome dello strumento e contenente i moduli musicali che gli appartengono. Nella radice di `music/` mantenere soltanto le responsabilità condivise tra le voci. Protocolli e integrazioni di destinazione appartengono agli adattatori; i comandi alle CLI.
+- Riutilizzare i package adatti. Creare un nuovo package o sottopackage quando rappresenta una responsabilità concreta e coesa, senza predisporre directory per funzionalità ipotetiche. Evitare contenitori generici come `misc`, `common` o `utils` che raccolgano funzioni prive di una responsabilità comune, e gerarchie che aggiungano soltanto livelli di navigazione.
+- Scegliere nomi che descrivano il contenuto nel contesto del package, evitando di ripetere inutilmente il nome del componente. Mantenere la logica nel componente responsabile: il codice musicale indipendente dalla destinazione non deve finire nelle CLI o nei moduli di trasporto per comodità.
+- Organizzare i test secondo i componenti verificati, seguendo la struttura di `tests/`. Conservare builder, sorgenti Max e launcher rispettivamente in `tools/`, `m4l/` e `comandi/`.
+- Quando si creano, rinominano o spostano moduli, aggiornare gli import e gli eventuali entry point, launcher, test e riferimenti documentali interessati. Verificare gli import, i comandi coinvolti e i comportamenti esistenti con controlli pertinenti.
+- Prima di concludere, verificare anche la collocazione dei file aggiunti o modificati. Correggere il disordine introdotto dall’intervento senza estendere il riordino a componenti estranei alla richiesta.
+
 ## Linee guida per la documentazione
 
 - Scrivere documentazione chiara, concisa, oggettiva e autonoma, nella stessa lingua della richiesta (italiano se si parla in italiano, inglese se si parla in inglese, spagnolo se si parla in spagnolo e così via).
@@ -53,6 +64,7 @@
 ## Modalità di lavoro
 
 - Comprendere la richiesta e individuare i componenti interessati prima di intervenire.
+- Interpretare l’intento della richiesta e distinguere i principi generali dagli esempi usati per chiarirli. Quando si formula una regola, esprimere il criterio applicabile anche ad altri casi, senza trasformare ogni dettaglio citato dall’utente in un obbligo o ripeterne meccanicamente le parole. Usare gli esempi solo quando aggiungono chiarezza e lasciare le conseguenze ovvie all’applicazione del principio.
 - Procedere autonomamente quando la soluzione è chiara e coerente con l'architettura esistente. Chiedere chiarimenti soltanto quando un'ambiguità influisce concretamente sul risultato.
 - Non interpretare una richiesta circoscritta come autorizzazione a riprogettare o ampliare il sistema.
 - Privilegiare modifiche concrete e verificabili rispetto a lunghe analisi, proposte speculative o implementazioni non richieste.
