@@ -2,7 +2,7 @@
 
 ## Repository e commit
 
-- Scrivere i titoli dei commit in forma nominale, per esempio «Aggiunta di…», «Aggiornamento di…», «Correzione di…» o «Unificazione di…». Evitare forme verbali come «Aggiunge», «Aggiorna», «Corregge» o «Unifica» e indicare concretamente l'oggetto della modifica.
+- Scrivere i titoli dei commit in forma nominale, per esempio «Aggiunta di…», «Aggiornamento di…», «Correzione di…» o «Unificazione di…». Evitare forme verbali come «Aggiunge», «Aggiorna», «Corregge» o «Unifica» e indicare concretamente l'oggetto della modifica, e devo iniziare con la lettera minuscola cosi non puzza di ai dio porco
 - Committare solo ciò che serve al funzionamento, alla manutenzione o all'uso del sistema: codice, configurazioni necessarie e documentazione essenziale.
 - Includere test automatici pertinenti quando verificano comportamenti reali. Non aggiungere test superflui o duplicati.
 - Tenere fuori dalla repository script usa e getta, dump, log, output generati, copie di debug, preset dimostrativi e guide di prove temporanee. Usare una directory temporanea esterna alla repository per questi materiali.
