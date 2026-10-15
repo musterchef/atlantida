@@ -10,12 +10,20 @@
 - Quando l'utente chiede una pulizia, verificare anche quali file servono davvero, non soltanto formattazione e messaggi di debug. Preservare il percorso funzionante e aggiornare gli eventuali riferimenti ai file rimossi.
 - Non cancellare modifiche altrui o riscrivere commit esistenti senza autorizzazione.
 
-## Documentazione
+## Linee guida per la documentazione
 
-- Scrivere in italiano chiaro e conciso, con frasi concrete e titoli brevi.
-- Descrivere cosa serve fare e perché. Evitare formule da assistente, ripetizioni, cronache della conversazione e precisazioni difensive tra parentesi.
+- Scrivere documentazione chiara, concisa, oggettiva e autonoma, nella stessa lingua della richiesta (italiano se si parla in italiano, inglese se si parla in inglese, spagnolo se si parla in spagnolo e così via).
+- Descrivere il sistema come esiste attualmente o come esplicitamente definito nell'architettura approvata.
+- Scrivere per lettori che non conoscono le conversazioni precedenti o la storia dello sviluppo.
+- Concentrarsi su componenti, responsabilità, interfacce e comportamento effettivo.
+- Evitare affermazioni difensive, giustificazioni inutili e riferimenti a soluzioni scartate o correzioni precedenti.
+- Non introdurre funzionalità speculative, astrazioni inutili o decisioni architetturali non confermate.
+- Usare un linguaggio tecnico preciso. Evitare formulazioni generiche generate dall'IA, riempitivi e ripetizioni.
+- Preservare i dettagli tecnici utili senza rendere la documentazione inutilmente lunga.
+- Quando si revisiona la documentazione, modificare soltanto ciò che richiede effettivamente una correzione.
+- Conservare sempre il nome originale del file. Non aggiungere mai suffissi come FINAL, CLEAN, UPDATED o REVISION, salvo richiesta esplicita.
+- Se informazioni essenziali mancano o sono ambigue, chiedere chiarimenti prima di fare assunzioni architetturali.
+- Scrivere nella lingua scelta in modo chiaro e conciso, con frasi concrete e titoli brevi.
 - Tenere le istruzioni correnti separate dai percorsi superati: questi vanno in `archivio/`, con collegamenti aggiornati.
-- Documentare solo comandi esistenti. Segnalare brevemente ciò che manca, senza inventare interfacce future.
-- Distinguere decisioni, codice presente e prove eseguite. Non presentare l'architettura scelta come già implementata.
-- Mantenere coerenti producer agnostico, motore musicale Python indipendente dalla destinazione e adattatori estensibili. Snake è un adattatore, non il centro del sistema.
+- Documentare solo comandi esistenti. Segnalare brevemente ciò che manca in sezioni apposite, senza inventare interfacce future.
 - Aggiornare i documenti interessati quando cambia una decisione, evitando di duplicare la stessa spiegazione in ogni file.
