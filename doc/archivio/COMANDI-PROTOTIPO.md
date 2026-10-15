@@ -1,5 +1,7 @@
 # Comandi del prototipo precedente
 
+> Il codice di questo percorso è conservato in [archivio/](../../archivio/README.md), escluso dal pacchetto corrente. I comandi riportati richiedono il ripristino dei componenti storici.
+
 Questi comandi appartengono alla pipeline musicale precedente, ancora presente nel codice. Per il lavoro corrente vedere [Comandi](../COMANDI.md).
 
 Tutti i comandi vogliono il venv attivo:

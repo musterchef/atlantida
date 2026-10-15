@@ -1,6 +1,8 @@
 # **DESNIVEL**
 
 > Architettura di riferimento: producer di dati agnostici → motore musicale Python indipendente dalla destinazione → adattatori estensibili → strumenti/sequencer. Snake via M4L/Live è il primo adattatore. Vedi [decisione tecnica](doc/TODO-ARCHITECTURE.md) e [prototipo Snake](doc/INTEGRAZIONE-SNAKE.md). Le sezioni seguenti conservano la descrizione concettuale del progetto.
+Il codice corrente è in `src/`, i test in `tests/` e i materiali dismessi in [archivio/](archivio/README.md). Per preparare l’ambiente vedere [Comandi](doc/COMANDI.md).
+
 ### *dal viaggio al suono, dal terreno al gesto audiovisivo*  
 
 ---

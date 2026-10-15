@@ -30,7 +30,7 @@ Il viaggio evolve indipendentemente dal clock musicale. Accelerare il replay non
 | `m4l/desnivel_snake_params.js` | Trova Snake e imposta i parametri per nome; va tenuto nella cartella del device. |
 | `src/desnivel/adapters/snake.py` | Nomi, gate, scale e conversioni per Snake. |
 | `src/desnivel/cli/snake_pattern.py` | Invio di gate e note. |
-| `src/desnivel/bridges/osc_to_midi.py` | Bridge `/mod/*` esistente, conservato; non è il nuovo adattatore Snake. |
+| `archivio/src/desnivel/bridges/osc_to_midi.py` | Bridge storico `/mod/*`, escluso dal pacchetto corrente. |
 | `tests/test_trip_metrics*.py` | Test del contratto metrico esistente. |
 
 Il motore a pattern e l’adattatore Snake sono implementati in `music.py`, `journey_music.py` e `adapters/snake.py`. Comandi e configurazioni sono descritti in [Comandi](COMANDI.md) e [Preset musicali](TEST-PRESET-MUSICALI.md). Prima di modificare il device M4L, salvare nel progetto la versione funzionante usata in Live: il `.maxpat` iniziale non si aggiorna da solo.

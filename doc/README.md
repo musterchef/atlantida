@@ -15,3 +15,5 @@
 | [TODO Desnivel](../TODO-DESNIVEL.md) | Revisioni da valutare, a partire dal basso parametrico. |
 
 La [ricerca artistica](../PROJECT-SPECS.md) descrive la visione del progetto. I documenti delle versioni precedenti sono nell'[archivio](archivio/README.md).
+
+Il [codice archiviato](../archivio/README.md) raccoglie pipeline e materiali esclusi dallo sviluppo corrente.

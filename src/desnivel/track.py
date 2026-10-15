@@ -1,8 +1,7 @@
 """Modello dati di una tappa e dei suoi campioni.
 
-`Track` è l'input immutabile della pipeline. Contiene i campioni
-ricampionati a frequenza fissa (vedi `Resampler`, da implementare)
-e i metadati liberi (meteo, città, eventi esterni dichiarati).
+`Track` contiene i campioni ricampionati dal loader GPX a frequenza
+fissa e i metadati della sorgente.
 """
 from __future__ import annotations
 
@@ -10,15 +9,6 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 import numpy as np
-
-
-@dataclass(frozen=True)
-class GeoPoint:
-    """Punto geografico (lat/lon in gradi, ele in metri)."""
-
-    lat: float
-    lon: float
-    ele: float | None = None
 
 
 @dataclass(frozen=True)
@@ -31,11 +21,11 @@ class Track:
             È sempre regolare, con passo ``1 / config.timing.internal_rate_hz``.
         samples: dizionario dei canali campionati. Ogni valore è un
             ``np.ndarray`` della stessa lunghezza di ``t``.
-            Chiavi previste (non tutte obbligatorie in scaffolding):
+            Canali del loader (quelli derivati dalla quota possono essere assenti):
             ``lat``, ``lon``, ``ele``, ``speed_kmh``, ``slope``,
-            ``effort``, ``flow``, ``terrain``.
+            ``effort``, ``dist_m``, ``cum_dist_m``.
         metadata: dati liberi associati alla tappa (meteo, eventi esterni,
-            informazioni di contesto). Non viene ispezionato dai modulatori.
+            informazioni di contesto). Include il percorso del GPX in ``source_path``.
     """
 
     stage_id: str
@@ -50,14 +40,3 @@ class Track:
     @property
     def n_samples(self) -> int:
         return int(len(self.t))
-
-
-def make_empty_track(
-    stage_id: str,
-    duration_s: float,
-    rate_hz: float,
-) -> Track:
-    """Crea un Track vuoto della durata indicata. Utile per scaffolding e test."""
-    n = int(duration_s * rate_hz) + 1
-    t = np.arange(n, dtype=float) / rate_hz
-    return Track(stage_id=stage_id, t=t, samples={}, metadata={})

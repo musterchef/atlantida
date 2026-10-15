@@ -16,4 +16,4 @@ Documenti dei percorsi e delle decisioni precedenti. Conservati per consultazion
 - [DESNIVEL-cat.md](DESNIVEL-cat.md): presentazione storica in catalano.
 - [html/index.html](html/index.html): sito della vecchia pipeline, con pagine e CSS conservati insieme.
 
-Per lavorare sul progetto partire dall'[indice corrente](../README.md) e dalla [decisione architetturale](../TODO-ARCHITECTURE.md). Il codice del generatore TD/audio è conservato separatamente in [old/td_audio](../../old/td_audio/README.md).
+Per lavorare sul progetto partire dall'[indice corrente](../README.md) e dalla [decisione architetturale](../TODO-ARCHITECTURE.md). Il codice del generatore TD/audio è conservato separatamente in [old/td_audio](../../archivio/old/td_audio/README.md).

@@ -13,7 +13,7 @@ __pycache__/
 /output/
 
 # TouchDesigner backups
-/td/Backup/
+/archivio/td/Backup/
 
 # Note di sviluppo locali
 DEV_NOTES.md
@@ -29,3 +29,6 @@ Thumbs.db
 
 # Setuptools build artifacts
 *.egg-info/
+
+# Materiali generati conservati durante il riordino
+/archivio/output-locale/

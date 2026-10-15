@@ -91,3 +91,11 @@ Il mittente dei controlli e l'andamento musicale della tappa restano da implemen
 ## Verifica del 15 ottobre
 
 Passati tutti i 275 test Python: 274 nel sandbox e il test UDP locale eseguito separatamente con i permessi di rete necessari. Verificati la sintassi Bash del launcher 08, i collegamenti locali della documentazione e l’assenza di errori di spaziatura nel diff. Nessuna nuova prova in Live.
+
+## Riordino per lo sviluppo
+
+La pipeline `/mod/*`, il bridge MIDI CC, le utility geografiche, i prototipi GoPro/TouchDesigner e i rispettivi test sono raccolti in [archivio/](../archivio/README.md). Il pacchetto corrente mantiene loader GPX, metriche neutrali, composizione del viaggio, generatore del basso, adattatori Snake e player M4L. Configurazione e dipendenze di sviluppo sono ridotte ai componenti attivi.
+
+Dopo il riordino passano 119 test Python: 118 nel sandbox e il test UDP locale eseguito separatamente con i permessi necessari. Passano anche i quattro controlli JavaScript in `tests/js/`. I 156 test della pipeline precedente sono conservati nell’archivio, esclusi dalla suite corrente. Director e Coordinator restano da implementare; nessuna nuova prova in Live.
+
+Verificati senza invii di rete il producer su Levanto–La Spezia e il replay Firenze con il preset misto: 99 pattern e 3271 comandi OSC generati. I 151 file versionati spostati coincidono byte per byte con gli originali.

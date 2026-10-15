@@ -1,25 +1,9 @@
-"""Sink: destinazioni di output (file, OSC, replay)."""
-from .base import Sink
-from .file_sink import FileSink
-from .osc import (
-    FakeOscClient,
-    OscClient,
-    OscSink,
-    ScheduledMessage,
-    UdpOscClient,
-    build_schedule,
-)
+"""Trasporto OSC, messaggi temporizzati e metriche del viaggio."""
+from .osc import FakeOscClient, OscClient, UdpOscClient
+from .schedule import ScheduledMessage, play_schedule
 from .trip_metrics_osc import TripMetricsOscSink, build_trip_metric_schedule
 
 __all__ = [
-    "Sink",
-    "FileSink",
-    "OscClient",
-    "UdpOscClient",
-    "FakeOscClient",
-    "OscSink",
-    "ScheduledMessage",
-    "build_schedule",
-    "TripMetricsOscSink",
-    "build_trip_metric_schedule",
+    "OscClient", "UdpOscClient", "FakeOscClient", "ScheduledMessage",
+    "play_schedule", "TripMetricsOscSink", "build_trip_metric_schedule",
 ]

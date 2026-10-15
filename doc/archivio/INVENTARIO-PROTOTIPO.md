@@ -1,5 +1,7 @@
 # Stato di implementazione del contratto OSC
 
+> Il codice di questo percorso è conservato in [archivio/](../../archivio/README.md), escluso dal pacchetto corrente. I comandi riportati richiedono il ripristino dei componenti storici.
+
 - Aggiornato con verifica del codice e prove dell'utente: 2026-10-02
 - Riferimenti: [CONTRATTO-MODULAZIONI.md](CONTRATTO-MODULAZIONI.md), [CONTRATTO-DATI-VIAGGIO.md](../CONTRATTO-DATI-VIAGGIO.md), [TODO-ARCHITECTURE.md](../TODO-ARCHITECTURE.md)
 - Scopo: distinguere le metriche di viaggio gia' derivate dai vecchi output musicali e registrare cio' che serve per definire il contratto neutrale.
@@ -56,6 +58,6 @@ Il bridge OSC→MIDI attuale mappa `sea_first_view`, mentre il producer emette `
 1. Definire i fatti/eventi neutrali senza categorie `MAJOR`/`MINOR` o cooldown compositivi.
 2. Ricezione OSC in M4L verificata; resta da collegare il consumer musicale Python.
 3. Separare root/scale/palette/pattern nel motore musicale Python; gli adattatori li traducono per le rispettive destinazioni; M4L serve al percorso Snake.
-4. Il percorso TD `/desnivel/*` è archiviato in `old/td_audio/`; non è parte del consumer nuovo.
+4. Il percorso TD `/desnivel/*` è archiviato in `archivio/old/td_audio/`; non è parte del consumer nuovo.
 
 Questo inventario descrive lo stato verificato del codice, non sostituisce la specifica del pilot.

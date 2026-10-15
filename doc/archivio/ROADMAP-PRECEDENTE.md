@@ -1,5 +1,7 @@
 # TODO — DESNIVEL
 
+> Il codice di questo percorso è conservato in [archivio/](../../archivio/README.md), escluso dal pacchetto corrente. I comandi riportati richiedono il ripristino dei componenti storici.
+
 Aggiornato il 2026-10-02. Decisione di riferimento: [architettura audio](../TODO-ARCHITECTURE.md). Le voci storiche completate in fondo non attestano che il nuovo percorso sia già implementato.
 
 ## Architettura e priorità
@@ -25,7 +27,7 @@ Guida operativa: [INTEGRAZIONE-SNAKE.md](../INTEGRAZIONE-SNAKE.md). `live.remote
 
 `desnivel-play`, i modulatori e `desnivel-bridge-midi` restano disponibili per il prototipo `/mod/*`. Le loro regole potranno essere riutilizzate separandole dal producer. Non sono il nuovo motore/adattatore già implementato.
 
-Il precedente percorso TouchDesigner → generatore JS è archiviato in [old/td_audio](../../old/td_audio/README.md). Progetti TD e altre implementazioni sono conservati; i riferimenti esterni dei `.toe` non sono stati verificati.
+Il precedente percorso TouchDesigner → generatore JS è archiviato in [old/td_audio](../../archivio/old/td_audio/README.md). Progetti TD e altre implementazioni sono conservati; i riferimenti esterni dei `.toe` non sono stati verificati.
 
 ## Metriche e fatti del viaggio
 
@@ -66,7 +68,7 @@ Il precedente percorso TouchDesigner → generatore JS è archiviato in [old/td_
   velocita'. Combinato con `POIDetector` per ottenere il concetto di
   "visita" (stop dentro un POI).
 - [ ] **TerrainDetector** *(fatto di cambiamento del terreno)* — riscritta dal
-  metodo `_elevation_only` di `old/terrain_classify.py`.
+  metodo `_elevation_only` di `archivio/old/terrain_classify.py`.
 - [ ] **ExternalEventDetector** — legge `events/<stage>.json` con
   eventi manuali; `USER` indica la sorgente, non una categoria musicale.
 
@@ -95,22 +97,22 @@ Il precedente percorso TouchDesigner → generatore JS è archiviato in [old/td_
 
 ## Roadmap integrazione esterna
 
-- [ ] **Loader meteo** *(da `old/weather_fetch.py`)* — quando servira'
+- [ ] **Loader meteo** *(da `archivio/old/weather_fetch.py`)* — quando servira'
   al layer paesaggio. Modulo autonomo, niente riscrittura: chiamarlo
   come utility.
 
 ## Da non fare (scartati)
 
-- `old/audio_mapper.py` — implementazione storica; non riattivarla automaticamente. Le regole su attraversamento di soglie restano ammesse nel nuovo motore configurabile.
-- `old/generate_sonic_index.py` — generatore HTML legacy.
-- `old/desnivel_gpx_to_td.py` — orchestratore vecchio, sostituito da
+- `archivio/old/audio_mapper.py` — implementazione storica; non riattivarla automaticamente. Le regole su attraversamento di soglie restano ammesse nel nuovo motore configurabile.
+- `archivio/old/generate_sonic_index.py` — generatore HTML legacy.
+- `archivio/old/desnivel_gpx_to_td.py` — orchestratore vecchio, sostituito da
   `pipeline.py` + `cli/run_stage.py`.
-- Vecchi `test_*.py` in `old/` — concettualmente obsoleti.
+- Vecchi `test_*.py` in `archivio/old/` — concettualmente obsoleti.
 
-## Riferimento (in `old/`, non toccare)
+## Riferimento (in `archivio/old/`, non toccare)
 
-- `old/gpmf_extract.py`, `old/gopro_*.py` — pipeline GoPro indipendente.
-- `old/constants.py` — verificare coerenza ad-hoc se servisse un valore.
+- `archivio/old/gpmf_extract.py`, `archivio/old/gopro_*.py` — pipeline GoPro indipendente.
+- `archivio/old/constants.py` — verificare coerenza ad-hoc se servisse un valore.
 
 ## Fatto
 
@@ -132,8 +134,8 @@ Il precedente percorso TouchDesigner → generatore JS è archiviato in [old/td_
 - [x] Predisposizione modalità live (`EventSource.USER`, `Event.source_id`).
 - [x] `JourneyModulator` (phase, energy, openness) — 6 test.
 - [x] Loader GPX completo (parse, geo, derive, resample) — 6 test.
-- [x] Riorganizzazione repo (`old/`, `tests/`, `pyproject.toml`).
-- [x] Audit `old/` per riuso (questa lista nasce da lì).
+- [x] Riorganizzazione repo (`archivio/old/`, `tests/`, `pyproject.toml`).
+- [x] Audit `archivio/old/` per riuso (questa lista nasce da lì).
 - [x] Savitzky-Golay in `_filters.py` (riscritto con pseudoinversa di
   Vandermonde, supporta qualunque `window`/`polyorder`) — 8 test.
 - [x] `run_all.py` + report di metriche sul corpus (12 tappe processate,

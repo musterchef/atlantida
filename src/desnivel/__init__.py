@@ -1,9 +1,6 @@
-"""DESNIVEL — pipeline musicale generativa.
+"""DESNIVEL — dati del viaggio, generazione musicale e adattatori.
 
-Riferimenti documentali:
-- doc/ARCHITETTURA-MUSICALE.md
-- doc/CONTRATTO-MODULAZIONI.md
-- doc/IMPLEMENTAZIONE.md
+Architettura: doc/TODO-ARCHITECTURE.md.
 """
 
 __version__ = "0.1.0"

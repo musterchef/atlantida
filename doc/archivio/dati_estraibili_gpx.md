@@ -8,7 +8,7 @@
 I 12 file GPX (Strava, tipo `cycling`) contengono **solo dati base**: `lat`, `lon`, `ele`, `time`.  
 Nessuna estensione Strava (HR, cadence, power, temperatura).
 
-Lo script `old/desnivel_gpx_to_td.py` estrae **16 canali per frame** a 30 fps, esportati in CSV (`output/tappa_XX.csv`).
+Lo script `archivio/old/desnivel_gpx_to_td.py` estrae **16 canali per frame** a 30 fps, esportati in CSV (`output/tappa_XX.csv`).
 
 ### Canali del prototipo storico
 

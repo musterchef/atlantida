@@ -18,6 +18,17 @@ Per controllare i messaggi senza inviarli:
 bash 'comandi/04 - Snake - sequenza di riferimento.command' --dry-run
 ```
 
+## Ambiente di sviluppo
+
+Creare l’ambiente e installare il pacchetto dalla radice del progetto:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+```
+
+Le dipendenze correnti sono definite in `pyproject.toml`.
+
 ## Preparare il terminale
 
 Dalla cartella del progetto:
@@ -65,7 +76,16 @@ python -m desnivel.cli.trip_music --gpx gpx/tappa04_Levanto_La_Spezia.gpx --rule
 pytest -q
 ```
 
-Le istruzioni della pipeline precedente sono nei [comandi archiviati](archivio/COMANDI-PROTOTIPO.md).
+Per verificare anche gli script Max con Node.js:
+
+```sh
+node tests/js/phrase_player.cjs
+node tests/js/snake_params.cjs
+node tests/js/snake_state.cjs
+node tests/js/transport_player.cjs
+```
+
+La pipeline precedente è raccolta in [archivio/](../archivio/README.md), esclusa dall’installazione e dalla suite corrente. I [comandi storici](archivio/COMANDI-PROTOTIPO.md) richiedono il ripristino del relativo codice.
 
 ## Preset del viaggio
 
