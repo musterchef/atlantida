@@ -2,14 +2,34 @@
 
 ## Repository e commit
 
-- Scrivere i titoli dei commit in forma nominale, per esempio «Aggiunta di…», «Aggiornamento di…», «Correzione di…» o «Unificazione di…». Evitare forme verbali come «Aggiunge», «Aggiorna», «Corregge» o «Unifica» e indicare concretamente l'oggetto della modifica, e devo iniziare con la lettera minuscola cosi non puzza di ai dio porco
+- Scrivere i titoli dei commit in forma nominale, per esempio «aggiunta di…», «aggiornamento di…», «correzione di…» o «unificazione di…». Iniziare sempre con la lettera minuscola, evitando forme verbali come «aggiunge», «aggiorna», «corregge» o «unifica». Indicare concretamente l'oggetto della modifica.
 - Committare solo ciò che serve al funzionamento, alla manutenzione o all'uso del sistema: codice, configurazioni necessarie e documentazione essenziale.
 - Includere test automatici pertinenti quando verificano comportamenti reali. Non aggiungere test superflui o duplicati.
-- Tenere fuori dalla repository script usa e getta, dump, log, output generati, copie di debug, preset dimostrativi e guide di prove temporanee. Usare una directory temporanea esterna alla repository per questi materiali.
+- Tenere fuori dal repository script usa e getta, dump, log, output generati, copie di debug, preset dimostrativi e guide di prove temporanee. Usare una directory temporanea esterna al repository per questi materiali.
 - Un esempio o fixture va conservato solo se necessario per un test mantenuto o per l'uso documentato del sistema.
 - Prima del commit, esaminare ogni file del diff e selezionare esplicitamente quelli necessari. Non includere automaticamente tutto ciò che è stato creato durante la sessione.
 - Quando l'utente chiede una pulizia, verificare anche quali file servono davvero, non soltanto formattazione e messaggi di debug. Preservare il percorso funzionante e aggiornare gli eventuali riferimenti ai file rimossi.
 - Non cancellare modifiche altrui o riscrivere commit esistenti senza autorizzazione.
+- Mantenere i commit coerenti e circoscritti a una modifica logica. Evitare di raggruppare interventi indipendenti nello stesso commit.
+- Non eseguire commit automaticamente se non richiesto esplicitamente.
+
+## Linee guida per la scrittura del codice
+
+- Scrivere codice pulito, ordinato e leggibile, con nomi precisi, flussi espliciti e responsabilità ben definite.
+- Scegliere la soluzione più semplice che risolve il problema reale e rispetta l'architettura del progetto. Ogni aggiunta deve avere uno scopo concreto.
+- Mantenere il codice modulare, con componenti coesi e interfacce essenziali. Evitare sia funzioni che mescolano responsabilità diverse sia frammentazioni e livelli di indirezione inutili.
+- Leggere il codice interessato e comprenderne il comportamento prima di modificarlo. Riutilizzare le soluzioni già presenti quando adatte, mantenendo le convenzioni del progetto.
+- Correggere la causa del problema. Evitare workaround, patch sovrapposte, condizioni speciali e fallback che nascondono errori o aggirano un difetto senza risolverlo.
+- Non introdurre astrazioni premature, framework interni, configurazioni, dipendenze o estensioni per esigenze ipotetiche.
+- Non aggiungere codice per riempire una risposta o mostrare attività. Se non serve una modifica, non farla.
+- Gestire errori e casi limite reali nei punti appropriati. Evitare controlli difensivi ridondanti, eccezioni ignorate e recuperi silenziosi che rendono il comportamento ambiguo.
+- Limitare le modifiche allo scopo richiesto. Eliminare il codice reso inutile dalla modifica, senza riscrivere parti estranee al problema.
+- Usare commenti per spiegare motivazioni e vincoli non evidenti, senza ripetere ciò che il codice esprime già.
+- Prima di concludere, rileggere il diff ed eliminare duplicazioni, complessità accidentale e aggiunte non necessarie. Verificare i comportamenti modificati con controlli pertinenti.
+- Preservare i comportamenti e i contratti esistenti non coinvolti dalla modifica. Valutare l'impatto sui componenti collegati ed evitare regressioni nelle funzionalità già operative.
+- Evitare la duplicazione di logiche, dati e stati condivisi. Definire chiaramente dove risiede ogni responsabilità e mantenere coerenti le informazioni tra i componenti.
+- Mantenere espliciti i flussi di dati e le dipendenze tra componenti. Evitare accoppiamenti nascosti, effetti collaterali non evidenti e modifiche implicite dello stato condiviso.
+- Considerare le prestazioni quando sono rilevanti per il comportamento reale del sistema. Evitare ottimizzazioni premature e complessità aggiuntiva senza benefici verificabili.
 
 ## Linee guida per la documentazione
 
@@ -25,6 +45,17 @@
 - Conservare sempre il nome originale del file. Non aggiungere mai suffissi come FINAL, CLEAN, UPDATED o REVISION, salvo richiesta esplicita.
 - Se informazioni essenziali mancano o sono ambigue, chiedere chiarimenti prima di fare assunzioni architetturali.
 - Scrivere nella lingua scelta in modo chiaro e conciso, con frasi concrete e titoli brevi.
-- Tenere le istruzioni correnti separate dai percorsi superati: questi vanno in `archivio/`, con collegamenti aggiornati.
+- Tenere le istruzioni correnti separate dai percorsi superati: questi vanno in archivio/, con collegamenti aggiornati.
 - Documentare solo comandi esistenti. Segnalare brevemente ciò che manca in sezioni apposite, senza inventare interfacce future.
 - Aggiornare i documenti interessati quando cambia una decisione, evitando di duplicare la stessa spiegazione in ogni file.
+- Mantenere coerenti documentazione e implementazione. Verificare che nomi, parametri, percorsi, esempi e comportamenti descritti corrispondano al sistema effettivo.
+
+## Modalità di lavoro
+
+- Comprendere la richiesta e individuare i componenti interessati prima di intervenire.
+- Procedere autonomamente quando la soluzione è chiara e coerente con l'architettura esistente. Chiedere chiarimenti soltanto quando un'ambiguità influisce concretamente sul risultato.
+- Non interpretare una richiesta circoscritta come autorizzazione a riprogettare o ampliare il sistema.
+- Privilegiare modifiche concrete e verificabili rispetto a lunghe analisi, proposte speculative o implementazioni non richieste.
+- Non dichiarare completate verifiche, test o modifiche che non sono stati effettivamente eseguiti.
+- Comunicare sinteticamente il risultato del lavoro, indicando cosa è stato modificato, cosa è stato verificato ed eventuali problemi rimasti.
+- Evitare riepiloghi prolissi, spiegazioni delle scelte ovvie e descrizioni passo per passo di operazioni ordinarie. Approfondire soltanto quando necessario o richiesto.
