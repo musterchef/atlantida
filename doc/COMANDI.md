@@ -89,6 +89,14 @@ python -m desnivel.cli.live_bass
 
 Il comando resta in ascolto e prepara le frasi future. Non richiede `stream_metrics`; il replay del viaggio può continuare a modificare Snake attraverso il bridge esistente.
 
+Per scegliere valori e confrontarli sullo stesso replay: [Regolare il basso all'ascolto](PLAYER-M4L.md#regolare-il-basso-allascolto).
+
+Il launcher `08 - Scegli assetto basso.command` propone `sobrio`, `dialogo` e `ritmico`, riusando il 07. [Comandi per Firenze con il basso](TEST-PRESET-MUSICALI.md#firenze-con-il-basso).
+
+Il ricevitore accetta anche [aggiornamenti dei parametri durante l'esecuzione](CONTROLLI-BASSO.md), su un indirizzo OSC distinto e sulla stessa porta. Il mittente verrà sviluppato separatamente.
+
+Per generare automaticamente un suggerimento dai pattern della tappa, avviando l'analisi su richiesta e senza invii a Live: [Analisi del basso](TEST-PRESET-MUSICALI.md#suggerire-il-basso-dalla-tappa). Non cambia i launcher o i controlli durante l'esecuzione.
+
 ## Acquisire Export Snake
 
 [Funzionamento, formato dei dati e piano delle verifiche](EXPORT-SNAKE.md).

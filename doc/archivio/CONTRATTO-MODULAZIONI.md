@@ -1,7 +1,7 @@
 # DESNIVEL — Contratto musicale storico (v0.4, transitorio)
 
 > Questo documento descrive l'interfaccia musicale `/mod/*` del prototipo precedente. Non e' il contratto target per i dati GPX.
-> La decisione corrente separa producer neutrale, motore musicale Python e adattatori estensibili; Snake/M4L è il primo adattatore. Vedi [DECISIONE-ARCHITETTURA-AUDIO.md](../DECISIONE-ARCHITETTURA-AUDIO.md) e [STATO-CONTRATTO-OSC.md](../STATO-CONTRATTO-OSC.md).
+> La decisione corrente separa producer neutrale, motore musicale Python e adattatori estensibili; Snake/M4L è il primo adattatore. Vedi [TODO-ARCHITECTURE.md](../TODO-ARCHITECTURE.md) e [STATO-CONTRATTO-OSC.md](../STATO-CONTRATTO-OSC.md).
 > Lo schema metrico neutrale è definito e implementato in [CONTRATTO-DATI-VIAGGIO.md](../CONTRATTO-DATI-VIAGGIO.md). Restano da definire fatti neutrali e contratto delle decisioni musicali. Non costruire nuovi consumer assumendo che i canali `/mod/*` sotto siano l'interfaccia finale.
 > Il contratto e' modificabile: ogni evoluzione va concordata e propagata a producer, consumer, documentazione e test.
 >

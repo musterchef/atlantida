@@ -1,7 +1,7 @@
 # DESNIVEL — Architettura musicale
 
 > Documento fondativo del sistema audio generativo.
-> Le sezioni estetiche descrivono un profilo compositivo possibile, non vincoli universali del motore o degli adattatori. Architettura e stato operativo: [DECISIONE-ARCHITETTURA-AUDIO.md](../DECISIONE-ARCHITETTURA-AUDIO.md). Aggiornato il 2026-10-02.
+> Le sezioni estetiche descrivono un profilo compositivo possibile, non vincoli universali del motore o degli adattatori. Architettura e stato operativo: [TODO-ARCHITECTURE.md](../TODO-ARCHITECTURE.md). Aggiornato il 2026-10-02.
 
 ---
 
@@ -150,7 +150,7 @@ Il flusso corrente separa tre responsabilità:
 2. **Motore musicale Python:** stato e regole configurabili, incluse soglie, note e pattern. Produce decisioni indipendenti dal dispositivo; il contratto condiviso è ancora da definire.
 3. **Adattatori e destinazioni:** traducono le decisioni nei controlli supportati e ne eseguono il timing musicale. Snake via OSC/M4L è il primo esperimento, non una dipendenza del motore. Altre destinazioni possono usare altri protocolli.
 
-TouchDesigner resta un consumer visuale indipendente. La futura telemetria dell'esecuzione musicale è distinta dai dati del viaggio e non è ancora definita. Vedi la [decisione architetturale](../DECISIONE-ARCHITETTURA-AUDIO.md).
+TouchDesigner resta un consumer visuale indipendente. La futura telemetria dell'esecuzione musicale è distinta dai dati del viaggio e non è ancora definita. Vedi la [decisione architetturale](../TODO-ARCHITECTURE.md).
 
 ---
 

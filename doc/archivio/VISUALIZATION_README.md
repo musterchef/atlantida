@@ -2,7 +2,7 @@
 
 Questa guida descrive gli script archiviati in `old/`, non il contratto metrico corrente. I comandi storici sotto richiedono i vecchi dati sonic e non sono stati rieseguiti in questo audit; tempi e dimensioni sono stime storiche. Le formule musicali illustrate non sono vincoli del nuovo motore. La proposta finale `src/osc_sender.py` non è stata implementata con quel percorso.
 
-Per visualizzare i canali del prototipo Python esistente usare `desnivel-run --stage tappa_04`, poi `desnivel-plot --stage tappa_04 --save output/viz/tappa_04.png`. Questo visualizza modulazioni musicali, non le sei metriche neutre. Vedi [COMANDI.md](../COMANDI.md) e [architettura corrente](../DECISIONE-ARCHITETTURA-AUDIO.md).
+Per visualizzare i canali del prototipo Python esistente usare `desnivel-run --stage tappa_04`, poi `desnivel-plot --stage tappa_04 --save output/viz/tappa_04.png`. Questo visualizza modulazioni musicali, non le sei metriche neutre. Vedi [COMANDI.md](../COMANDI.md) e [architettura corrente](../TODO-ARCHITECTURE.md).
 
 ---
 

@@ -1,6 +1,6 @@
 # **DESNIVEL — Documento di Ricerca**
 
-> Documento di ricerca e visione artistica. Le mappature, il time-warp, la sincronizzazione audiovisiva e i risultati narrati non costituiscono una specifica verificata del software corrente. Per architettura e stato vedere [decisione tecnica](doc/DECISIONE-ARCHITETTURA-AUDIO.md) e [indice](doc/README.md).
+> Documento di ricerca e visione artistica. Le mappature, il time-warp, la sincronizzazione audiovisiva e i risultati narrati non costituiscono una specifica verificata del software corrente. Per architettura e stato vedere [decisione tecnica](doc/TODO-ARCHITECTURE.md) e [indice](doc/README.md).
 
 ### *dal viaggio al suono, dal terreno al gesto audiovisivo*  
 

@@ -1,6 +1,6 @@
 # Decisione architetturale — audio e visualizzazione
 
-- Stato: accettata, aggiornata il 2026-10-02.
+- Stato: documento storico del 2026-10-02. Riferimento corrente: [architettura musicale](../TODO-ARCHITECTURE.md).
 
 ## Percorso scelto
 
@@ -31,8 +31,8 @@ Soglie, intervalli, scale e comportamenti vanno configurati esplicitamente. Ness
 
 ## Interfacce
 
-Il [contratto dati](CONTRATTO-DATI-VIAGGIO.md) descrive le metriche del viaggio. Le decisioni musicali e i comandi degli adattatori sono separati: la [prima prova](TEST-VIAGGIO-SNAKE.md) implementa pattern e traduzione per Snake.
+Il [contratto dati](../CONTRATTO-DATI-VIAGGIO.md) descrive le metriche del viaggio. Le decisioni musicali e i comandi degli adattatori sono separati: la [prima prova](../TEST-VIAGGIO-SNAKE.md) implementa pattern e traduzione per Snake.
 
 Il tempo del replay stabilisce quanto rapidamente attraversiamo il viaggio. Il clock della destinazione stabilisce quando eseguire le note. Le regole devono dichiarare se operano sul tempo del viaggio o sul tempo musicale.
 
-Lo [stato dell'integrazione](STATO-CONTRATTO-OSC.md) riporta le funzionalità disponibili. I passi per il primo adattatore sono nella [guida Snake](INTEGRAZIONE-SNAKE.md).
+Lo [stato dell'integrazione](../STATO-CONTRATTO-OSC.md) riporta le funzionalità disponibili. I passi per il primo adattatore sono nella [guida Snake](../INTEGRAZIONE-SNAKE.md).

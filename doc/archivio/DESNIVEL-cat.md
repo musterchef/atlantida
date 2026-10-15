@@ -1,6 +1,6 @@
 DESNIVEL
 
-> Document conceptual històric en català. Les fases i els mapatges descriuen la visió artística, no l’estat actual del programari. Arquitectura vigent: productor neutre → motor musical Python → adaptadors extensibles; Snake/M4L és la primera prova. Vegeu [la decisió tècnica](../DECISIONE-ARCHITETTURA-AUDIO.md).
+> Document conceptual històric en català. Les fases i els mapatges descriuen la visió artística, no l’estat actual del programari. Arquitectura vigent: productor neutre → motor musical Python → adaptadors extensibles; Snake/M4L és la primera prova. Vegeu [la decisió tècnica](../TODO-ARCHITECTURE.md).
 
 del viatge al so, del terreny al gest audiovisual
 I. Declaració
@@ -110,7 +110,7 @@ Fase 3	Composició audiovisual (Torí → Castel del Monte)	⏳ planificada
 Fase 4	Instal·lació / performance en directe interactiva	🌀 expansió futura
 VIII. Apèndix tècnic
 
-La referència tècnica actual és [DECISIONE-ARCHITETTURA-AUDIO.md](../DECISIONE-ARCHITETTURA-AUDIO.md); el full de ruta anterior és històric.
+La referència tècnica actual és [TODO-ARCHITECTURE.md](../TODO-ARCHITECTURE.md); el full de ruta anterior és històric.
 
 Les extensions previstes inclouen:
 

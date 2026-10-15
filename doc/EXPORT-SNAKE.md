@@ -106,7 +106,7 @@ Il piano parte quindi da un multiplo di quattro beat con almeno un beat di antic
 
 Comandi, launcher e procedura di registrazione sono in [Comandi](COMANDI.md#acquisire-export-snake). Il contratto del player e le opzioni musicali sono in [Player M4L](PLAYER-M4L.md#basso-collegato-a-snake).
 
-## Archivio JSONL e passaggio futuro a SQLite
+## Archivio JSONL
 
 Il formato dell’archivio ha `schema_version: 1`, distinto dal campo `version` del protocollo Export. Ogni riga è un oggetto JSON completo con `record_type` e `session_id` UUID. I dati sono append-only.
 
@@ -120,16 +120,11 @@ Il formato dell’archivio ha `schema_version: 1`, distinto dal campo `version` 
 
 `event_id` ordina gli eventi salvati nella sessione. `serial` resta il contatore della sorgente: non sono intercambiabili. `elapsed_ns` è un tempo locale relativo, non il clock musicale e non una misura della latenza di rete. I nanosecondi sono l’unità di memorizzazione, non una garanzia di precisione.
 
-Il ricevitore dipende soltanto da `CaptureStore.append()` e `finish()`. Una futura implementazione SQLite potrà usare due tabelle:
-
-- `sessions`: ID, versione archivio, data UTC, metadati e informazioni di chiusura;
-- `events`: chiave `(session_id, event_id)`, tempo relativo, indirizzo e contenuto del messaggio.
-
-Per la prima migrazione `payload`, `raw_args` e metadati possono restare colonne JSON; eventuali indici su sorgente, epoca o beat si aggiungono quando servono alle query. Non occorre cambiare il protocollo OSC, Export o il modello musicale. SQLite non è ancora implementato.
+Il ricevitore usa l’interfaccia `CaptureStore.append()` e `finish()`; l’implementazione presente è `JsonlCaptureStore`.
 
 Ogni riga viene sottoposta a flush, senza fsync. Se manca la riga `end`, l’acquisizione è incompleta, anche se gli eventi precedenti sono leggibili. Una riga finale troncata va segnalata dal lettore; non va interpretata come chiusura normale.
 
-Le acquisizioni precedenti, prive di `schema_version`, contengono `received_monotonic`, `address` e `args`. Restano inalterate. Un futuro importatore dovrà riconoscere quel formato separatamente: non contiene i metadati e il motivo di chiusura delle nuove sessioni.
+Le acquisizioni precedenti, prive di `schema_version`, contengono `received_monotonic`, `address` e `args`. Questo formato non contiene i metadati e il motivo di chiusura delle sessioni versionate.
 
 ## Errori e limiti attuali
 

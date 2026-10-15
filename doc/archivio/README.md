@@ -1,7 +1,8 @@
 # Archivio della documentazione
 
-Documenti del precedente prototipo, spostati il 2026-10-02. Conservati per consultazione e riuso; non definiscono l'architettura corrente.
+Documenti dei percorsi e delle decisioni precedenti. Conservati per consultazione e riuso; non definiscono l'architettura corrente.
 
+- [DECISIONE-ARCHITETTURA-AUDIO.md](DECISIONE-ARCHITETTURA-AUDIO.md): decisione del 2 ottobre 2026, sostituita dall’architettura musicale corrente.
 - [ROADMAP-PRECEDENTE.md](ROADMAP-PRECEDENTE.md): vecchie priorità e completamenti.
 - [INVENTARIO-PROTOTIPO.md](INVENTARIO-PROTOTIPO.md): canali e limiti della pipeline precedente.
 - [ARCHITETTURA-MUSICALE.md](ARCHITETTURA-MUSICALE.md): profilo compositivo continuo.
@@ -15,4 +16,4 @@ Documenti del precedente prototipo, spostati il 2026-10-02. Conservati per consu
 - [DESNIVEL-cat.md](DESNIVEL-cat.md): presentazione storica in catalano.
 - [html/index.html](html/index.html): sito della vecchia pipeline, con pagine e CSS conservati insieme.
 
-Per lavorare sul progetto partire dall'[indice corrente](../README.md) e dalla [decisione architetturale](../DECISIONE-ARCHITETTURA-AUDIO.md). Il codice del generatore TD/audio è conservato separatamente in [old/td_audio](../../old/td_audio/README.md).
+Per lavorare sul progetto partire dall'[indice corrente](../README.md) e dalla [decisione architetturale](../TODO-ARCHITECTURE.md). Il codice del generatore TD/audio è conservato separatamente in [old/td_audio](../../old/td_audio/README.md).

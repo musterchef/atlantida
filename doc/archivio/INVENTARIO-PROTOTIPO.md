@@ -1,7 +1,7 @@
 # Stato di implementazione del contratto OSC
 
 - Aggiornato con verifica del codice e prove dell'utente: 2026-10-02
-- Riferimenti: [CONTRATTO-MODULAZIONI.md](CONTRATTO-MODULAZIONI.md), [CONTRATTO-DATI-VIAGGIO.md](../CONTRATTO-DATI-VIAGGIO.md), [DECISIONE-ARCHITETTURA-AUDIO.md](../DECISIONE-ARCHITETTURA-AUDIO.md)
+- Riferimenti: [CONTRATTO-MODULAZIONI.md](CONTRATTO-MODULAZIONI.md), [CONTRATTO-DATI-VIAGGIO.md](../CONTRATTO-DATI-VIAGGIO.md), [TODO-ARCHITECTURE.md](../TODO-ARCHITECTURE.md)
 - Scopo: distinguere le metriche di viaggio gia' derivate dai vecchi output musicali e registrare cio' che serve per definire il contratto neutrale.
 
 ## Metriche gia' nel Track

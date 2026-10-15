@@ -1,6 +1,6 @@
 # Integrazione MDD Snake — guida al prototipo
 
-Aggiornata il 2026-10-02. Riferimento: [decisione architetturale](DECISIONE-ARCHITETTURA-AUDIO.md).
+Aggiornata il 2026-10-15. Riferimento: [decisione architetturale](TODO-ARCHITECTURE.md).
 
 ## Confini
 
@@ -16,7 +16,7 @@ Producer GPX → metriche neutre → motore musicale Python
 
 Il motore musicale Python contiene regole, soglie, stato e mapping configurabili. L'adattatore contiene nomi e range specifici di Snake. M4L riceve e applica i comandi; il clock delle note resta in Live/Snake.
 
-Il viaggio evolve indipendentemente dal clock musicale. Accelerare il replay non implica accelerare il BPM. Il producer resta agnostico e utilizzabile da altri consumer; il supporto Snake può essere scollegato senza cambiarlo. Le altre implementazioni sono conservate; il precedente generatore TD/JS è stato spostato in [old/td_audio](../old/td_audio/README.md).
+Il viaggio evolve indipendentemente dal clock musicale. Accelerare il replay non implica accelerare il BPM. Il producer resta agnostico e utilizzabile da altri consumer; il supporto Snake può essere scollegato senza cambiarlo.
 
 ## File e stato
 
@@ -33,7 +33,7 @@ Il viaggio evolve indipendentemente dal clock musicale. Accelerare il replay non
 | `src/desnivel/bridges/osc_to_midi.py` | Bridge `/mod/*` esistente, conservato; non è il nuovo adattatore Snake. |
 | `tests/test_trip_metrics*.py` | Test del contratto metrico esistente. |
 
-Motore musicale separato, adattatore Snake e loro configurazione sono da implementare. Non attribuire loro file o funzionalità già esistenti. Prima di modificare il device M4L, salvare nel progetto la versione funzionante usata in Live: il `.maxpat` iniziale non si aggiorna da solo.
+Il motore a pattern e l’adattatore Snake sono implementati in `music.py`, `journey_music.py` e `adapters/snake.py`. Comandi e configurazioni sono descritti in [Comandi](COMANDI.md) e [Preset musicali](TEST-PRESET-MUSICALI.md). Prima di modificare il device M4L, salvare nel progetto la versione funzionante usata in Live: il `.maxpat` iniziale non si aggiorna da solo.
 
 ## Risultati verificati dall'utente
 
@@ -42,7 +42,7 @@ Motore musicale separato, adattatore Snake e loro configurazione sono da impleme
 - Lettura API di `Note_01`: minimo 0, massimo 83.
 - `set value 12` tramite `live.object` cambia il parametro di Snake.
 
-Non verificati: equivalenza tra valore del parametro e nota MIDI emessa, controllo completo di gate/velocity, aggiornamento di tutti gli step e applicazione sincronizzata del pattern.
+Le verifiche successive dello stato esportato e della previsione MIDI sono in [Export Snake](EXPORT-SNAKE.md#verifiche-concluse). L’applicazione dei cambi di pattern non è atomica né quantizzata a battuta.
 
 ## Riprodurre la prova delle metriche
 
@@ -58,7 +58,7 @@ Formato: `/desnivel/v1/trip/metric/<nome> elapsed_s value`. Il primo argomento �
 
 Caricare in Live [il device](../m4l/desnivel-bridge.amxd), copiandolo con il `.js` nella cartella User Library dei Max Audio Effect. Per provarlo in Max, aprirlo e bloccare la patch con Cmd+E. Il messaggio locale di test mostra 12.5 secondi e 345 metri: non prova la rete. Tenere un solo receiver sulla porta scelta; nella prova un altro receiver impediva l'aggiornamento in Max.
 
-Per usarla in Live, copiare gli oggetti nel template di un Max MIDI Effect sostituendo il pass-through MIDI del template, senza duplicarlo. Salvare il device `.amxd` nel progetto. La ricezione diretta delle metriche resta utile come diagnostica; il nuovo flusso operativo porterà a M4L comandi già elaborati, con protocollo e porta da definire separatamente.
+Per usarla in Live, copiare gli oggetti nel template di un Max MIDI Effect sostituendo il pass-through MIDI del template, senza duplicarlo. Salvare il device `.amxd` nel progetto. La ricezione diretta delle metriche resta utile come diagnostica; il nuovo flusso operativo porterà a M4L comandi già elaborati, sulla porta 9001, indirizzo `/desnivel/v1/control/snake/set`, con nome del parametro e valore.
 
 ## Collegamento manuale verificato
 
@@ -71,7 +71,7 @@ Nell'editor del device aperto da Live:
 5. Collegare l'uscita di `live.object` a un oggetto `print parametro`.
 6. Bloccare la patch. In Live, con MIDI Map disattivato, selezionare la manopola di Snake; in Max cliccare il messaggio `path ...`, poi i comandi di lettura e scrittura.
 
-Gli ID vengono acquisiti da Live: non scrivere nel codice i numeri osservati durante una sessione. Per `Note_01` usare il range osservato 0–83; non assumere che sia una nota MIDI o un valore normalizzato 0–1. L'associazione da conservare al riavvio resta da implementare/verificare.
+Gli ID vengono acquisiti da Live: non scrivere nel codice i numeri osservati durante una sessione. Per `Note_01` usare il range osservato 0–83; non assumere che sia una nota MIDI o un valore normalizzato 0–1. Il bridge operativo risolve i parametri per nome tramite `desnivel_snake_params.js`.
 
 Riferimenti: [live.path](https://docs.cycling74.com/reference/live.path), [live.object](https://docs.cycling74.com/reference/live.object), [udpreceive](https://docs.cycling74.com/reference/udpreceive/).
 
@@ -81,36 +81,6 @@ Riferimenti: [live.path](https://docs.cycling74.com/reference/live.path), [live.
 - Nessun dato OSC: controllare la porta e chiudere altri receiver sulla stessa porta.
 - Parametro inatteso: leggere `get name` prima di scrivere un valore.
 - Crash con `live.remote~`: usare il collegamento verificato con `live.object`.
-
-## Prossimi passi: sviluppo autonomo
-
-1. **Salvare la base funzionante:** portare nel progetto il device con `live.object` verificato, mantenendo il receiver iniziale come riferimento diagnostico.
-2. **Una regola Python:** scegliere una metrica, una conversione e i suoi parametri configurabili. Definire input/output e comportamento a dati mancanti o replay riavviato. Provare la funzione con valori noti prima di collegarla alla rete.
-3. **Un adattamento Snake:** tradurre la decisione nel parametro e range di destinazione. Nessun ID Live nel motore musicale. Non generalizzare a tutti i sequencer prima di questa prova.
-4. **Un comando OSC:** documentare indirizzo, argomenti, destinazione di rete e comportamento dei valori fuori intervallo. Usare un contratto distinto dalle metriche del viaggio. Evitare due receiver sulla stessa porta.
-5. **Ricevere e applicare in M4L:** trasformare il comando ricevuto in `set value` per il parametro associato. Non trasferire qui soglie e regole geografiche.
-6. **Provare la catena:** valore noto → parametro atteso, poi replay GPX. Verificare stop, riavvio e associazione del parametro dopo riapertura del set. Solo dopo aggiungere altre destinazioni e timing a battuta/step.
-
-Non implementare tutti i passi insieme. La prova del cambio manuale è già completata e non va ripetuta come prerequisito a ogni sessione.
-
-### Scheda della prima regola
-
-| Decisione | Da compilare |
-|---|---|
-| Metrica, unità e intervallo di ingresso | |
-| Regola musicale e parametri configurabili | |
-| Decisione prodotta dal motore | |
-| Destinazione e conversione dell'adattatore | |
-| Comando OSC, argomenti e porta | |
-| Dati assenti, timeout, stop e nuovo replay | |
-| Applicazione immediata o sincronizzata | |
-| Input di prova e risultato atteso | |
-
-Per una soglia distinguere permanenza sopra soglia da attraversamento: decidere quando riarmare la regola ed evitare trigger ripetuti. Non aggiungere queste regole al producer GPX.
-
-### Autocomplete e richieste mirate
-
-Usare autocomplete per piccoli blocchi di comportamento già deciso. Per una revisione indicare file, input, risultato atteso e osservato; chiedere di leggere solo il frammento o diff necessario. Per gli oggetti Max usare l'help installato. Salvare un punto funzionante e aggiornare questa guida a fine sessione.
 
 ## Stato corrente
 
@@ -136,4 +106,4 @@ L'output deve essere un file nuovo. Il device generato resta fuori dalla reposit
 
 Length ha 16 valori da 0 a 127, convertiti linearmente fra Min e Max in millisecondi. Ogni durata appartiene alla corrispondente cella Notes. Il motore Notes seleziona insieme altezza e durata; Length non ha un sequencer autonomo. I limiti iniziali sono 50–500 ms. La durata corrente viene acquisita all'attacco di ogni nota; cambiarla non modifica le note già iniziate. `makenote` gestisce i note-off e chiude la nota precedente quando viene ripetuta la stessa altezza.
 
-Verificati struttura, collegamenti e conservazione delle risorse incorporate. L’utente ha confermato suono, controllo Shape e replay Firenze nella configurazione installata. Restano da misurare durate, retrigger e corrispondenza con la previsione Python. Il bridge risolve Gates per nome nella mod; gli indici non sono stabili tra versioni.
+Verificati struttura, collegamenti e conservazione delle risorse incorporate. L’utente ha confermato suono, controllo Shape e replay Firenze nella configurazione installata. Durate, retrigger e previsione sono stati confrontati con registrazioni MIDI nelle configurazioni descritte in [Export Snake](EXPORT-SNAKE.md#verifiche-concluse). Il bridge risolve Gates per nome nella mod; gli indici non sono stabili tra versioni.

@@ -1,6 +1,6 @@
 # TODO — DESNIVEL
 
-Aggiornato il 2026-10-02. Decisione di riferimento: [architettura audio](../DECISIONE-ARCHITETTURA-AUDIO.md). Le voci storiche completate in fondo non attestano che il nuovo percorso sia già implementato.
+Aggiornato il 2026-10-02. Decisione di riferimento: [architettura audio](../TODO-ARCHITECTURE.md). Le voci storiche completate in fondo non attestano che il nuovo percorso sia già implementato.
 
 ## Architettura e priorità
 

@@ -10,4 +10,4 @@ I quattro file sono stati spostati insieme senza modificarne il contenuto. Il JS
 
 I progetti `.toe`, shader e loader visuali restano in `td/`. Eventuali riferimenti esterni nei `.toe` ai vecchi percorsi non sono stati aggiornati né verificati: per rieseguire questo prototipo occorre puntarli ai file di questo archivio. Il callback archiviato contiene anche aggiornamenti visuali, per questo è conservato interamente.
 
-Per il percorso corrente vedere [la decisione architetturale](../../doc/DECISIONE-ARCHITETTURA-AUDIO.md).
+Per il percorso corrente vedere [la decisione architetturale](../../doc/TODO-ARCHITECTURE.md).

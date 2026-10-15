@@ -1,6 +1,6 @@
 # Stato dell'integrazione
 
-Aggiornato il 2026-10-04.
+Riepilogo dei percorsi implementati. Per risultati e configurazioni delle prove vedere lo [stato del progetto](SESSIONE.md).
 
 | Parte | Stato |
 |---|---|
@@ -11,7 +11,10 @@ Aggiornato il 2026-10-04.
 | Contratto delle decisioni musicali | Pattern con note e gate, cambi con timestamp e stato. |
 | Adattatori di destinazione | Snake: note, gate e Shape; player M4L: frasi MIDI. |
 | Comandi OSC verso M4L | Controllo per nome verificato dall’utente su note e gate. |
-| Pattern dal viaggio | Test Python e dry-run verificati; ascolto in Live da eseguire. Timing a battuta assente. |
+| Pattern dal viaggio | Replay Firenze confermato in Live. Cambi dei parametri immediati, senza quantizzazione a battuta. |
+| Export e basso live | Previsione Snake e piani del basso confrontati con MIDI nelle configurazioni documentate. |
+| Controlli del basso | Ricevitore OSC e transizioni implementati; mittente e andamento musicale della tappa da implementare. |
+| Director e Coordinator | Definiti nell’[architettura musicale](TODO-ARCHITECTURE.md), da implementare come componenti condivisi. |
 
 ## File disponibili
 
@@ -32,8 +35,8 @@ Il producer usa `src/desnivel/trip_metrics.py` e `src/desnivel/sinks/trip_metric
 
 ## Preset del viaggio
 
-Disponibili movimento, sforzo e misto, con percorso armonico per tappa. [Comandi e configurazione](TEST-PRESET-MUSICALI.md). Test Python e generazione verificati; ascolto in Live da eseguire.
+Disponibili movimento, sforzo e misto, con percorso armonico per tappa. [Comandi e configurazione](TEST-PRESET-MUSICALI.md). Replay Firenze confermato in Live; gli altri preset e gli assetti del basso richiedono valutazione musicale. Dettagli nello [stato del progetto](SESSIONE.md).
 
 ## Player M4L
 
-Ricezione e riproduzione confermate dall’utente in Live. Frasi di prova indipendenti dal viaggio; sincronizzazione avanzata ancora da validare. [Guida](PLAYER-M4L.md).
+Il player ciclico di frasi e il player dei piani assoluti del basso sono percorsi distinti. L’esecuzione dei piani del basso è stata confrontata con tre registrazioni MIDI; Stop/ripartenza, seek e cambi di tempo richiedono ulteriori verifiche. [Guida](PLAYER-M4L.md).

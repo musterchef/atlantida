@@ -1,20 +1,14 @@
 # Prossimi passi
 
-## Prima integrazione
+## Architettura musicale
 
-- [ ] Salvare nel repository il device M4L con il controllo manuale funzionante.
-- [ ] Implementare una regola musicale Python con parametri configurabili.
-- [ ] Definire la decisione musicale prodotta dalla regola, indipendente dallo strumento.
-- [ ] Implementare l'adattatore Snake e il suo comando OSC.
-- [ ] Ricevere il comando in M4L e applicarlo al parametro associato.
-- [ ] Verificare il percorso completo, inclusi stop, riavvio e dati mancanti.
+Definire le interfacce e i punti aperti dell’[architettura musicale](doc/TODO-ARCHITECTURE.md) prima dell’implementazione di Music Director e Music Coordinator. Conservare il generatore del basso agnostico e preparare la gestione di più sorgenti melodiche simultanee.
 
-## Dopo la prima prova
+## Percorso presente
 
-- [ ] Estendere i controlli a gate, velocity e pattern; verificare il timing in Live.
-- [ ] Separare le regole riutilizzabili dei modulatori esistenti nel motore musicale.
-- [ ] Definire i fatti geografici nel contratto del viaggio.
-- [ ] Aggiungere altri adattatori secondo le necessità musicali.
-- [ ] Definire la telemetria per le visualizzazioni quando necessaria.
+- [ ] Valutare all’ascolto i controlli del basso sullo stesso materiale: [metodo e revisioni](TODO-DESNIVEL.md).
+- [ ] Verificare Stop/ripartenza, salti del trasporto e cambi di stato nelle condizioni necessarie all’uso: [piano delle prove](doc/EXPORT-SNAKE.md#piano-di-lavoro).
+- [ ] Definire il comportamento in assenza di snapshot e per metriche scadute nei consumer.
+- [ ] Definire il contratto dei fatti geografici neutrali: [dati del viaggio](doc/CONTRATTO-DATI-VIAGGIO.md).
 
-[Architettura](doc/DECISIONE-ARCHITETTURA-AUDIO.md) · [Guida Snake](doc/INTEGRAZIONE-SNAKE.md) · [Stato](doc/STATO-CONTRATTO-OSC.md) · [Roadmap precedente](doc/archivio/ROADMAP-PRECEDENTE.md)
+[Comandi](doc/COMANDI.md) · [Stato del progetto](doc/SESSIONE.md) · [Integrazione](doc/STATO-CONTRATTO-OSC.md)

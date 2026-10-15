@@ -1,12 +1,12 @@
 # Stato del progetto
 
-Aggiornato il 12 ottobre 2026.
+Stato aggiornato al 15 ottobre 2026.
 
 ## Base verificata in Live
 
 L’utente ha confermato i tre launcher in `comandi/`: Shape Gates 0, Shape Gates 13 e Firenze–San Gimignano a 150×. Snake suona e il replay funziona nella configurazione attuale. Questa conferma non misura la corrispondenza della previsione Python con il MIDI reale né la sincronizzazione del basso.
 
-Usare il Set funzionante dell’utente. Il consolidamento non modifica Set, device installati o impostazioni di Ableton.
+Per le prove usare il Set con bridge, Snake con Export e player del basso descritti nelle guide operative.
 
 ## Architettura e sorgenti
 
@@ -18,7 +18,7 @@ Usare il Set funzionante dell’utente. Il consolidamento non modifica Set, devi
 - `tools/build_live_bass.py` aggiunge la lettura dello stato e genera il player del basso. I device generati restano fuori dalla repository.
 - `adapters/snake_sequence.py` ricostruisce una `Phrase`; `bass.py` genera il basso da una frase indipendente dalla sorgente; il player esegue piani sul trasporto Live.
 
-## Confronto con i file installati
+## Confronto dei file dell’11 ottobre
 
 Cartella: `~/Music/Ableton/User Library/MaxForLive/desnivel`.
 
@@ -34,15 +34,15 @@ Il confronto riguarda i file su disco, non eventuali modifiche non salvate nel S
 
 La previsione Snake è stata confrontata con registrazioni MIDI e stati Export nelle configurazioni descritte sotto. Il basso live riceve lo stato e le fasi di Snake, prevede la frase e invia piani al player M4L. La corrispondenza di esecuzione è stata verificata nelle tre registrazioni descritte sotto; questo non valuta la qualità musicale. La previsione supporta clock e Shape indipendenti, forwards/backwards, Shift visualizzato 1 e Swing 0. La telemetria legge le altezze già quantizzate e le fasi effettive; non anticipa modifiche future dello stato.
 
-Il basso offre tre strategie selezionabili: `responsive`, `follow` e `slap`. Quest’ultima aggiunge un groove più fitto, con colpi bassi sugli appoggi, risposte sincopate e possibili salti d’ottava nel registro configurato. Le altre due strategie restano disponibili. Nessuna strategia deduce accordi certi dalla scala né usa ancora un’armonia condivisa esplicita con il viaggio. La valutazione musicale di `slap` in Ableton resta da fare all’ascolto.
+Il basso usa un generatore parametrico unico, con preset `responsive`, `follow` e `slap`. Controlli e valori sono descritti in [Player M4L](PLAYER-M4L.md#generare-il-basso). Non dispone ancora di un’armonia condivisa esplicita con il viaggio. I controlli e i pesi musicali restano da valutare all’ascolto.
 
 Sabaudia–Formia e Peschici–Mattinata sono preset d’uso richiesti dall’utente, verificati in generazione ma ancora da valutare all’ascolto.
 
 ## Verifiche e prossimo passo
 
-Al consolidamento dell’11 ottobre: 212 test Python passati, incluso il test UDP locale eseguito fuori dal sandbox. Quattro test JavaScript e sintassi dei tre launcher verificati. Nessun comando musicale inviato a Live durante il consolidamento.
+Le verifiche automatiche più recenti registrate sono riportate nella sezione [Controlli del basso durante l’esecuzione](#controlli-del-basso-durante-lesecuzione).
 
-Prossimo passo: ascoltare in Live la strategia `slap` con Snake e confrontarla, a parità di Set e melodia, con `responsive` e `follow`. Le prove di seek, cambi di stato e combinazioni rare restano secondarie finché non servono all’uso concreto.
+Prossimo passo: ascoltare il generatore parametrico con Snake, a parità di Set e melodia, modificando un controllo per volta. Le prove di seek, cambi di stato e combinazioni rare restano secondarie finché non servono all’uso concreto.
 
 ## Istruzioni
 
@@ -50,7 +50,7 @@ Prossimo passo: ascoltare in Live la strategia `slap` con Snake e confrontarla, 
 - [Preset musicali](TEST-PRESET-MUSICALI.md)
 - [Integrazione Snake e Length](INTEGRAZIONE-SNAKE.md)
 - [Player e basso](PLAYER-M4L.md)
-- [Architettura](DECISIONE-ARCHITETTURA-AUDIO.md)
+- [Architettura](TODO-ARCHITECTURE.md)
 
 ## Verifica Export e MIDI del 12 ottobre
 
@@ -70,18 +70,24 @@ Risultato: 31/31 note del basso e 129/130 note Snake compatibili con i piani/sta
 
 Conclusione: esecuzione dei piani del basso verificata nelle tre registrazioni, con il limite temporale di un tick (circa 6,65 ms a 94 BPM). Non è una verifica indipendente della posizione assoluta delle clip, né certifica Stop/ripartenza: l’utente non ha dichiarato di aver effettuato quei comandi. Le transizioni di trasporto nel log non vengono attribuite ad azioni dell’utente.
 
-## Passaggio di consegne: prova slap
+## Basso parametrico
 
-Il 12 ottobre è stata aggiunta `slap` in `bass.py`, esposta da `live_bass` e `compose_bass`; `responsive` e `follow` non sono state modificate. Il groove usa suddivisioni a ottavi, varia il disegno ogni quattro beat e accorcia le risposte sincopate. Quando il registro lo consente, alterna note basse e risposte un’ottava sopra. Il MIDI definisce le note, non il timbro slap dello strumento.
+Il generatore usa un percorso unico: selezione degli attacchi, scelta delle altezze e articolazione. I preset inizializzano controlli sovrascrivibili; le CLI offline e live condividono le opzioni musicali. Previsione Snake e protocollo del player restano invariati. `BassSession.set_settings` interpola i controlli nelle finestre future; le opzioni CLI definiscono i valori iniziali.
 
-Verifiche mirate: 12 test passati fra basso, acquisizione live e device; diagnostica Python senza errori. Su una frase artificiale di quattro beat, `slap` genera 6–8 attacchi contro 3 con `responsive` e 4 con `follow`. Sono verifiche del codice e del ritmo generato, non dell’ascolto in Ableton.
+La verifica MIDI precedente riguarda l'esecuzione dei piani, non certifica la qualità musicale del nuovo generatore. Per ascoltarlo usare il launcher 07 e il replay Firenze, senza altri ricevitori sulla porta 9003. Parametri ed esempio corrente in [Player M4L](PLAYER-M4L.md#generare-il-basso). Modificare un controllo per volta e raccogliere il feedback musicale dell'utente.
 
-Per riprendere la prova dal vivo, con il Set funzionante e Export attivo, avviare il launcher 07 con:
+Verifica automatica: 240 test Python passati, escluso `test_trip_metrics_wire.py`, che usa un socket UDP reale e riguarda il contratto delle metriche del viaggio. Verificati anche parametri espliciti nel launcher live tramite client simulato, metadati risolti dell'acquisizione, transizioni per finestre ed epoche e limiti comuni ai preset. Nessun ascolto o nuova registrazione in Live.
 
-```sh
-./comandi/07\ -\ Basso\ e\ acquisizione.command --strategy slap --highest 59
-```
+Disponibile anche l'[analisi della tappa su richiesta](TEST-PRESET-MUSICALI.md#suggerire-il-basso-dalla-tappa): genera automaticamente un suggerimento da provare, senza applicarlo al basso live. Verifica mirata dell'aggiunta: 40 test passati su analisi, composizione del viaggio e generazione del basso. Gli assetti del launcher 08 restano il percorso principale d'ascolto.
 
-Poi avviare il replay Firenze già documentato in [Comandi](COMANDI.md) o [Preset musicali](TEST-PRESET-MUSICALI.md). Per confrontare le strategie, fermare replay e launcher e riavviarli con `--strategy responsive` e poi `--strategy follow`, lasciando invariati Set, configurazione Snake e replay. Il valore `--highest 59` amplia il registro per rendere possibili le risposte d’ottava. Non avviare insieme i ricevitori 05/06: condividono la porta 9003 con `live_bass`.
 
-Il 13 ottobre lo stato è stato consolidato con acquisizione JSONL, modalità keep-open, launcher 06/07 e strategia slap. Verifica del consolidamento: 22 test mirati passati su basso, acquisizione, pianificazione live e device; sintassi dei launcher 06/07 verificata. Non è un’esecuzione dell’intera suite. Acquisizioni e MIDI restano fuori dalla repository.
+## Controlli del basso durante l'esecuzione
+
+`live_bass` riceve aggiornamenti parziali dei parametri su un indirizzo OSC distinto dallo stato Snake, usando la stessa porta. Il contratto è indipendente dalla sorgente e il cambio viene validato per intero. Le transizioni conservano le destinazioni già richieste; messaggi duplicati o superati vengono ignorati e quelli non validi lasciano i piani invariati. [Formato e tempi di applicazione](CONTROLLI-BASSO.md).
+
+Il mittente dei controlli e l'andamento musicale della tappa restano da implementare. Verifica automatica: 274 test Python passati, escluso il test UDP reale delle metriche del viaggio. Il ricevitore dei nuovi controlli è verificato con client e server simulati, inclusi cambi graduali e senza interpolazione, rifiuti, ordine e acquisizione. Nessun controllo inviato a Live dall'assistente; l'effetto musicale resta da ascoltare.
+
+
+## Verifica del 15 ottobre
+
+Passati tutti i 275 test Python: 274 nel sandbox e il test UDP locale eseguito separatamente con i permessi di rete necessari. Verificati la sintassi Bash del launcher 08, i collegamenti locali della documentazione e l’assenza di errori di spaziatura nel diff. Nessuna nuova prova in Live.

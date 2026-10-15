@@ -2,7 +2,7 @@
 
 Questa guida descrive il prototipo che riceve CC MIDI dal bridge OSC→MIDI.
 Non e' il consumer del contratto neutrale `/desnivel/v1/trip/metric/*`.
-Il percorso target è producer neutrale → motore musicale Python → adattatori estensibili; Snake/M4L è il primo esperimento. Vedi [decisione corrente](../DECISIONE-ARCHITETTURA-AUDIO.md).
+Il percorso target è producer neutrale → motore musicale Python → adattatori estensibili; Snake/M4L è il primo esperimento. Vedi [decisione corrente](../TODO-ARCHITECTURE.md).
 il Rack qui sotto resta un riferimento per le prove del prototipo, non la
 configurazione target.
 
