@@ -51,3 +51,34 @@ def test_unknown_state_silences_and_multiple_sources_rejected():
 
 def test_new_python_process_has_new_session():
     assert BassSession().update(snapshot())['session']!=BassSession().update(snapshot())['session']
+
+
+def test_controls_transition_on_musical_windows_not_snapshot_count():
+    from desnivel.bass import BassSettings
+    session = BassSession(BassSettings(density=.5))
+    first = session.update(snapshot())
+    session.set_settings(BassSettings(density=1.5), transition_windows=2)
+    repeated = session.update(snapshot(2, .375))
+    assert repeated['phrase'] == first['phrase']
+    assert session.settings.density == .5
+    halfway = session.update(snapshot(3, 4.125))
+    assert halfway['start'] == 8
+    assert session.settings.density == 1
+    session.update(snapshot(4, 4.375))
+    assert session.settings.density == 1
+    session.update(snapshot(5, 8.125))
+    assert session.settings.density == 1.5
+
+
+def test_settings_transition_rebases_after_transport_epoch_changes():
+    from desnivel.bass import BassSettings
+    session = BassSession(BassSettings(density=.5))
+    session.update(snapshot(1, 20.125))
+    session.set_settings(BassSettings(density=1.5), transition_windows=2)
+    session.update(snapshot(2, 24.125))
+    assert session.settings.density == 1
+    session.update(snapshot(3, 0, epoch=1, playing=0))
+    session.update(snapshot(4, .125, epoch=2))
+    assert session.settings.density == 1
+    session.update(snapshot(5, 4.125, epoch=2))
+    assert session.settings.density == 1.25

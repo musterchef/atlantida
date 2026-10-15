@@ -1,231 +1,201 @@
-"""Generazione del basso da una frase MIDI, indipendente dalla sorgente."""
+"""Accompagnamento parametrico da una frase, indipendente da sorgente e player."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, replace
 import math
 import random
-from collections import defaultdict
 
 from desnivel.phrases import Note, Phrase
+
+# I preset forniscono solo valori: il percorso musicale è unico.
+PRESETS = {
+    'responsive': dict(density=.8, syncopation=.25, rhythm_follow=.35,
+                       melody_follow=.25, mobility=.15, variation=.35,
+                       min_spacing=1.0, articulation=.9),
+    'follow': dict(density=4.0, syncopation=0.0, rhythm_follow=1.0,
+                   melody_follow=1.0, mobility=0.0, variation=0.0,
+                   min_spacing=1.0, articulation=.9),
+    'slap': dict(density=1.8, syncopation=.7, rhythm_follow=.15,
+                 melody_follow=.5, mobility=.85, variation=.5,
+                 min_spacing=.5, articulation=.5),
+}
 
 
 @dataclass(frozen=True)
 class BassSettings:
     lowest: int = 28
     highest: int = 47
-    min_spacing: float = 1.0
-    articulation: float = 0.9
-    velocity_ratio: float = 0.9
-    strategy: str = 'responsive'
+    min_spacing: float | None = None
+    articulation: float | None = None
+    velocity_ratio: float = .9
+    strategy: str = 'responsive'  # Alias storico del nome del preset.
     seed: int = 0
     variation_period: int = 4
     max_hold: float = 2.0
-    grid: float = 0.5
+    grid: float = .5
+    density: float | None = None
+    syncopation: float | None = None
+    rhythm_follow: float | None = None
+    melody_follow: float | None = None
+    mobility: float | None = None
+    variation: float | None = None
 
     def __post_init__(self):
-        if self.strategy not in ('responsive', 'follow', 'slap'):
-            raise ValueError('strategia basso sconosciuta')
+        if self.strategy not in PRESETS:
+            raise ValueError('preset basso sconosciuto')
+        for name, default in PRESETS[self.strategy].items():
+            if getattr(self, name) is None:
+                object.__setattr__(self, name, default)
         if type(self.seed) is not int or type(self.variation_period) is not int or self.variation_period < 1:
             raise ValueError('seed intero e variation_period positivo richiesti')
-        if any(not math.isfinite(x) or x <= 0 for x in (self.max_hold, self.grid)):
-            raise ValueError('max_hold e grid devono essere positivi e finiti')
         if (type(self.lowest) is not int or type(self.highest) is not int
                 or not 0 <= self.lowest <= self.highest <= 127
                 or self.highest - self.lowest < 11):
             raise ValueError('registro del basso: almeno 12 note MIDI consecutive')
-        if not math.isfinite(self.min_spacing) or self.min_spacing <= 0:
-            raise ValueError('min_spacing deve essere positivo e finito')
-        for value in (self.articulation, self.velocity_ratio):
+        for name in ('min_spacing', 'max_hold', 'grid'):
+            value = getattr(self, name)
+            if not math.isfinite(value) or value <= 0:
+                raise ValueError(name + ' deve essere positivo e finito')
+        if not math.isfinite(self.density) or self.density < 0:
+            raise ValueError('density deve essere non negativa e finita')
+        for name in ('syncopation', 'rhythm_follow', 'melody_follow', 'mobility', 'variation'):
+            value = getattr(self, name)
+            if not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError(name + ' deve essere in [0, 1]')
+        for name in ('articulation', 'velocity_ratio'):
+            value = getattr(self, name)
             if not math.isfinite(value) or not 0 < value <= 1:
-                raise ValueError('articolazione e rapporto velocity devono essere in (0, 1]')
+                raise ValueError(name + ' deve essere in (0, 1]')
 
 
-def _follow(melody: Phrase, settings: BassSettings = BassSettings(),
-                  previous_pitch: int | None = None) -> Phrase:
-    """Seleziona attacchi distanziati e minimizza i salti fra ottave.
-
-    Mantiene la classe di altezza dell'attacco scelto. Non deduce accordi
-    dalla sola scala. Il silenzio della melodia resta silenzio nel basso.
-    previous_pitch permette continuità fra sezioni pianificate.
-    """
-    if previous_pitch is not None and (type(previous_pitch) is not int or not 0 <= previous_pitch <= 127):
-        raise ValueError('previous_pitch deve essere una nota MIDI')
-    selected = []
-    for note in sorted(melody.notes, key=lambda n: (n.beat, -n.velocity, n.pitch)):
-        if not selected or note.beat - selected[-1].beat >= settings.min_spacing:
-            selected.append(note)
-    result = []
-    reference = previous_pitch if previous_pitch is not None else (settings.lowest + settings.highest) / 2
-    for i, note in enumerate(selected):
-        candidates = [p for p in range(settings.lowest, settings.highest + 1)
-                      if p % 12 == note.pitch % 12]
-        pitch = min(candidates, key=lambda p: (abs(p-reference), p))
-        end = min(note.beat + note.duration, melody.length_beats)
-        if i+1 < len(selected):
-            end = min(end, selected[i+1].beat)
-        duration = (end-note.beat) * settings.articulation
-        result.append(Note(note.beat, pitch, duration,
-                           max(1, min(127, round(note.velocity * settings.velocity_ratio)))))
-        reference = pitch
-    return Phrase(melody.length_beats, tuple(result))
+def interpolate_settings(start: BassSettings, target: BassSettings, amount: float) -> BassSettings:
+    """Interpola i controlli musicali; seed, griglia e periodo restano discreti."""
+    if not math.isfinite(amount) or not 0 <= amount <= 1:
+        raise ValueError('amount deve essere in [0, 1]')
+    if amount == 0:
+        return start
+    if amount == 1:
+        return target
+    values = {}
+    for name in ('lowest', 'highest', 'density', 'syncopation', 'rhythm_follow',
+                 'melody_follow', 'mobility', 'variation', 'min_spacing',
+                 'articulation', 'velocity_ratio', 'max_hold'):
+        value = getattr(start, name) * (1 - amount) + getattr(target, name) * amount
+        values[name] = math.floor(value + .5) if name in ('lowest', 'highest') else value
+    return replace(target, **values)
 
 
 def _salience(melody):
     weights = defaultdict(float)
-    for n in melody.notes:
-        accent = 1.5 if abs(n.beat-round(n.beat)) < 1e-8 else 1.0
-        weights[n.pitch % 12] += n.duration * n.velocity * accent
+    for note in melody.notes:
+        accent = 1.5 if abs(note.beat - round(note.beat)) < 1e-8 else 1.0
+        weights[note.pitch % 12] += note.duration * note.velocity * accent
     return weights
 
 
-def _rhythm(melody, settings, phase, rng):
-    """Combina appoggi metrici e risposte negli spazi della melodia."""
+def _rhythm(melody, settings, rng):
+    """La densità decide quanti attacchi; i pesi decidono dove collocarli."""
     start = min(n.beat for n in melody.notes)
-    end = max(n.beat+n.duration for n in melody.notes)
-    slots = {start}
-    i = math.ceil(start/settings.grid)
-    while i*settings.grid < end-1e-9:
-        slots.add(round(i*settings.grid,9)); i += 1
-    slots.update(n.beat for n in melody.notes)
-    attacks = {round(n.beat,9) for n in melody.notes}
+    attacks = {round(n.beat, 9) for n in melody.notes}
+    slots = set(attacks)
+    if settings.rhythm_follow < 1:
+        for i in range(math.ceil(start / settings.grid), math.ceil(melody.length_beats / settings.grid)):
+            slots.add(round(i * settings.grid, 9))
     ranked = []
-    for t in sorted(slots):
-        strong = abs(t-round(t)) < 1e-8
-        response = round(t,9) not in attacks
-        # La risposta ha più spazio verso il centro del ciclo di variazione.
-        openness = phase/max(1,settings.variation_period-1)
-        score = (1.0 if strong else 0.35) + response*openness + rng.random()*.8
-        if t == start: score += 4
-        ranked.append((score,t))
-    density = len(melody.notes)/melody.length_beats
-    capacity = max(1,math.ceil((end-start)/settings.min_spacing))
-    activity = min(1.0,density/2)
-    target = max(1,round(capacity*(.55+.3*activity+.15*phase/max(1,settings.variation_period-1))))
+    for beat in sorted(slots):
+        if beat >= melody.length_beats:
+            continue
+        strong = abs(beat - round(beat)) < 1e-8
+        coincides = beat in attacks
+        metric = (1 - settings.syncopation) if strong else settings.syncopation
+        relation = settings.rhythm_follow if coincides else 1 - settings.rhythm_follow
+        score = metric + 2 * relation + rng.random() * settings.variation
+        # Un primo appoggio rende riconoscibile l'ingresso, anche con molte sincopi.
+        if beat == start:
+            score += 4
+        ranked.append((score, beat))
+    target = round(min(len(ranked), settings.density * (melody.length_beats - start)))
+    if target <= 0:
+        return []
     selected = []
-    for _,t in sorted(ranked,reverse=True):
-        if all(abs(t-other) >= settings.min_spacing-1e-9 for other in selected):
-            selected.append(t)
-            if len(selected)>=target:break
+    for _, beat in sorted(ranked, key=lambda item: (-item[0], item[1])):
+        if all(abs(beat - other) >= settings.min_spacing - 1e-9 for other in selected):
+            selected.append(beat)
+            if len(selected) >= target:
+                break
     return sorted(selected)
 
 
-def _responsive(melody, settings, previous_pitch, phrase_index):
-    if not melody.notes:
-        return Phrase(melody.length_beats,())
-    phase = phrase_index % settings.variation_period
-    # Non dipende dal numero di snapshot ricevuti: lo stesso piano è ripetibile.
-    rng = random.Random(settings.seed + phase*104729)
+def _pitches(melody, onsets, settings, previous_pitch, rng, resolve):
+    """Bilancia nota locale, appoggi osservati e continuità del registro."""
     weights = _salience(melody)
-    anchor = max(weights, key=lambda pc: (weights[pc], -pc))
-    candidates = [p for p in range(settings.lowest,settings.highest+1) if p%12 in weights]
-    if not candidates:
-        raise ValueError('nessuna nota della melodia nel registro richiesto')
-    onsets = _rhythm(melody,settings,phase,rng)
-    previous = previous_pitch if previous_pitch is not None else (settings.lowest+settings.highest)/2
     peak = max(weights.values())
-    result = []
-    for i,t in enumerate(onsets):
-        sounding = [n for n in melody.notes if n.beat <= t < n.beat+n.duration]
-        nearby = min(melody.notes,key=lambda n: (abs(n.beat-t),-n.velocity))
-        strong = abs(t-round(t)) < 1e-8
-        resolve = phase == settings.variation_period-1 and i == len(onsets)-1
-        jitter = {p:rng.random()*.3 for p in candidates}
-        def score(p):
-            harmonic = sum(1 if (n.pitch-p)%12 in (0,3,4,5,7,8,9) else -2
-                           for n in sounding)/max(1,len(sounding))
-            home = 2.5 if (i==0 or resolve) and p%12==anchor else 0
-            repeat = .8 if result and p==result[-1].pitch and not resolve else 0
-            return home + harmonic + weights[p%12]/peak - abs(p-previous)*.1 - repeat + jitter[p]
-        pitch = max(candidates,key=lambda p:(score(p),-p))
-        end = onsets[i+1] if i+1<len(onsets) else melody.length_beats
-        hold = min(end-t,settings.max_hold)
-        # Appoggi più distesi, risposte più corte: non copia la durata della melodia.
-        articulation = settings.articulation * (1 if strong else .65)
-        duration = hold*articulation
-        accent = 1 if i==0 or resolve else (.92 if strong else .75)
-        velocity = max(1,min(127,round(nearby.velocity*settings.velocity_ratio*accent)))
-        result.append(Note(t,pitch,duration,velocity));previous=pitch
-    return Phrase(melody.length_beats,tuple(result))
-
-
-def _slap(melody, settings, previous_pitch, phrase_index):
-    """Alterna colpi bassi sugli appoggi e risposte acute sincopate."""
-    if not melody.notes:
-        return Phrase(melody.length_beats, ())
-
-    weights = _salience(melody)
     anchor = max(weights, key=lambda pc: (weights[pc], -pc))
-    paired_lows = defaultdict(list)
-    for pitch in range(settings.lowest, settings.highest - 11):
-        if pitch % 12 in weights:
-            paired_lows[pitch % 12].append(pitch)
-
-    groove = (
-        (0, 1, 2, 3),
-        (1, 3),
-        (0, 2),
-        (1, 2, 3),
-    )[phrase_index % 4]
-    onsets = []
-    for index in range(math.ceil(melody.length_beats / 0.5)):
-        beat = index * 0.5
-        if beat >= melody.length_beats:
-            break
-        if abs(beat - round(beat)) < 1e-9:
-            onsets.append(beat)
-        elif int((beat % 4) - 0.5) in groove:
-            onsets.append(beat)
-
+    candidates = [p for p in range(settings.lowest, settings.highest + 1) if p % 12 in weights]
+    previous = previous_pitch if previous_pitch is not None else (settings.lowest + settings.highest) / 2
     result = []
     for index, beat in enumerate(onsets):
-        thumb = abs(beat - round(beat)) < 1e-9
-        nearby = min(melody.notes, key=lambda n: (abs(n.beat - beat), -n.velocity))
-        anchor_beat = thumb and int(round(beat)) % 4 in (0, 2)
-        source = nearby
-        if anchor_beat:
-            source = min(
-                (n for n in melody.notes if n.pitch % 12 == anchor),
-                key=lambda n: (abs(n.beat - beat), -n.velocity),
-            )
+        nearby = min(melody.notes, key=lambda n: (abs(n.beat - beat), -n.velocity, n.pitch))
+        sounding = [n for n in melody.notes if n.beat <= beat < n.beat + n.duration]
+        offbeat = abs(beat - round(beat)) >= 1e-8
+        # Mobilità alta apre risposte acute; bassa privilegia il movimento vicino.
+        center = (settings.lowest + settings.highest) / 2
+        target = center + (6 if offbeat else -6) * settings.mobility
+        jitter = {p: rng.random() * settings.variation for p in candidates}
 
-        candidates = paired_lows.get(source.pitch % 12, [])
-        if candidates:
-            target_low = source.pitch - 24
-            if index == 0 and previous_pitch is not None:
-                target_low = previous_pitch - 12
-            low_pitch = min(candidates, key=lambda p: (abs(p - target_low), p))
-            pitch = low_pitch if thumb else low_pitch + 12
-        else:
-            candidates = [p for p in range(settings.lowest, settings.highest + 1)
-                          if p % 12 == source.pitch % 12]
-            target = source.pitch - (24 if thumb else 12)
-            pitch = min(candidates, key=lambda p: (abs(p - target), p))
+        def score(pitch):
+            harmony = sum(1 if (n.pitch - pitch) % 12 in (0, 3, 4, 5, 7, 8, 9) else -2
+                          for n in sounding) / max(1, len(sounding))
+            home = 0
+            if pitch % 12 == anchor:
+                if index == 0:
+                    home = 2.5
+                elif resolve and index == len(onsets) - 1:
+                    home = 2.5 * settings.variation
+            independent = home + harmony + weights[pitch % 12] / peak
+            local = 4 if pitch % 12 == nearby.pitch % 12 else -4
+            continuity = abs(pitch - previous) * .1 * (1 - settings.mobility)
+            register = abs(pitch - target) * .15 * settings.mobility
+            repeat = .5 if result and pitch == result[-1] else 0
+            return ((1 - settings.melody_follow) * independent + settings.melody_follow * local
+                    - continuity - register - repeat * (1 - settings.melody_follow) + jitter[pitch])
 
-        next_beat = onsets[index + 1] if index + 1 < len(onsets) else melody.length_beats
-        hold = min(next_beat - beat, settings.max_hold)
-        duration = hold * settings.articulation * (0.7 if thumb else 0.45)
-        velocity = max(1, min(127, round(
-            source.velocity * settings.velocity_ratio * (1.0 if thumb else 0.95)
-        )))
-        result.append(Note(beat, pitch, duration, velocity))
+        pitch = max(candidates, key=lambda p: (score(p), -p))
+        result.append((pitch, nearby))
+        previous = pitch
+    return result
 
-    return Phrase(melody.length_beats, tuple(result))
+
+def _articulate(melody, onsets, pitches, settings):
+    notes = []
+    for index, (beat, (pitch, source)) in enumerate(zip(onsets, pitches)):
+        end = onsets[index + 1] if index + 1 < len(onsets) else melody.length_beats
+        available = min(end - beat, settings.max_hold)
+        # Il legame ritmico influenza anche il respiro della nota sorgente.
+        source_hold = min(available, source.duration)
+        hold = available * (1 - settings.rhythm_follow) + source_hold * settings.rhythm_follow
+        strong = abs(beat - round(beat)) < 1e-8
+        metric_accent = 1 if index == 0 else (.92 if strong else .75)
+        accent = metric_accent * (1 - settings.rhythm_follow) + settings.rhythm_follow
+        duration = hold * settings.articulation
+        velocity = max(1, min(127, round(source.velocity * settings.velocity_ratio * accent)))
+        notes.append(Note(beat, pitch, duration, velocity))
+    return Phrase(melody.length_beats, tuple(notes))
 
 
 def generate_bass(melody: Phrase, settings: BassSettings = BassSettings(),
                   previous_pitch: int | None = None, *, phrase_index: int = 0) -> Phrase:
-    """Compone una frase; indice musicale esplicito per variazioni ripetibili.
-
-    responsive costruisce ritmo e articolazione autonomi usando le classi di
-    altezza osservate. follow conserva il comportamento di accompagnamento
-    iniziale. Nessuna conoscenza di Snake, OSC o del viaggio.
-    """
+    """Stessi input musicali e seed producono lo stesso piano, senza stato RNG globale."""
     if type(phrase_index) is not int or phrase_index < 0:
         raise ValueError('phrase_index deve essere un intero non negativo')
-    if previous_pitch is not None and (type(previous_pitch) is not int or not 0<=previous_pitch<=127):
+    if previous_pitch is not None and (type(previous_pitch) is not int or not 0 <= previous_pitch <= 127):
         raise ValueError('previous_pitch deve essere una nota MIDI')
-    if settings.strategy == 'follow':
-        return _follow(melody,settings,previous_pitch)
-    if settings.strategy == 'slap':
-        return _slap(melody, settings, previous_pitch, phrase_index)
-    return _responsive(melody,settings,previous_pitch,phrase_index)
+    if not melody.notes or settings.density == 0:
+        return Phrase(melody.length_beats, ())
+    # Nessuna ripetizione forzata di un catalogo di groove ogni quattro frasi.
+    rng = random.Random(settings.seed + phrase_index * 104729)
+    onsets = _rhythm(melody, settings, rng)
+    resolve = (phrase_index + 1) % settings.variation_period == 0
+    pitches = _pitches(melody, onsets, settings, previous_pitch, rng, resolve)
+    return _articulate(melody, onsets, pitches, settings)

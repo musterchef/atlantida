@@ -6,7 +6,7 @@ import math
 import uuid
 
 from desnivel.adapters.snake_sequence import SnakeState, SPEEDS, predict
-from desnivel.bass import BassSettings, generate_bass
+from desnivel.bass import BassSettings, generate_bass, interpolate_settings
 
 
 class BassSession:
@@ -20,6 +20,35 @@ class BassSession:
         self.session = None
         self.plans = {}
         self.revision = 0
+        self._transition = None
+        self._last_start = None
+
+    @property
+    def target_settings(self):
+        """Destinazione corrente, anche quando la transizione è ancora in corso."""
+        return self._transition[1] if self._transition is not None else self.settings
+
+    def set_settings(self, settings: BassSettings, transition_windows: int = 4):
+        """Nuovi controlli dalle prossime finestre, senza dipendere dagli snapshot."""
+        if not isinstance(settings, BassSettings):
+            raise TypeError('attese BassSettings')
+        if type(transition_windows) is not int or transition_windows < 0:
+            raise ValueError('transition_windows deve essere un intero non negativo')
+        if self._last_start is None or transition_windows == 0:
+            self.settings = settings
+            self._transition = None
+        else:
+            self._transition = (self.settings, settings, self._last_start, transition_windows)
+
+    def _settings_at(self, start):
+        if self._transition is not None:
+            initial, target, origin, windows = self._transition
+            amount = min(1.0, max(0.0, (start - origin) / (self.window * windows)))
+            self.settings = interpolate_settings(initial, target, amount)
+            if amount == 1:
+                self._transition = None
+        self._last_start = start
+        return self.settings
 
     def update(self, snapshot):
         if snapshot['version'] != 1:
@@ -38,6 +67,11 @@ class BassSession:
         session = f"{source}:{snapshot['epoch']}:{self.run_id}"
         if self.session != session:
             self.session, self.plans = session, {}
+            if self._transition is not None:
+                # Una discontinuità riparte dall'ultimo valore, senza riusare il beat vecchio.
+                _, target, _, windows = self._transition
+                self._transition = (self.settings, target, None, windows)
+            self._last_start = None
         if not snapshot['playing'] or snapshot.get('error'):
             self.plans = {}
             return {'version':1,'session':session,'serial':serial,'reset':True}
@@ -46,6 +80,9 @@ class BassSession:
             raise ValueError('posizione trasporto non valida')
         state = SnakeState.from_dict(snapshot['state'])
         start = math.ceil((beat+self.lead)/self.window)*self.window
+        if self._transition is not None and self._transition[2] is None:
+            initial, target, _, windows = self._transition
+            self._transition = (initial, target, start, windows)
         elapsed = start-beat
         lanes = {}
         for name in ('notes_lane','gates_lane','velocities_lane'):
@@ -56,7 +93,7 @@ class BassSession:
         melody = predict(future,self.window)
         previous = self.plans.get(start-self.window)
         last = previous['phrase']['notes'][-1]['pitch'] if previous and previous['phrase']['notes'] else None
-        bass = generate_bass(melody,self.settings,last,phrase_index=round(start/self.window))
+        bass = generate_bass(melody,self._settings_at(start),last,phrase_index=round(start/self.window))
         self.revision += 1
         plan = {'version':1,'session':session,'serial':serial,'revision':self.revision,
                 'start':start,'phrase':asdict(bass)}
