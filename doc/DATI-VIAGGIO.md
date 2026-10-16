@@ -12,12 +12,12 @@ Ogni misura viene trasmessa con due argomenti numerici:
 /desnivel/v1/trip/metric/<nome>  elapsed_s  value
 ```
 
-- **`elapsed_s`**: tempo relativo dall'inizio della tappa (in secondi), corrispondente alla fine dell'intervallo di misura. Rimane coerente con il tempo reale del viaggio anche durante replay accelerati.
+- **`elapsed_s`**: tempo relativo dall'inizio della tappa (in secondi), corrispondente alla fine dell'intervallo di misura. Quota e distanza totale sono disponibili anche all'istante iniziale. Rimane coerente con il tempo reale del viaggio anche durante replay accelerati.
 - **`value`**: valore numerico della grandezza, nell'unità specificata.
 
 ### Frequenza di campionamento e aggregazione
-- **Campionamento interno**: 10 Hz (`TimingConfig.internal_rate_hz`), per calcolare con precisione differenze di quota e velocità istantanee.
-- **Pubblicazione OSC**: 1 Hz (`OscConfig.trip_metrics_rate_hz`, porta predefinita **9000**). Le metriche vengono aggregate e inviate su finestre di un secondo.
+- **Ricampionamento interno**: 10 Hz (`TimingConfig.internal_rate_hz`).
+- **Pubblicazione OSC**: un aggiornamento per ogni secondo del viaggio (`OscConfig.trip_metrics_rate_hz`, porta predefinita **9000**). Con replay 30×, viene inviato un aggiornamento ogni 1/30 di secondo.
 
 ---
 
@@ -49,7 +49,7 @@ I pesi e le velocità di riferimento sono configurabili in `src/desnivel/trip/co
 ## Gestione dei valori mancanti
 
 - I campi non disponibili nella traccia originale (ad esempio quote assenti) non vengono trasmessi; l'assenza di un messaggio non equivale a zero.
-- Se la traccia contiene solo alcune quote, le lacune intermedie vengono interpolate linearmente sulla distanza percorsa.
+- Se la traccia contiene solo alcune quote, le quote mancanti vengono interpolate linearmente in base alla posizione dei punti nella sequenza GPX.
 
 ---
 

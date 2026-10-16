@@ -30,16 +30,16 @@ Traccia GPX ──► [trip] Metriche neutre ──► [music] Generazione music
 ### 1. Separazione tra tempo del viaggio e tempo musicale
 La velocità di scorrimento del viaggio (replay) e il tempo musicale (BPM) sono completamente indipendenti:
 - Il replay della traccia può essere accelerato (es. a 30× o 50×) per condensare ore di pedalata in pochi minuti di ascolto.
-- I BPM e la griglia ritmica (16th, terzine, beat) rimangono controllati dal trasporto di Ableton Live, garantendo stabilità metrica e perfetta sincronizzazione audio.
+- Ableton Live controlla BPM e griglia ritmica. Il player del basso segue il suo trasporto. I cambi dei parametri di Snake non sono quantizzati a battuta.
 
 ### 2. Neutralità delle metriche
 Il modulo `trip` non produce note, accordi o parametri synth. Calcola solo grandezze fisiche scalari e continue. Le decisioni estetiche (come mappare una pendenza a una scala minore o a un aumento di densità) risiedono interamente in `music`.
 
 ### 3. Modelli musicali condivisi
 La generazione musicale si basa su due strutture dati fondamentali:
-- **`Pattern`**: sequenza discreta di passi (note e gate) associata a un intervallo temporale del viaggio.
+- **`Pattern`**: sequenza di passi, ciascuno con una nota e un gate. `PatternChange` indica quando applicarla durante il viaggio.
 - **`Phrase`**: insieme polifonico di eventi sonori, in cui ogni nota specifica attacco relativo (in beat), altezza MIDI (0–127), durata (in beat) e velocity (1–127).
-- **`Plan`**: estensione di una `Phrase` che specifica beat assoluto di ingresso nel trasporto di Live, revisione del piano e sessione attiva, consentendo la pianificazione anticipata senza interruzioni sonore.
+- **Piano di esecuzione**: messaggio preparato da `adapters/snake_live.py` per il player Live. Contiene la frase da eseguire, il beat di inizio e gli identificativi di sessione, messaggio e revisione.
 
 ---
 

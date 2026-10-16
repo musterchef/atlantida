@@ -14,7 +14,7 @@ pip install -e '.[dev]'
 
 ## Streaming e lettura delle metriche
 
-Visualizzazione delle metriche a terminale (senza invio di rete):
+Mostra un'anteprima dei messaggi OSC, senza inviarli:
 
 ```sh
 desnivel-stream-metrics --gpx gpx/tappa04_Levanto_La_Spezia.gpx --dry-run
@@ -39,10 +39,12 @@ Opzioni utili:
 | **9000** | Pubblicazione delle metriche fisiche del viaggio. | [Dati del viaggio](DATI-VIAGGIO.md) |
 | **9001** | Controllo dei parametri di Snake in Live. | [Sequencer Snake](SNAKE.md) |
 | **9002** | Invio di frasi predefinite per il player ciclico. | [Player M4L](BASSO.md) |
-| **9003** | Telemetria dello stato di Snake (`/snake/state`) e controlli live del basso (`/bass/control`). | [Snake](SNAKE.md), [Basso](BASSO.md) |
+| **9003** | Telemetria dello stato di Snake (`/desnivel/v1/snake/state`) e controlli live del basso (`/desnivel/v1/bass/control`). | [Snake](SNAKE.md), [Basso](BASSO.md) |
 | **9004** | Piani di esecuzione per il basso sincronizzato al trasporto di Live. | [Basso in Live](BASSO.md) |
 
 ---
+
+`capture_snake` e `live_bass` usano entrambi la porta 9003 e non possono essere avviati insieme. Per registrare mentre il basso suona, usare `live_bass --capture`.
 
 ## Operazioni e launcher principali
 

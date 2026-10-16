@@ -12,7 +12,7 @@ Il bridge Max for Live (`m4l/desnivel-bridge.amxd` con `m4l/desnivel_snake_param
 /desnivel/v1/control/snake/set  <nome_parametro>  <valore>
 ```
 
-Lo script JavaScript individua l'istanza di Snake nella traccia e aggiorna i parametri tramite l'API `live.object`.
+Lo script JavaScript cerca il primo device il cui nome contiene `snake` tra le tracce del Set e ne aggiorna i parametri tramite la Live API.
 
 ### Configurazione delle note e scale
 - Il parametro `Note_01` accetta valori da `0` a `83`.
@@ -23,7 +23,7 @@ Lo script JavaScript individua l'istanza di Snake nella traccia e aggiorna i par
 
 ## Banco Length personalizzato
 
-Lo script `tools/build_snake_length.py` estende il device vanilla MDD Snake (versione 3.2.3) aggiungendo un quarto banco dedicato alla durata delle note (**Length**), preservando i banchi *Notes*, *Gates*, *Velocities* e *Custom*.
+Lo script `tools/build_snake_length.py` estende il device vanilla MDD Snake (versione 3.2.3) aggiungendo un banco dedicato alla durata delle note (**Length**), preservando i banchi *Notes*, *Gates*, *Velocities* e *Custom*.
 
 ```sh
 python3 tools/build_snake_length.py \
@@ -37,7 +37,7 @@ Il banco Length gestisce 16 valori (0–127) convertiti in millisecondi tra i va
 
 ## Telemetria dello stato ed Export
 
-Per consentire ad altri strumenti (come il basso generativo) di ascoltare e prevedere la melodia, il device esporta periodicamente lo stato interno del sequencer verso Python.
+La variante costruita da `tools/build_live_bass.py` aggiunge il controllo **Export** al banco Length e invia lo stato del sequencer verso Python.
 
 - **Porta**: UDP **9003**
 - **Indirizzo**: `/desnivel/v1/snake/state`
@@ -47,34 +47,42 @@ Per consentire ad altri strumenti (come il basso generativo) di ascoltare e prev
 ```json
 {
   "version": 1,
+  "source": "snake-source",
   "serial": 12,
   "epoch": 1,
   "beat": 16.0,
-  "playing": true,
+  "playing": 1,
   "state": {
-    "notes": [...],
-    "gates": [...],
-    "velocities": [...],
-    "lengths_ms": [...],
+    "notes": [60, 62, 64, 65, 67, 69, 71, 72, 60, 62, 64, 65, 67, 69, 71, 72],
+    "gates": [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+    "velocities": [90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90],
+    "lengths_ms": [200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200],
     "bpm": 94.0,
-    "notes_lane": {"shape": 1, "speed": 4, "steps": 16, "direction": "forwards", "phase_beats": 0.0},
-    "gates_lane": {"shape": 1, "speed": 4, "steps": 16, "direction": "forwards", "phase_beats": 0.0}
+    "midi_offset": 0,
+    "swing": 0,
+    "notes_lane": {"shape": 1, "speed": "16n", "steps": 16, "direction": "forwards", "phase_beats": 0.0},
+    "gates_lane": {"shape": 1, "speed": "16n", "steps": 16, "direction": "forwards", "phase_beats": 0.0},
+    "velocities_lane": {"shape": 1, "speed": "16n", "steps": 16, "direction": "forwards", "phase_beats": 0.0}
   }
 }
 ```
 
 ### Previsione melodica (`snake_sequence.predict`)
-Il modulo Python `src/desnivel/adapters/snake_sequence.py` usa questi snapshot per calcolare con precisione gli attacchi, le altezze e le durate delle note future generate da Snake su una finestra temporale (es. 4 beat). In questo modo il generatore del basso conosce in anticipo gli eventi melodici e può comporre linee di risposta e contrappunto sincronizzate.
+Il modulo Python `src/desnivel/adapters/snake_sequence.py` usa questi snapshot per prevedere gli attacchi, le altezze e le durate delle note future generate da Snake su una finestra temporale (es. 4 beat). In questo modo il generatore del basso conosce in anticipo gli eventi melodici e può comporre linee di risposta e contrappunto sincronizzate.
 
 ---
 
+La previsione richiede swing zero, Shift = 1 sulle tre lane, direzioni `forwards` o `backwards` e velocità `32n`, `16n`, `8n`, `4n` o `2n`. Il calcolo presuppone che BPM e parametri di Snake restino invariati durante i beat previsti.
+
 ## Acquisizione delle sessioni
 
-È possibile salvare gli stati del sequencer e i piani generati in formato JSONL per analisi e verifica:
+Per salvare gli snapshot del sequencer in JSONL:
 
 ```sh
 python -m desnivel.cli.capture_snake --seconds 180 --label "sessione_studio"
 ```
+
+Per acquisire anche i piani del basso usare `python -m desnivel.cli.live_bass --capture`. Non avviare `capture_snake` e `live_bass` insieme: usano entrambi la porta 9003.
 
 I dati vengono salvati in una directory temporanea esterna alla repository, preservando la cronologia degli eventi e dei beat.
 

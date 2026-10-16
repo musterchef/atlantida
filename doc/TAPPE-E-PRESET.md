@@ -13,14 +13,14 @@ Tre preset determinano come le grandezze fisiche influenzano la generazione:
 | Preset | Sorgente | Effetto sonoro |
 |---|---|---|
 | **`presets/movimento.json`** | Velocità del ciclista | Più si pedala veloci, più la sequenza si fa densa; i rallentamenti diradano il ritmo. |
-| **`presets/sforzo.json`** | Stima di sforzo (pendenza + velocità) | Le salite aumentano la tensione e il numero di note, anche a basse velocità. |
+| **`presets/sforzo.json`** | Stima di sforzo (pendenza + velocità) | Uno sforzo stimato maggiore apre più gate, anche a basse velocità in salita. |
 | **`presets/misto.json`** | 60% movimento, 40% sforzo | Bilanciamento naturale tra la spinta del passo e la fatica delle salite. |
 
 ---
 
 ## Le tappe e i percorsi modali
 
-Ogni tappa è suddivisa in quattro sezioni (all'avanzamento 0%, 25%, 55% e 80% della distanza). Al passaggio tra una sezione e l'altra, il motore modula le scale consentite e muta la Shape geometrica del sequencer:
+Levanto è suddivisa in tre sezioni (0%, 30% e 75% della distanza); Firenze, Sabaudia e Peschici in quattro (0%, 25%, 55% e 80%). Al passaggio tra una sezione e l'altra, il motore modula le scale consentite e l'adattatore sceglie casualmente il percorso dei Gates nella matrice (Shape):
 
 ### 1. Levanto – La Spezia (`presets/tappe/levanto_la_spezia.json`)
 - **Carattere**: litorale ligure, salite brevi e ritorni ciclici.
@@ -49,7 +49,7 @@ Ogni tappa è suddivisa in quattro sezioni (all'avanzamento 0%, 25%, 55% e 80% d
 Oltre alla suddivisione per sezioni chilometriche, è possibile modulare la musica tramite una regola a soglia altimetrica:
 - **Sotto i 200 metri**: pattern rado (4 note su 16) con registro grave.
 - **Sopra i 200 metri**: pattern più denso (8 note su 16) e melodia più acuta.
-- **Isteresi (margine di 15 m)**: il passaggio da alto a basso scatta sotto i 185 m, e da basso ad alto sopra i 215 m, evitando continue oscillazioni quando si pedala attorno alla quota limite.
+- **Isteresi (margine di 15 m)**: il passaggio da alto a basso scatta sotto i 185 m, e da basso ad alto quando la quota raggiunge o supera i 215 m, evitando continue oscillazioni quando si pedala attorno alla quota limite.
 
 ```sh
 python -m desnivel.cli.trip_music \
@@ -79,7 +79,7 @@ Il flag `--seed 7` garantisce la ripetibilità delle Shape estratte nelle sezion
 Aggiungendo `--dry-run` è possibile visualizzare l'elenco cronologico di tutte le decisioni musicali a terminale senza trasmettere via rete.
 
 ### Ascolto combinato: Melodia e Basso generativo
-Per ascoltare l'interazione completa tra melodia del paesaggio e basso generativo:
+Preparare i device come descritto in [BASSO.md](BASSO.md#esecuzione-in-ableton-live-device-m4l), attivare Export e avviare il trasporto di Live. Per ascoltare melodia e basso:
 
 1. **Terminale 1 (Basso)**:
    ```sh
@@ -101,7 +101,7 @@ Il basso ascolta la melodia via OSC (porta 9003) e programma i propri eventi sul
 
 ## Analisi automatica della tappa
 
-Per suggerire un assetto del basso ottimizzato sulle caratteristiche fisiche di una specifica tappa:
+Per suggerire un assetto iniziale del basso dai pattern generati per una tappa:
 
 ```sh
 python -m desnivel.cli.analyze_bass \
@@ -110,5 +110,5 @@ python -m desnivel.cli.analyze_bass \
   --preset presets/misto.json
 ```
 
-L'analisi calcola la media e la dispersione dei gate aperti e restituisce i parametri consigliati per il basso (densità, sincopazione, mobilità).
+L'analisi misura quanti gate sono aperti e quanto cambia questo numero lungo la tappa, dando più peso ai pattern che durano più a lungo. Da questi dati propone densità, sincopazione, articolazione e variazione. Registro e mobilità restano quelli di `responsive`. Stampa un comando da provare, senza inviarlo a Live.
 
