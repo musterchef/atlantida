@@ -16,14 +16,14 @@ Guida alla documentazione di **Desnivel**, organizzata per aree tematiche.
 
 ---
 
-## Dati e strumenti musicali
+## Dati del viaggio e integrazioni attive
 
 | Documento | Argomento |
 |---|---|
 | [Dati del viaggio](DATI-VIAGGIO.md) | Lettura GPX, calcolo continuo delle metriche (quota, pendenza, sforzo) e formato OSC. |
-| [Sequencer Snake](SNAKE.md) | Sequencer melodico in Live, bridge Max for Live, banco Length, telemetria ed export. |
-| [Generatore del basso](BASSO.md) | Composizione del contrappunto, preset espressivi, controlli in tempo reale e player M4L. |
-| [Tappe e percorsi modali](TAPPE-E-PRESET.md) | Caratterizzazione musicale delle tappe (Firenze, Sabaudia, Peschici) e ascolto congiunto. |
+| [Sequencer Snake](SNAKE.md) | Banco di prova per la linea melodica: integrazione del sequencer Snake, bridge M4L e telemetria. |
+| [Generatore del basso](BASSO.md) | Banco di prova per l'accompagnamento: logica di contrappunto e dialogo con la melodia, controlli live e player. |
+| [Tappe e percorsi modali](TAPPE-E-PRESET.md) | Caratterizzazione modale delle tappe (Levanto, Firenze, Sabaudia, Peschici) e ascolto. |
 
 ---
 

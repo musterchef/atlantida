@@ -45,6 +45,7 @@
 ## Linee guida per la documentazione
 
 - Nella documentazione di presentazione, descrivere identità, obiettivi e capacità del progetto senza identificarlo con singoli componenti, strumenti, integrazioni o scelte attuali di implementazione. Riservare i dettagli specifici agli approfondimenti pertinenti.
+- Non identificare mai il sistema con gli strumenti, i sequencer o le destinazioni (come Snake, il basso o Ableton Live) scelti come primo banco di prova per ascoltare il risultato. Trattare sempre le integrazioni correnti come componenti periferici e sostituibili di un'architettura generativa multivoce agnostica, sia nei testi di presentazione sia nelle spiegazioni tecniche.
 
 - Scrivere documentazione chiara, concisa, oggettiva e autonoma, nella stessa lingua della richiesta (italiano se si parla in italiano, inglese se si parla in inglese, spagnolo se si parla in spagnolo e così via).
 - Descrivere il sistema come esiste attualmente o come esplicitamente definito nell'architettura approvata.
@@ -83,3 +84,4 @@
 - Utilizzare prove e verifiche per validare funzionalità destinate a rimanere nel sistema. Evitare implementazioni dimostrative isolate che non contribuiscono allo sviluppo effettivo.
 - Mantenere stabili le interfacce e i contratti fondamentali quando possibile, permettendo alle funzionalità di evolvere senza richiedere continue riscritture.
 - Quando si propone una soluzione, considerare sia il comportamento immediato sia la sua evoluzione prevista, senza implementare anticipatamente funzionalità future.
+- Distinguere il motore centrale dagli strumenti scelti per il collaudo acustico: le prime voci connesse (come un sequencer melodico o una linea di basso) servono a verificare all'ascolto il dialogo polifonico e le risposte al viaggio, ma non definiscono né esauriscono l'organico del sistema.

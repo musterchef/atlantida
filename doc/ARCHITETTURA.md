@@ -4,24 +4,24 @@ Desnivel adotta un'architettura a pipeline modulare con separazione rigorosa tra
 1. **Dati fisici del viaggio** (oggettivi, neutrali e indipendenti dall'estetica).
 2. **Interpretazione compositiva** (regole musicali, scale, contrappunto e dinamica).
 3. **Adattamento e trasporto** (traduzione nei formati e protocolli di destinazione).
-4. **Esecuzione sonora** (sintesi, campionamento e clock musicale in Ableton Live).
+4. **Esecuzione sonora** (generazione audio, sintesi o sequencer nella destinazione finale; attualmente Ableton Live e Max for Live costituiscono il primo banco di prova operativo).
 
 ---
 
 ## Flusso generale
 
 ```text
-Traccia GPX ──► [trip] Metriche neutre ──► [music] Generazione musicale ──► [adapters] ──► [sinks / OSC] ──► Ableton Live / M4L
+Traccia GPX ──► [trip] Metriche neutre ──► [music] Generazione musicale ──► [adapters] ──► [sinks] ──► Destinazioni (DAW / Synth / MIDI / OSC)
 ```
 
 | Modulo | Responsabilità | Package |
 |---|---|---|
 | **Analisi del viaggio** | Carica le tracce GPX, ricampiona a tempo costante e calcola le metriche fisiche (distanza, quota, pendenza, velocità, sforzo). | `src/desnivel/trip/` |
-| **Generazione musicale** | Applica le scelte compositive: traduce metriche in pattern, modula scale e sezioni, genera frasi di accompagnamento (basso). | `src/desnivel/music/` |
-| **Adattatori** | Converte strutture musicali astratte (`Pattern`, `Phrase`) nei parametri specifici dei dispositivi (Snake, player M4L). | `src/desnivel/adapters/` |
-| **Trasporto** | Gestisce la trasmissione dei messaggi via rete OSC e il salvataggio dei log di acquisizione. | `src/desnivel/sinks/` |
-| **Interfaccia CLI** | Entry point eseguibili da riga di comando o tramite launcher macOS per orchestrare replay e analisi. | `src/desnivel/cli/` |
-| **Device Max for Live** | Ricevono i messaggi OSC all'interno di Ableton Live e controllano sequencer e strumenti sonori. | `m4l/` |
+| **Generazione musicale** | Applica le scelte compositive: traduce metriche in pattern, governa l'armonia, genera frasi musicali e relazioni polifoniche tra le voci. | `src/desnivel/music/` |
+| **Adattatori** | Converte strutture musicali astratte (`Pattern`, `Phrase`) nei parametri specifici dei dispositivi o protocolli di destinazione. | `src/desnivel/adapters/` |
+| **Trasporto** | Gestisce la trasmissione dei messaggi via rete (es. OSC) e il salvataggio dei log di acquisizione. | `src/desnivel/sinks/` |
+| **Interfaccia CLI** | Entry point eseguibili da riga di comando o tramite launcher per orchestrare replay, analisi e sessioni. | `src/desnivel/cli/` |
+| **Integrazioni attive** | Device Max for Live e bridge di controllo per testare all'ascolto la melodia (Snake) e l'accompagnamento (basso generativo). | `m4l/` |
 
 ---
 

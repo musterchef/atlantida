@@ -1,6 +1,6 @@
 # Generatore del basso
 
-Il modulo `desnivel.music.bass` implementa una voce di basso generativa e polifonica. A differenza di un semplice arpeggiatore o di un raddoppio, il generatore del basso analizza la frase melodica (estratta da Snake o da un file di note) e compone una linea di risposta musicale coerente.
+Il modulo `desnivel.music.bass` implementa una voce di basso generativa e polifonica, sviluppata come primo banco di prova per sperimentare all'ascolto il contrappunto e l'accompagnamento reattivo. A differenza di un semplice arpeggiatore o di un raddoppio, il generatore analizza la frase melodica in ingresso e compone una linea di risposta coerente.
 
 ---
 

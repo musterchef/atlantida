@@ -1,6 +1,6 @@
 # Sequencer melodico (Snake)
 
-In Ableton Live la linea melodica principale è affidata al sequencer **MDD Snake**, controllato dal motore Python tramite bridge Max for Live dedicati.
+Come primo banco di prova operativo per ascoltare la linea melodica generata dalle metriche del viaggio, il sistema si interfaccia con il sequencer **MDD Snake** in Ableton Live tramite un bridge Max for Live dedicato.
 
 ---
 

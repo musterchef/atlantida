@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "desnivel"
 version = "0.1.0"
-description = "Musica generativa da dati GPX: traduzione delle metriche del viaggio in dialogo musicale in Ableton Live."
+description = "Musica generativa basata sui dati di un viaggio: traduzione delle metriche GPX in composizione musicale multivoce."
 requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.24",
