@@ -2,7 +2,7 @@
 
 > Specifica storica del prototipo `/mod/*`: include implementazioni presenti e proposte non completate. Non è una checklist per costruire il nuovo motore/adattatore.
 > Riferimenti: [ARCHITETTURA-MUSICALE.md](ARCHITETTURA-MUSICALE.md), [CONTRATTO-MODULAZIONI.md](CONTRATTO-MODULAZIONI.md).
-> Stato: specifica del prototipo precedente, in migrazione. Il confine target e' producer Python di metriche/fatti del viaggio agnostici; mapping musicale nel consumer Python indipendente dalla destinazione; adattatori estensibili traducono le decisioni per gli strumenti. Decisione: [TODO-ARCHITECTURE.md](../TODO-ARCHITECTURE.md); inventario: [STATO-CONTRATTO-OSC.md](../STATO-CONTRATTO-OSC.md).
+> Stato: specifica del prototipo precedente, in migrazione. Il confine target e' producer Python di metriche/fatti del viaggio agnostici; mapping musicale nel consumer Python indipendente dalla destinazione; adattatori estensibili traducono le decisioni per gli strumenti. Decisione: [TODO-ARCHITECTURE.md](../TODO-ARCHITECTURE.md); inventario: [Stato del progetto](../SESSIONE.md).
 
 ---
 

@@ -1,6 +1,6 @@
 # Preset musicali
 
-Una voce melodica, tre interpretazioni confrontabili: movimento, sforzo e misto. Il producer resta neutro; Python genera pattern indipendenti dalla destinazione. Snake è l'adattatore disponibile.
+Questa guida descrive le prove di generazione di pattern dal viaggio: movimento, sforzo e misto. Il replay presente usa l'adattatore Snake in Ableton Live.
 
 ## Avvio
 
@@ -11,7 +11,7 @@ source .venv/bin/activate
 python -m desnivel.cli.trip_music --gpx gpx/tappa04_Levanto_La_Spezia.gpx --stage-music presets/tappe/levanto_la_spezia.json --preset presets/misto.json --speed 50
 ```
 
-Sostituire `misto.json` con `movimento.json` o `sforzo.json` per confrontare le interpretazioni. Aggiungere `--dry-run` per leggere tutte le decisioni senza attese né invii. Non serve `stream_metrics`; il comando usa direttamente il producer Python. Il riepilogo viene stampato prima del replay.
+Sostituire `misto.json` con `movimento.json` o `sforzo.json` per confrontare le interpretazioni. Aggiungere `--dry-run` per leggere tutte le decisioni senza attese né invii. Non serve `stream_metrics`; il comando usa direttamente il producer Python.
 
 ## Controlli
 
@@ -30,9 +30,9 @@ Sostituire `misto.json` con `movimento.json` o `sforzo.json` per confrontare le 
 | `smoothing_s` | Costante del filtro esponenziale nel tempo del viaggio. |
 | `stale_s` | Età massima degli ingressi prima di sospendere nuove decisioni. |
 
-La densità è la media pesata delle interpretazioni, convertita nel numero di gate. Lo sforzo deriva già anche dalla velocità: i due ingressi non sono statisticamente indipendenti. Non è una misura fisiologica.
+La densità è la media pesata delle interpretazioni, convertita nel numero di gate. Lo sforzo deriva già anche dalla velocità: i due ingressi non sono statisticamente indipendenti.
 
-La prova usa La pentatonica minore, La minore dal 30% e ritorno alla pentatonica dal 75%. Nello sviluppo cambiano solo due celle, introducendo Si e Fa. Tonica e percorso sono scelte modificabili della tappa, non deduzioni automatiche dal GPX.
+La prova usa La pentatonica minore, La minore dal 30% e ritorno alla pentatonica dal 75%. Nello sviluppo cambiano solo due celle, introducendo Si e Fa. Tonica e scale sono configurate nel preset della tappa.
 
 A 50× il filtro di 60 s equivale a 1,2 s reali e l'intervallo di 200 s a 4 s. Il clock di Snake non cambia. Si inviano solo pattern diversi dal precedente. Le variazioni della melodia avvengono per ora ai cambi di sezione; la densità segue i dati durante tutta la tappa.
 
@@ -41,26 +41,18 @@ A 50× il filtro di 60 s equivale a 1,2 s reali e l'intervallo di 200 s a 4 s. I
 - Gli ingressi attivi mancanti o scaduti conservano l'ultimo pattern; il primo invio attende dati validi. Una sosta riduce la densità verso il minimo, non impone silenzio.
 - I cambi arrivano subito, senza sincronizzazione a ciclo e senza applicazione atomica. Il bridge applica i parametri uno alla volta.
 - Snake richiede 16 celle; lunghezza eseguita e percorso restano impostazioni dell'utente. Non vengono imposti dal comando.
-- Echo e Reverb non sono ancora controllati. L'ottava MIDI effettiva di Snake resta da verificare.
+- Echo e Reverb non sono controllati da questi preset. Nella configurazione di riferimento Chromatic/C, i valori 36–51 corrispondono alle altezze MIDI 60–75.
 - Fine replay e Ctrl+C lasciano attivo l'ultimo pattern in Live.
-
-La generazione sul GPX Levanto–La Spezia produce 36 cambi per movimento, 32 per sforzo e 31 per misto, attraversando le tre sezioni. Il replay Firenze è stato confermato in Live; gli altri preset restano da valutare all’ascolto.
 
 Codice: `src/desnivel/music/journey.py` per le regole; `music/patterns.py` per pattern e scale; `adapters/snake.py` per la traduzione; `cli/trip_music.py` per il replay. La regola a soglia è descritta in [Quota e pattern](TEST-VIAGGIO-SNAKE.md).
 
 ## Shape dei Gates per sezione
 
-Il bridge accetta `gate_shape` e l’alias precedente `test_shape_90`. Nella mod per il basso risolve il parametro per nome univoco `Gate_Shape`, senza dipendere dall’ordine dei parametri. L’indice 90 resta un ripiego soltanto per il vanilla a 152 parametri.
-
-A ogni ingresso di sezione, inclusa la prima, l'adattatore Snake estrae un intero uniforme 0–13. Il valore può ripetersi. Gli aggiornamenti nella stessa sezione non estraggono altre Shape. Il motore musicale emette solo l'indice della sezione; nomi e range Snake restano nell'adattatore.
-
-Aggiornare `desnivel_snake_params.js` accanto al device e ricaricare il bridge. Il comando del replay resta uguale; `--seed 7` rende ripetibili le estrazioni. Senza seed cambiano a ogni avvio. I messaggi Shape vengono applicati immediatamente, senza sincronizzazione a battuta.
-
-Verificati 15 test su motore e adattatore e dry-run sul GPX: tre estrazioni, valori 5, 2, 6 con seed 7. L’11 ottobre 2026 l’utente ha confermato il funzionamento dei launcher Shape 0 e 13 e del replay Firenze a 150×.
+Il replay cambia Shape all’ingresso di ogni sezione. Valori e selezione: [integrazione](INTEGRAZIONE-SNAKE.md#shape).
 
 ## Altre tappe
 
-Tre preset con quattro sezioni, ai progressi 0%, 25%, 55% e 80% della distanza. Sono scelte compositive per l'ascolto, non armonie dedotte dal paesaggio. Ogni sezione modifica più celle; il motivo torna riconoscibile senza ripetere esattamente la prima versione.
+Tre preset con quattro sezioni, ai progressi 0%, 25%, 55% e 80% della distanza. Le scale sono configurate nei preset. Ogni sezione modifica più celle; il motivo torna riconoscibile senza ripetere esattamente la prima versione.
 
 | Tappa | Carattere | Percorso delle scale | Gate |
 |---|---|---|---|
@@ -108,7 +100,7 @@ Oppure selezionarlo direttamente:
 | `dialogo` | Più risposte negli spazi e movimento moderato. | Preset responsive, registro 28–55, densità 1, distanza minima 0,5 beat, sincopi 0,45, legame ritmico 0,3, melodico 0,35, mobilità 0,3, articolazione 0,7. |
 | `ritmico` | Note più corte, levare e risposte acute. | Preset slap, registro 28–59, densità 1,2, mobilità 0,6; gli altri valori sono quelli del preset. |
 
-Tutti usano seed del basso 0; i controlli non indicati ereditano i valori descritti in [Generare il basso](PLAYER-M4L.md#generare-il-basso). Sono assetti da valutare all'ascolto, non risultati musicali già confermati.
+Tutti usano seed 0; gli altri controlli ereditano i [valori del preset](SCELTE-BASSO.md#controlli-e-preset).
 
 Avviare il trasporto Live dalla stessa posizione iniziale per ogni confronto. Nel secondo terminale, dalla radice del progetto, avviare Firenze a 50×:
 
@@ -130,7 +122,7 @@ Le opzioni finali prevalgono sui valori dell'assetto. Confrontare lo stesso trat
 
 ## Suggerire il basso dalla tappa
 
-L'analisi genera automaticamente un suggerimento e viene avviata dall'utente su richiesta. Non modifica gli assetti o il ricevitore live. Genera le stesse decisioni melodiche del replay e stampa un comando per il basso, senza inviarlo a Live:
+L'analisi usa le decisioni melodiche del replay e stampa un comando per il basso da eseguire manualmente:
 
 ```sh
 .venv/bin/python -m desnivel.cli.analyze_bass --gpx gpx/tappa05_Firenze_San_Gimignano.gpx --stage-music presets/tappe/firenze_san_gimignano.json --preset presets/misto.json
@@ -140,4 +132,4 @@ Usare GPX, configurazione musicale e interpretazione uguali al replay che si vuo
 
 Il risultato contiene la frazione media di gate aperti, la sua variabilità e un assetto unico da provare per tutta la tappa. Copiare il comando stampato nel primo terminale; nel secondo avviare il replay consueto. Non occorre eseguire l'analisi per usare il launcher 08.
 
-Il suggerimento lascia più spazio al basso quando la melodia è rarefatta; con più gate aperti riduce densità, levare e durate. Il registro resta 28–47 e la mobilità contenuta. I gate descrivono una disponibilità di attacchi, non le note effettive: clock, Steps, Shape e strumento in Live non sono noti. Il risultato è una proposta compositiva prudente, da correggere all'ascolto. [Regole e formule](SCELTE-BASSO.md#suggerimento-automatico-dalla-tappa).
+Regole del suggerimento: [generatore](SCELTE-BASSO.md#suggerimento-automatico-dalla-tappa).

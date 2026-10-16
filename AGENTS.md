@@ -44,6 +44,8 @@
 
 ## Linee guida per la documentazione
 
+- Nella documentazione di presentazione, descrivere identità, obiettivi e capacità del progetto senza identificarlo con singoli componenti, strumenti, integrazioni o scelte attuali di implementazione. Riservare i dettagli specifici agli approfondimenti pertinenti.
+
 - Scrivere documentazione chiara, concisa, oggettiva e autonoma, nella stessa lingua della richiesta (italiano se si parla in italiano, inglese se si parla in inglese, spagnolo se si parla in spagnolo e così via).
 - Descrivere il sistema come esiste attualmente o come esplicitamente definito nell'architettura approvata.
 - Scrivere per lettori che non conoscono le conversazioni precedenti o la storia dello sviluppo.
@@ -71,3 +73,13 @@
 - Non dichiarare completate verifiche, test o modifiche che non sono stati effettivamente eseguiti.
 - Comunicare sinteticamente il risultato del lavoro, indicando cosa è stato modificato, cosa è stato verificato ed eventuali problemi rimasti.
 - Evitare riepiloghi prolissi, spiegazioni delle scelte ovvie e descrizioni passo per passo di operazioni ordinarie. Approfondire soltanto quando necessario o richiesto.
+
+## Sviluppo incrementale e scalabilità
+- Partire dall'implementazione più semplice che permetta di verificare il comportamento reale richiesto, mantenendo una struttura coerente con l'architettura prevista.
+- Progettare ogni implementazione iniziale come nucleo funzionante del sistema definitivo, non come prototipo temporaneo destinato a essere sostituito.
+- Procedere per incrementi successivi, estendendo e perfezionando il codice esistente senza ricominciare da zero a ogni nuova esigenza.
+- Distinguere la semplicità iniziale dalla semplificazione architetturale: ridurre le funzionalità implementate, non compromettere la possibilità di evoluzione.
+- Introdurre nuove responsabilità, componenti e livelli di complessità soltanto quando diventano necessari per raggiungere gli obiettivi concreti del progetto.
+- Utilizzare prove e verifiche per validare funzionalità destinate a rimanere nel sistema. Evitare implementazioni dimostrative isolate che non contribuiscono allo sviluppo effettivo.
+- Mantenere stabili le interfacce e i contratti fondamentali quando possibile, permettendo alle funzionalità di evolvere senza richiedere continue riscritture.
+- Quando si propone una soluzione, considerare sia il comportamento immediato sia la sua evoluzione prevista, senza implementare anticipatamente funzionalità future.

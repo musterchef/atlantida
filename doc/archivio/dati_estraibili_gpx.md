@@ -1,7 +1,6 @@
 # DESNIVEL — Dati estraibili dai GPX per TouchDesigner
 
-> Inventario storico del percorso CSV/TouchDesigner e proposte di metriche future. I 16 canali e i 30 fps sotto non descrivono il publisher neutrale attuale (sei metriche, 1 Hz sorgente). Per dati implementati vedere [STATO-CONTRATTO-OSC.md](../STATO-CONTRATTO-OSC.md); per nuove metriche verificare utilità, unità e qualità prima di estendere il contratto.
-
+> Inventario storico del percorso CSV/TouchDesigner e proposte di metriche future. I 16 canali e i 30 fps sotto non descrivono il publisher neutrale attuale (sei metriche, 1 Hz sorgente). Per dati implementati vedere [Stato del progetto](../SESSIONE.md); per nuove metriche verificare utilità, unità e qualità prima di estendere il contratto.
 
 ## Stato del prototipo storico
 

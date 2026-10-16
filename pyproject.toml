@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "desnivel"
 version = "0.1.0"
-description = "Generative audiovisual system: GPX cycling data modulates a self-running ecosystem."
+description = "Musica generativa da dati GPX: traduzione delle metriche del viaggio in dialogo musicale in Ableton Live."
 requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.24",
@@ -17,6 +17,10 @@ dev = ["pytest>=7", "python-osc>=1.8"]
 
 [project.scripts]
 desnivel-stream-metrics = "desnivel.cli.stream_metrics:main"
+desnivel-trip-music = "desnivel.cli.trip_music:main"
+desnivel-live-bass = "desnivel.cli.live_bass:main"
+desnivel-analyze-bass = "desnivel.cli.analyze_bass:main"
+desnivel-capture-snake = "desnivel.cli.capture_snake:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

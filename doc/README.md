@@ -1,19 +1,34 @@
-# Documentazione
+# Indice della documentazione
 
-| Documento | Contenuto |
+Guida alla documentazione di **Desnivel**, organizzata per aree tematiche.
+
+---
+
+## Panoramica e sistema
+
+| Documento | Argomento |
 |---|---|
-| [Architettura musicale](TODO-ARCHITECTURE.md) | Producer, Director, generatori, Coordinator e adattatori; interfacce presenti e punti da definire. |
-| [Dati del viaggio](CONTRATTO-DATI-VIAGGIO.md) | Metriche, unità e formato OSC. |
-| [Stato del progetto](SESSIONE.md) | Implementazione, verifiche e lavoro aperto. |
-| [Integrazione](STATO-CONTRATTO-OSC.md) | Percorsi disponibili, protocolli e limiti. |
-| [Comandi](COMANDI.md) | Avvio del producer e test. |
-| [Export Snake](EXPORT-SNAKE.md) | Stato, fase, acquisizione, previsione e piano delle verifiche live. |
-| [Scelte del basso](SCELTE-BASSO.md) | Motivazioni degli assetti, regole musicali e punti del codice da modificare. |
-| [Controlli del basso](CONTROLLI-BASSO.md) | Aggiornamenti dei parametri durante l'esecuzione e transizioni. |
-| [Snake](INTEGRAZIONE-SNAKE.md) | Collegamento M4L e prove del primo adattatore. |
-| [Prossimi passi](../TODO.md) | Lavoro da completare. |
-| [TODO Desnivel](../TODO-DESNIVEL.md) | Revisioni da valutare, a partire dal basso parametrico. |
+| [Presentazione](../README.md) | Origine del progetto, viaggio da Torino a Castel del Monte e i tre livelli di lettura. |
+| [Architettura](ARCHITETTURA.md) | Pipeline modulare, flusso dei dati, modelli musicali e organizzazione del codice. |
+| [Stato del progetto](STATO.md) | Funzionalità operative verificate e sviluppi aperti. |
+| [Comandi e setup](COMANDI.md) | Ambiente virtuale, porte di rete, streaming delle metriche, launcher e test suite. |
+| [TODO](../TODO.md) | Roadmap delle attività di ricerca e sviluppo. |
 
-La [ricerca artistica](../PROJECT-SPECS.md) descrive la visione del progetto. I documenti delle versioni precedenti sono nell'[archivio](archivio/README.md).
+---
 
-Il [codice archiviato](../archivio/README.md) raccoglie pipeline e materiali esclusi dallo sviluppo corrente.
+## Dati e strumenti musicali
+
+| Documento | Argomento |
+|---|---|
+| [Dati del viaggio](DATI-VIAGGIO.md) | Lettura GPX, calcolo continuo delle metriche (quota, pendenza, sforzo) e formato OSC. |
+| [Sequencer Snake](SNAKE.md) | Sequencer melodico in Live, bridge Max for Live, banco Length, telemetria ed export. |
+| [Generatore del basso](BASSO.md) | Composizione del contrappunto, preset espressivi, controlli in tempo reale e player M4L. |
+| [Tappe e percorsi modali](TAPPE-E-PRESET.md) | Caratterizzazione musicale delle tappe (Firenze, Sabaudia, Peschici) e ascolto congiunto. |
+
+---
+
+## Materiali storici
+
+I documenti e i codici relativi a versioni precedenti, pipeline prototipali e decisioni superate sono conservati in:
+- [Archivio della documentazione](archivio/README.md)
+- [Archivio del codice e dei prototipi](../archivio/README.md)

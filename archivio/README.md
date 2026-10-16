@@ -18,4 +18,4 @@ I nomi dei file e la struttura relativa dei gruppi sono conservati.
 Il codice è conservato per consultazione e recupero: non costituisce un pacchetto autonomo eseguibile. I vecchi entry point non sono installati e i test qui raccolti non fanno parte della suite corrente. Per riattivare un componente occorre verificarne dipendenze, percorsi e contratti rispetto al sistema attuale.
 
 La documentazione storica resta in [doc/archivio](../doc/archivio/README.md).
-Per lo sviluppo usare [i comandi correnti](../doc/COMANDI.md) e l’[architettura musicale](../doc/TODO-ARCHITECTURE.md).
+Per lo sviluppo usare [i comandi correnti](../doc/COMANDI.md) e l’[architettura del sistema](../doc/ARCHITETTURA.md).

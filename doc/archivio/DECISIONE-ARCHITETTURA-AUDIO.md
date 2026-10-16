@@ -35,4 +35,4 @@ Il [contratto dati](../CONTRATTO-DATI-VIAGGIO.md) descrive le metriche del viagg
 
 Il tempo del replay stabilisce quanto rapidamente attraversiamo il viaggio. Il clock della destinazione stabilisce quando eseguire le note. Le regole devono dichiarare se operano sul tempo del viaggio o sul tempo musicale.
 
-Lo [stato dell'integrazione](../STATO-CONTRATTO-OSC.md) riporta le funzionalità disponibili. I passi per il primo adattatore sono nella [guida Snake](../INTEGRAZIONE-SNAKE.md).
+Lo [stato del progetto](../SESSIONE.md) riporta le funzionalità disponibili. I passi per il primo adattatore sono nella [guida Snake](../INTEGRAZIONE-SNAKE.md).

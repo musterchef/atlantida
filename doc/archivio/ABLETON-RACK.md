@@ -6,9 +6,9 @@ Il percorso target è producer neutrale → motore musicale Python → adattator
 il Rack qui sotto resta un riferimento per le prove del prototipo, non la
 configurazione target.
 
-Fonte di verità del mapping: [src/desnivel/bridges/rack_spec.py](../../src/desnivel/bridges/rack_spec.py).
-Tabella tecnica OSC→CC: [src/desnivel/bridges/osc_to_midi.py](../../src/desnivel/bridges/osc_to_midi.py).
-Le due fonti sono tenute in sincrono dai test ([tests/test_rack_spec.py](../../tests/test_rack_spec.py)).
+Fonte di verità del mapping: [src/desnivel/bridges/rack_spec.py](../../archivio/src/desnivel/bridges/rack_spec.py).
+Tabella tecnica OSC→CC: [src/desnivel/bridges/osc_to_midi.py](../../archivio/src/desnivel/bridges/osc_to_midi.py).
+Le due fonti sono tenute in sincrono dai test ([tests/test_rack_spec.py](../../archivio/tests/test_rack_spec.py)).
 
 Per vedere la mappa attiva in qualsiasi momento:
 
@@ -177,7 +177,7 @@ Click destro sul titolo del rack → **Save As Preset…** → nome `DESNIVEL Vo
 
 ## Riferimenti
 
-- Specifica macchina-leggibile: [rack_spec.py](../../src/desnivel/bridges/rack_spec.py)
-- Tabella tecnica OSC→CC: [osc_to_midi.py](../../src/desnivel/bridges/osc_to_midi.py)
-- Test di sincronia tra le due: [test_rack_spec.py](../../tests/test_rack_spec.py)
+- Specifica macchina-leggibile: [rack_spec.py](../../archivio/src/desnivel/bridges/rack_spec.py)
+- Tabella tecnica OSC→CC: [osc_to_midi.py](../../archivio/src/desnivel/bridges/osc_to_midi.py)
+- Test di sincronia tra le due: [test_rack_spec.py](../../archivio/tests/test_rack_spec.py)
 - Cheat sheet comandi: [COMANDI.md](../COMANDI.md)

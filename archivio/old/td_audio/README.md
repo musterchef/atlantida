@@ -8,6 +8,6 @@ Archiviato il 2026-10-02: questo percorso non è quello di sviluppo corrente.
 
 I quattro file sono stati spostati insieme senza modificarne il contenuto. Il JS è una dipendenza della patch archiviata; non è usato dalla patch Snake in `m4l/`.
 
-I progetti `.toe`, shader e loader visuali restano in `td/`. Eventuali riferimenti esterni nei `.toe` ai vecchi percorsi non sono stati aggiornati né verificati: per rieseguire questo prototipo occorre puntarli ai file di questo archivio. Il callback archiviato contiene anche aggiornamenti visuali, per questo è conservato interamente.
+I progetti `.toe`, shader e loader visuali restano in `archivio/td/`. Eventuali riferimenti esterni nei `.toe` ai vecchi percorsi non sono stati aggiornati né verificati: per rieseguire questo prototipo occorre puntarli ai file di questo archivio. Il callback archiviato contiene anche aggiornamenti visuali, per questo è conservato interamente.
 
-Per il percorso corrente vedere [la decisione architetturale](../../doc/TODO-ARCHITECTURE.md).
+Per il percorso corrente vedere [l'architettura del sistema](../../../doc/ARCHITETTURA.md).

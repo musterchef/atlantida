@@ -1,6 +1,6 @@
 # Quota e pattern
 
-Prima regola musicale: la quota sceglie tra due pattern in La pentatonica minore.
+Questa prova usa una regola a soglia: la quota sceglie tra due pattern in La pentatonica minore.
 
 - All'avvio: pattern basso sotto 200 m, alto da 200 m.
 - In seguito: alto da 215 m, basso sotto 185 m. Il margine evita oscillazioni vicino alla soglia.
@@ -29,6 +29,4 @@ BPM e avanzamento di Snake restano in Live. I comandi aggiornano subito i parame
 - `src/desnivel/adapters/snake.py`: traduce note e gate in parametri Snake, richiede 16 elementi e note 0–83.
 - `src/desnivel/cli/trip_music.py`: carica il viaggio e riproduce i cambi attraverso l'adattatore.
 
-Il pattern musicale contiene note espresse in semitoni e gate. Snake usa per ora gli stessi valori numerici verificati nelle prove precedenti; l'ottava MIDI effettiva resta da misurare. Nessun controllo di velocity in questa prova.
-
-Verificati 14 test Python su regola, adattatore e metriche, e il dry-run sul GPX. L'ascolto della regola in Live resta da eseguire.
+Conversione delle altezze: [integrazione](INTEGRAZIONE-SNAKE.md#bridge). La prova di ascolto della regola resta aperta.

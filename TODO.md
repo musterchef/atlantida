@@ -1,14 +1,19 @@
 # Prossimi passi
 
-## Architettura musicale
+## Sistema
 
-Definire le interfacce e i punti aperti dell’[architettura musicale](doc/TODO-ARCHITECTURE.md) prima dell’implementazione di Music Director e Music Coordinator. Conservare il generatore del basso agnostico e preparare la gestione di più sorgenti melodiche simultanee.
+- [ ] Definire e implementare le interfacce di Music Director e Music Coordinator secondo l'[architettura](doc/ARCHITETTURA.md).
+- [ ] Definire criteri armonici, regole di arrangiamento e trasformazioni tra sezioni.
+- [ ] Definire tempi, revisioni e dipendenze dei piani per più voci.
+- [ ] Stabilire il rapporto tra tempo del viaggio e beat e il comportamento a Stop, salti, loop e ripartenza.
+- [ ] Definire i fatti geografici neutrali e la gestione dei dati mancanti o scaduti.
+- [ ] Valutare le regole musicali confrontando lo stesso tratto e modificando un aspetto per volta.
 
-## Percorso presente
+## Generatore di accompagnamento presente
 
-- [ ] Valutare all’ascolto i controlli del basso sullo stesso materiale: [metodo e revisioni](TODO-DESNIVEL.md).
-- [ ] Verificare Stop/ripartenza, salti del trasporto e cambi di stato nelle condizioni necessarie all’uso: [piano delle prove](doc/EXPORT-SNAKE.md#piano-di-lavoro).
-- [ ] Definire il comportamento in assenza di snapshot e per metriche scadute nei consumer.
-- [ ] Definire il contratto dei fatti geografici neutrali: [dati del viaggio](doc/CONTRATTO-DATI-VIAGGIO.md).
+- [ ] Valutare se limitare `rhythm_follow` agli attacchi; oggi influenza anche durate e accenti.
+- [ ] Distinguere la propensione ai salti dall'alternanza basso/acuto introdotta da `mobility`.
+- [ ] Verificare intervalli, dissonanze e pesi delle preferenze armoniche.
+- [ ] Calibrare bonus d'appoggio, salti, ripetizioni e risposta dei controlli.
 
-[Comandi](doc/COMANDI.md) · [Stato del progetto](doc/SESSIONE.md) · [Integrazione](doc/STATO-CONTRATTO-OSC.md)
+[Stato](doc/STATO.md) · [Regole del generatore](doc/BASSO.md)
