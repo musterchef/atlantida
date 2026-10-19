@@ -5,6 +5,7 @@ from itertools import groupby
 import math
 
 from desnivel.music.patterns import Pattern, PatternChange, SCALES
+from desnivel.music.director import MusicDirector
 from desnivel.trip.metrics import MetricName
 
 
@@ -32,12 +33,7 @@ def compose(samples, config, weights):
     if any(type(n) is not int for n in (lo, hi)) or not 0 <= lo <= hi <= size:
         raise ValueError("gate_range fuori dalla lunghezza del motivo")
     sections = config["sections"]
-    starts = [s["from_progress"] for s in sections]
-    if not starts or starts[0] != 0 or any(not math.isfinite(x) or not 0 <= x < 1 for x in starts) or any(a >= b for a, b in zip(starts, starts[1:])):
-        raise ValueError("sezioni ordinate, dalla progressione 0 a meno di 1")
-    for section in sections:
-        if section["scale"] not in SCALES or type(section["root"]) is not int:
-            raise ValueError("scala o tonica non valida")
+    director = MusicDirector(sections)
     samples = sorted(samples, key=lambda s: s.elapsed_s)
     distances = [s.value for s in samples if s.name == MetricName.DISTANCE_TOTAL_M and math.isfinite(s.value)]
     if not distances or distances[-1] <= distances[0]:
@@ -77,8 +73,9 @@ def compose(samples, config, weights):
         intensity = sum(filtered[k] * weights[k] for k in active) / sum(weights.values())
         count = int(math.floor(lo + (hi - lo) * intensity + 0.5))
         progress = min(1.0, max(0.0, (distance[0] - origin) / total))
-        section = next(s for s in reversed(sections) if progress >= s["from_progress"])
-        intervals = SCALES[section["scale"]]
+        context = director.context_at(progress)
+        section = sections[context.section_index]
+        intervals = SCALES[context.scale]
         # Il motivo resta ancorato ai gradi della prima scala. Le sezioni successive
         # cambiano solo le posizioni dichiarate, preservando le altre note.
         base = SCALES[sections[0]["scale"]]
@@ -94,12 +91,12 @@ def compose(samples, config, weights):
             else:
                 candidates = [x + 12 * octave for octave in range(pitch // 12 + 2) for x in intervals]
                 pitch = min(candidates, key=lambda x: (abs(x - pitch), x))
-            notes.append(section["root"] + pitch)
+            notes.append(context.root + pitch)
         opened = set(order[:count])
         pattern = Pattern(tuple(notes), tuple(int(i in opened) for i in range(size)))
-        section_index = sections.index(section)
+        section_index = context.section_index
         if pattern != previous or section_index != previous_section:
-            changes.append(PatternChange(t, f'{section["name"]} intensity={intensity:.2f}', pattern, section_index))
+            changes.append(PatternChange(t, f'{context.name} intensity={intensity:.2f}', pattern, section_index))
             previous = pattern
             previous_section = section_index
     return changes
