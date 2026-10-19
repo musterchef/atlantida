@@ -1,0 +1,144 @@
+{
+  "status": "draft",
+  "roles": {
+    "melody": {
+      "description": "Present the main melodic line."
+    },
+    "bass_line": {
+      "description": "Provide a low-register line contributing harmonic and rhythmic support."
+    },
+    "harmonic_accompaniment": {
+      "description": "Support the harmony with chords or successive chord tones."
+    },
+    "pulse": {
+      "description": "Establish a recurring rhythmic reference."
+    },
+    "countermelody": {
+      "description": "Provide a distinct melodic line alongside a reference melody."
+    }
+  },
+  "relations": {
+    "response": {
+      "description": "Respond to a defined gesture in a reference part."
+    },
+    "doubling": {
+      "description": "Repeat a reference part, optionally transposed."
+    }
+  },
+  "timbre_descriptors": {
+    "warm": {
+      "description": "Warm tonal character."
+    },
+    "round": {
+      "description": "Rounded tonal character."
+    },
+    "bright": {
+      "description": "Bright tonal character."
+    },
+    "dry": {
+      "description": "Dry sonic character."
+    },
+    "metallic": {
+      "description": "Metallic tonal character."
+    },
+    "punchy": {
+      "description": "Pronounced attack and impact."
+    }
+  },
+  "descriptor_usage": "Descriptive only. No automatic selection or parameter mapping is defined.",
+  "preset_classifications": {
+    "serum_browser": {
+      "source": "User-provided screenshot of the preset browser.",
+      "scope": "Visible top-level labels only; subcategories have not been inspected.",
+      "categories": {
+        "arp": {
+          "label": "Arp"
+        },
+        "bass": {
+          "label": "Bass"
+        },
+        "bell": {
+          "label": "Bell"
+        },
+        "brass": {
+          "label": "Brass"
+        },
+        "chord": {
+          "label": "Chord"
+        },
+        "drum": {
+          "label": "Drum"
+        },
+        "drumkit": {
+          "label": "Drumkit"
+        },
+        "e_piano": {
+          "label": "E Piano"
+        },
+        "guitar": {
+          "label": "Guitar"
+        },
+        "hit": {
+          "label": "Hit"
+        },
+        "hoover": {
+          "label": "Hoover"
+        },
+        "instrument": {
+          "label": "Instrument"
+        },
+        "keyboard": {
+          "label": "Keyboard"
+        },
+        "lead": {
+          "label": "Lead"
+        },
+        "loop": {
+          "label": "Loop"
+        },
+        "mallet": {
+          "label": "Mallet"
+        },
+        "orchestral": {
+          "label": "Orchestral"
+        },
+        "organ": {
+          "label": "Organ"
+        },
+        "pad": {
+          "label": "Pad"
+        },
+        "piano": {
+          "label": "Piano"
+        },
+        "pluck": {
+          "label": "Pluck"
+        },
+        "seq": {
+          "label": "Seq"
+        },
+        "sfx": {
+          "label": "SFX"
+        },
+        "soundscape": {
+          "label": "Soundscape"
+        },
+        "string": {
+          "label": "String"
+        },
+        "synth": {
+          "label": "Synth"
+        },
+        "template": {
+          "label": "Template"
+        },
+        "vox": {
+          "label": "Vox"
+        },
+        "woodwind": {
+          "label": "Woodwind"
+        }
+      }
+    }
+  }
+}

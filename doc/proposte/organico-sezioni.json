@@ -1,0 +1,72 @@
+{
+  "status": "draft",
+  "selection_mode": "manual",
+  "voices": {
+    "voice_01": {
+      "sound_profile": "sound_01",
+      "generator_ref": null
+    },
+    "voice_02": {
+      "sound_profile": "sound_02",
+      "generator_ref": null
+    },
+    "voice_03": {
+      "sound_profile": "sound_03",
+      "generator_ref": null
+    }
+  },
+  "sections": [
+    {
+      "id": "opening",
+      "from_progress": 0.0,
+      "assignments": {
+        "voice_01": {
+          "role": "melody",
+          "dependencies": [],
+          "parameters": {}
+        }
+      }
+    },
+    {
+      "id": "development",
+      "from_progress": 0.3,
+      "assignments": {
+        "voice_01": {
+          "role": "melody",
+          "dependencies": [],
+          "parameters": {}
+        },
+        "voice_02": {
+          "role": "bass_line",
+          "dependencies": [
+            "voice_01"
+          ],
+          "parameters": {}
+        },
+        "voice_03": {
+          "role": "pulse",
+          "dependencies": [],
+          "parameters": {}
+        }
+      }
+    },
+    {
+      "id": "closing",
+      "from_progress": 0.75,
+      "assignments": {
+        "voice_01": {
+          "role": "melody",
+          "dependencies": [],
+          "parameters": {}
+        },
+        "voice_02": {
+          "role": "bass_line",
+          "dependencies": [
+            "voice_01"
+          ],
+          "parameters": {}
+        }
+      }
+    }
+  ]
+}

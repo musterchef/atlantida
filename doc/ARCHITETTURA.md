@@ -43,12 +43,16 @@ La generazione musicale si basa su due strutture dati fondamentali:
 
 ---
 
-## Evoluzione: Director e Coordinator
+## Music Director e Music Coordinator
 
-Per orchestrare un organico con più voci indipendenti ma coerenti, l'architettura prevede due ruoli di coordinamento:
+I due ruoli sono implementati in classi distinte nel package `music`: il Director seleziona il contesto compositivo, il Coordinator pianifica le voci a partire dalle frasi disponibili.
 
-- **Music Director**: definisce il contesto espressivo comune della sezione (tonalità, percorsi modali, livello complessivo di tensione o densità ed equilibrio tra le voci).
-- **Music Coordinator**: gestisce l'ordine di pianificazione, risolvendo le dipendenze tra strumenti (ad esempio passando al generatore del basso la melodia pianificata per consentirgli di dialogare o rispondere negli spazi).
+- **`MusicDirector`** (`music/director.py`): riceve le sezioni configurate e seleziona, dalla progressione del viaggio, un `MusicalContext` con indice e nome della sezione, tonica e scala. `journey.compose` usa questo contesto per generare i pattern; motivo, gate e trasformazioni dei gradi restano nella composizione della voce.
+- **`MusicCoordinator`** (`music/coordinator.py`): riceve generatori identificati per voce e le rispettive dipendenze. Verifica dipendenze mancanti o cicliche prima della generazione, ordina le chiamate e raccoglie le frasi. Ogni generatore riceve un `PlanningRequest` con intervallo in beat, eventuale contesto comune e frasi delle sole dipendenze dichiarate. Il chiamante può fornire frasi sorgente già pianificate.
+- **Moduli delle voci** (`music/<voce>/`): contengono regole compositive, controlli e stato specifici della voce. Il planner presente in `music/bass/` conserva continuità e transizioni dei controlli per quel generatore.
+- **Adattatori**: traducono lo stato della sorgente in frasi e i risultati musicali nel formato di destinazione. Gestiscono identificativi, revisioni dei messaggi e segnali del trasporto; configurano le voci e invocano il Coordinator.
+
+Il Director legge anche le assegnazioni manuali delle voci per sezione. Il Coordinator verifica i ruoli supportati e passa ruolo e parametri ai generatori. `cli/ensemble.py` collega queste assegnazioni a generatori e destinazioni registrati dal chiamante. Il Coordinator propaga il contesto fornito dal chiamante senza interpretarlo. Nella sessione multivoce ogni generatore riceve il contesto delle sezioni; il generatore di accompagnamento compone dalla frase fornita come dipendenza. L’integrazione `live_bass` usa invece una frase ricostruita dalla sorgente esterna. La [sessione multivoce](SESSIONE-MULTIVOCE.md) include vista globale e dettaglio delle decisioni di pianificazione.
 
 ---
 
@@ -66,6 +70,8 @@ Per orchestrare un organico con più voci indipendenti ma coerenti, l'architettu
 ---
 
 ## Riferimenti
+
+- [Voci e contesto musicale](RUOLI-MUSICALI.md)
 
 - [Dati del viaggio e metriche GPX](DATI-VIAGGIO.md)
 - [Sequencer Snake e ponte M4L](SNAKE.md)

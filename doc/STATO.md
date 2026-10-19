@@ -19,11 +19,21 @@
 - Tre assetti sonori calibrati: `sobrio` (appoggio minimale), `dialogo` (risposte negli spazi) e `ritmico` (slap e accenti sui levare).
 - Aggiornamento dinamico dei parametri durante l'esecuzione tramite messaggi OSC (`/desnivel/v1/bass/control`) con transizioni fluide interpolate su finestre temporali.
 
+### 4. Sessione multivoce condivisa
+- Avvio unico con `desnivel.cli.ensemble`: replay GPX, selezione del contesto delle sezioni, coordinamento dei generatori e invio delle frasi alle destinazioni.
+- Organico e ruoli configurati per sezione; selezione manuale del ruolo e ritorno a `Follow section` dal dispositivo comune `Desnivel_Voice`.
+- Generazione melodica da motivo con sviluppo su più finestre, ritmo variabile, pause, dinamica e conclusioni sulla tonica; preset letterale per il confronto.
+- Collegamento delle parti al trasporto di Live e controlli compositivi esposti dal motore Python.
+- Vista globale nel terminale e snapshot JSON con avanzamento, collegamenti, ruoli e decisioni effettive di Director e Coordinator.
+- Esecuzione di melodia e accompagnamento verificata all'ascolto in Live.
+
+[Sessione multivoce](SESSIONE-MULTIVOCE.md) · [Melodia](MELODIA.md) · [Dispositivo MIDI](VOCE-M4L.md)
+
 ---
 
 ## Aspetti in sviluppo
 
-- **Music Director e Coordinator**: architettura a più livelli per gestire armonia comune e dipendenze tra più voci.
+- **Proposte di sviluppo**: [plancia grafica globale](proposte/PLANCIA.md) e [catalogo delle voci e ruoli musicali](proposte/RUOLI-MUSICALI.md), separati dalle funzionalità operative.
 - **Quantizzazione metrica su Snake**: allineamento dei cambi di pattern a inizio battuta.
 - **Calibrazione all'ascolto**: affinamento dei pesi armonici del generatore del basso durante le sessioni musicali.
 

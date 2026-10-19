@@ -1,0 +1,102 @@
+// Interfaccia della voce. Le scelte compositive restano nel motore Python.
+inlets=1;outlets=3; // UDP, player, diagnostica
+var voiceId='', replyPort=9101, instance='', serial=0, acknowledged=-1;
+var backendPort=9006, beat=0, playing=0, epoch=0, lastTick=-1;
+var connected=false, lastReply=0, state=null, snapshot='', parameterNames=[], presetNames=[];
+var selectedParameter=0, patch=this.patcher;
+function status(text){outlet(2,String(text));}
+function ui(name){return patch.getnamed(name);}
+function playerReset(){outlet(1,'panic');}
+function disconnect(){connected=false;state=null;snapshot='';playerReset();ui('role_display').message('set','Unassigned');ui('role_menu').message('clear');status('Disconnected');}
+function voice(){var name=arrayfromargs(arguments).join(' ');if(name!==voiceId){disconnect();voiceId=name;}}
+function receiveport(value){var n=Number(value);if(n!==replyPort){disconnect();replyPort=n;}}
+function backendport(value){var n=Number(value);if(n!==backendPort){disconnect();backendPort=n;}}
+function connect(){
+    if(connected){request('hello',{});return;}
+    disconnect();
+    if(!/^[A-Za-z0-9_-]+$/.test(voiceId)){status('Enter a voice ID');return;}
+    instance='device_'+new Date().getTime()+'_'+Math.floor(Math.random()*1000000000);
+    serial=0;acknowledged=-1;lastReply=new Date().getTime();connected=true;request('hello',{});
+}
+function request(action, extra){
+    if(!connected)return;
+    var m={version:1,voice:voiceId,instance:instance,reply_port:replyPort,serial:++serial,action:action,transport:{beat:beat,playing:playing,epoch:epoch}};
+    for(var key in extra)m[key]=extra[key];
+    outlet(0,'/desnivel/v1/voice/control',JSON.stringify(m));
+}
+function clock(ticks,running){
+    ticks=Number(ticks);running=Number(running);
+    if(ticks<lastTick || running!==playing)epoch++;
+    lastTick=ticks;beat=ticks/480;playing=running;
+    if(connected)request('transport',{});
+}
+function heartbeat(){
+    if(!connected)return;
+    if(new Date().getTime()-lastReply>3000){playerReset();status('Python not responding');}
+    request('hello',{});
+}
+function receive(text){
+    try{
+        var m=JSON.parse(String(text));
+        if(!connected || m.version!==1 || m.voice!==voiceId || m.instance!==instance)return;
+        if(m.kind==='error'){reflectRole();status(m.error);return;}
+        if(m.kind==='plan'){if(new Date().getTime()-lastReply>3000)return;outlet(1,'plan',JSON.stringify(m.plan));return;}
+        if(m.kind!=='state' || m.serial<acknowledged)return;
+        acknowledged=m.serial;lastReply=new Date().getTime();
+        var signature=JSON.stringify([m.role,m.role_mode,m.supported_roles,m.active,m.next_entry_progress,m.section_role,m.preset,m.presets,m.controls]);
+        if(signature!==snapshot){
+            state=m;snapshot=signature;
+            reflectRole();
+            var previous=parameterNames[selectedParameter];
+            presetNames=m.presets;parameterNames=[];
+            ui('preset_menu').message('clear');
+            for(var i=0;i<presetNames.length;i++)ui('preset_menu').message('append',presetNames[i]);
+            if(m.preset!==null)ui('preset_menu').message('set',presetNames.indexOf(m.preset));
+            else ui('preset_menu').message('set',-1);
+            for(var key in m.controls)parameterNames.push(key);
+            ui('parameter_menu').message('clear');
+            for(var j=0;j<parameterNames.length;j++)ui('parameter_menu').message('append',parameterNames[j]);
+            selectedParameter=Math.max(0,parameterNames.indexOf(previous));
+            ui('parameter_menu').message('set',selectedParameter);parameter(selectedParameter);
+        }
+        status('Python connected');
+    }catch(e){status('Invalid Python message: '+e);}
+}
+function reflectRole(){
+    if(!state)return;
+    var roles=state.supported_roles||[], menu=ui('role_menu');
+    menu.message('clear');menu.message('append',roles.length?'Follow section':'No roles available');
+    for(var i=0;i<roles.length;i++)menu.message('append',roles[i]);
+    menu.message('set',state.role_mode==='manual'?roles.indexOf(state.role)+1:0);
+    var activity='';
+    if(state.active===false)activity=state.next_entry_progress!==null && state.next_entry_progress!==undefined
+        ?' (enters at '+Math.round(state.next_entry_progress*100)+'%)':' (not in this section)';
+    ui('role_display').message('set',(state.role||'Unassigned')+activity);
+}
+function choose_role(index){
+    if(!state)return;
+    var roles=state.supported_roles||[];
+    if(!roles.length)return;
+    if(index===0)request('role',{role:null});
+    else if(roles[index-1]!==undefined)request('role',{role:roles[index-1]});
+}
+function preset(index){if(state && presetNames[index]!==undefined)request('preset',{preset:presetNames[index]});}
+function parameter(index){
+    selectedParameter=Number(index);
+    var name=parameterNames[selectedParameter];
+    if(state && name!==undefined){
+        var c=state.controls[name];ui('parameter_value').message('set',c.value);
+        ui('range_display').message('set',c.minimum+' .. '+c.maximum+(c.integer?' (integer)':''));
+    }else ui('range_display').message('set','No controls');
+}
+function value(v){
+    var name=parameterNames[selectedParameter];
+    if(!state || name===undefined)return;
+    var c=state.controls[name], n=Number(v);
+    if(!isFinite(n)||n<c.minimum||n>c.maximum||(c.integer&&Math.floor(n)!==n)){
+        ui('parameter_value').message('set',c.value);status('Value outside allowed range');return;
+    }
+    request('parameter',{parameter:name,value:n});
+}
+function panic(){playerReset();request('panic',{});}
+function notifydeleted(){playerReset();}

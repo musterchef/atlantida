@@ -2,10 +2,10 @@
 
 ## Sistema
 
-- [ ] Definire e implementare le interfacce di Music Director e Music Coordinator secondo l'[architettura](doc/ARCHITETTURA.md).
+- [x] Collegare Music Director, Music Coordinator e generatori con contesto comune, ruoli e dipendenze dichiarate nella sessione multivoce.
 - [ ] Definire criteri armonici, regole di arrangiamento e trasformazioni tra sezioni.
-- [ ] Definire tempi, revisioni e dipendenze dei piani per più voci.
-- [ ] Stabilire il rapporto tra tempo del viaggio e beat e il comportamento a Stop, salti, loop e ripartenza.
+- [x] Pianificare finestre in beat e inviare piani con revisioni a più dispositivi di voce.
+- [x] Separare replay GPX e beat, gestendo Stop, ripartenza e discontinuità nella sessione multivoce.
 - [ ] Definire i fatti geografici neutrali e la gestione dei dati mancanti o scaduti.
 - [ ] Valutare le regole musicali confrontando lo stesso tratto e modificando un aspetto per volta.
 

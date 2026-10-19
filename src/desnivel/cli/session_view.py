@@ -1,0 +1,69 @@
+"""Vista globale del terminale, aggiornata anche senza cambi di stato."""
+import sys
+import time
+
+
+def _time(seconds):
+    seconds = int(seconds)
+    return f'{seconds//3600:02d}:{seconds//60%60:02d}:{seconds%60:02d}'
+
+
+def render_session(state):
+    trip, transport = state['trip'], state['transport']
+    decision = state['decisions']['director']
+    rows = [f"DESNIVEL | {state['state']} | Live {'PLAY' if transport['playing'] else 'STOP'} | beat {transport['beat']:.2f}",
+            f"Viaggio {trip['progress']:.2%} | {_time(trip['elapsed_s'])} / {_time(trip['duration_s'])} | {trip['distance_m']/1000:.2f} km | replay {trip['speed']:g}x",
+            f"Director: {decision['section']} [{decision['from_progress']:.0%}, {decision['until_progress']:.0%}] | root MIDI {decision['root']} | {decision['scale']}"]
+    for name, voice in state['voices'].items():
+        connection = 'collegato' if voice['connected'] else 'SCOLLEGATO'
+        if voice['active']:
+            activity = 'in organico'
+        elif voice.get('next_entry_progress') is not None:
+            activity = f"fuori organico; ingresso al {voice['next_entry_progress']:.0%}"
+        else:
+            activity = 'fuori organico di questa sezione'
+        origin = 'manuale' if voice['role_mode'] == 'manual' else 'da sezione'
+        rows.append(f"  {name} ({voice['name']}): {connection} | {activity} | {voice['role'] or 'nessun ruolo'} ({origin})")
+        values = ', '.join(f"{key}={control['value']:g}" for key, control in voice['controls'].items())
+        rows.append(f"    preset: {voice['preset'] or 'nessuno/custom'} | {values}")
+    plan = state['decisions']['coordinator']
+    if plan is None:
+        rows.append('Coordinator: nessun piano in attesa.')
+    else:
+        rows.append(f"Coordinator: piano inviato [{plan['start']:g}, {plan['start']+plan['length_beats']:g}] beat | sezione {plan['section']}")
+        rows.append('  Ordine generatori: ' + (' -> '.join(plan['order']) or 'nessuna voce attiva'))
+        for name in plan['order']:
+            voice = plan['voices'][name]
+            notes = voice['notes']
+            composition = voice.get('composition')
+            if composition:
+                rows.append(f"  Composizione {name}: {composition['summary']}")
+            preview = ', '.join(f"{n['pitch']}@{n['beat']:g}" for n in notes[:8])
+            if len(notes) > 8:
+                preview += ', ...'
+            rows.append(f"  {name}: {voice['role']} | riferimenti: {', '.join(voice['dependencies']) or 'nessuno'} | {len(notes)} note MIDI@beat: {preview or 'silenzio'}")
+        rows.append('  Piano inviato; non è una conferma audio dello strumento.')
+    if state['error']:
+        rows.append('ERRORE: ' + state['error'])
+    rows.append('Ctrl+C per chiudere la sessione.')
+    return '\n'.join(rows)
+
+
+class TerminalSessionView:
+    def __init__(self, stream=None, clock=time.monotonic, interval=1.):
+        self.stream = stream if stream is not None else sys.stdout
+        self.clock, self.interval = clock, interval
+        self.last_refresh = None
+
+    def update(self, state):
+        now = self.clock()
+        if self.last_refresh is not None and now-self.last_refresh < self.interval:
+            return
+        frame = render_session(state)
+        if self.stream.isatty():
+            prefix = '\x1b[2J' if self.last_refresh is None else ''
+            self.stream.write(prefix+'\x1b[H'+frame+'\x1b[J\n')
+        else:
+            self.stream.write(frame+'\n\n')
+        self.stream.flush()
+        self.last_refresh = now

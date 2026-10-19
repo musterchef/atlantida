@@ -1,0 +1,89 @@
+"""Frasi da gradi della scala: motivo articolato o nota sostenuta."""
+from __future__ import annotations
+
+import math
+
+from desnivel.music.patterns import SCALES
+from desnivel.music.phrases import Note, Phrase
+from desnivel.music.melodic.development import develop
+
+ROLES = ('melody', 'sustained_texture', 'bass_line')
+DEFAULTS = dict(octave=0, step_beats=1.0, articulation=.8, velocity=85,
+                development=0., activity=.75, phrase_windows=4, seed=0)
+
+
+class MotifGenerator:
+    def __init__(self, degrees, settings=None):
+        self.degrees = tuple(degrees)
+        if not self.degrees or any(type(d) is not int or d < 0 for d in self.degrees):
+            raise ValueError('il motivo richiede gradi interi non negativi')
+        self.settings = {**DEFAULTS, **(settings or {})}
+        self.validate('melody', {})
+        self.last_decision = None
+        self._origin = None
+
+    def validate(self, role, parameters):
+        if role not in ROLES:
+            raise ValueError('ruolo non supportato dal generatore di motivo')
+        values = {**self.settings, **parameters}
+        if set(values) != set(DEFAULTS):
+            raise ValueError('parametri sconosciuti per il motivo')
+        for name in ('step_beats', 'articulation'):
+            if not isinstance(values[name], (int, float)) or not math.isfinite(values[name]) or values[name] <= 0:
+                raise ValueError(f'{name} deve essere positivo e finito')
+        if values['articulation'] > 1:
+            raise ValueError('articulation deve essere al massimo 1')
+        if type(values['velocity']) is not int or not 1 <= values['velocity'] <= 127:
+            raise ValueError('velocity deve essere un intero tra 1 e 127')
+        for name in ('development', 'activity'):
+            if type(values[name]) not in (int, float) or not math.isfinite(values[name]) or not 0 <= values[name] <= 1:
+                raise ValueError(f'{name} deve essere in [0, 1]')
+        if type(values['phrase_windows']) is not int or not 2 <= values['phrase_windows'] <= 8:
+            raise ValueError('phrase_windows deve essere un intero tra 2 e 8')
+        if type(values['seed']) is not int or not 0 <= values['seed'] <= 2147483647:
+            raise ValueError('seed deve essere un intero tra 0 e 2147483647')
+        if type(values['octave']) is not int or not -5 <= values['octave'] <= 5:
+            raise ValueError('octave deve essere un intero tra -5 e 5')
+
+    def __call__(self, request):
+        self.validate(request.role, request.parameters)
+        if request.context is None:
+            raise ValueError('il motivo richiede tonica e scala')
+        values = {**self.settings, **request.parameters}
+        intervals = SCALES[request.context.scale]
+        root = request.context.root + 12 * values['octave']
+        degrees = self.degrees[:1] if request.role == 'sustained_texture' else self.degrees
+        if any(not 0 <= root+intervals[d % len(intervals)]+12*(d//len(intervals)) <= 127 for d in degrees):
+            raise ValueError('motivo fuori dal registro MIDI')
+        if request.role == 'melody' and values['development'] > 0:
+            if not 0 <= root <= 127:
+                raise ValueError('lo sviluppo richiede una tonica nel registro MIDI')
+            if self._origin is None:
+                self._origin = request.start
+            if request.start < self._origin:
+                raise ValueError('lo sviluppo richiede reset prima di una ripartenza precedente')
+            phrase, self.last_decision = develop(self.degrees, intervals, root, request, values, self._origin)
+            return phrase
+        self.last_decision = {'method': 'sustained_note' if request.role == 'sustained_texture' else 'literal_motif',
+                              'summary': 'nota sostenuta' if request.role == 'sustained_texture' else 'motivo letterale'}
+        notes = []
+        if request.role == 'sustained_texture':
+            # Una nota per finestra: tessitura monofonica, senza accordi impliciti.
+            positions = [(0., self.degrees[0], request.length_beats)]
+        else:
+            count = math.ceil(request.length_beats / values['step_beats'])
+            if count > 128:
+                raise ValueError('il motivo supera 128 note nella finestra')
+            offset = math.floor(request.start / values['step_beats'])
+            positions = [(i * values['step_beats'], self.degrees[(offset+i) % len(self.degrees)],
+                          min(values['step_beats'], request.length_beats-i*values['step_beats']) * values['articulation'])
+                         for i in range(count)]
+        for beat, degree, duration in positions:
+            pitch = root + intervals[degree % len(intervals)] + 12 * (degree // len(intervals))
+            notes.append(Note(beat, pitch, duration, values['velocity']))
+        return Phrase(request.length_beats, tuple(notes))
+
+    def reset(self):
+        """La prima finestra successiva apre un nuovo periodo melodico."""
+        self._origin = None
+        self.last_decision = None

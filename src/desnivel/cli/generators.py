@@ -1,0 +1,55 @@
+"""Registro esplicito dei generatori e dei controlli esposti nella sessione."""
+from dataclasses import asdict, dataclass
+
+from desnivel.adapters.voice_device import Control
+from desnivel.cli.ensemble import Generator
+from desnivel.music.melodic.generator import MotifGenerator, ROLES
+from desnivel.music.bass.voice import BassVoice
+
+
+@dataclass
+class RegisteredGenerator:
+    generator: Generator
+    controls: dict
+    values: dict
+    presets: dict
+    reset: object = None
+
+
+def build_generator(spec):
+    kind = spec['type']
+    if kind == 'motif':
+        compose = MotifGenerator(spec['degrees'], spec.get('settings'))
+        controls = {'octave': Control(-5, 5, True), 'step_beats': Control(.25, 8),
+                    'articulation': Control(.05, 1), 'velocity': Control(1, 127, True),
+                    'development': Control(0, 1), 'activity': Control(0, 1),
+                    'phrase_windows': Control(2, 8, True), 'seed': Control(0, 2147483647, True)}
+        roles = ROLES
+        values = compose.settings
+    elif kind == 'responsive_line':
+        compose = BassVoice(spec.get('settings'))
+        controls = {'density': Control(0, 4), 'syncopation': Control(0, 1),
+                    'rhythm_follow': Control(0, 1), 'melody_follow': Control(0, 1),
+                    'mobility': Control(0, 1), 'variation': Control(0, 1),
+                    'articulation': Control(.05, 1)}
+        roles = ('bass_line',)
+        values = asdict(compose.settings)
+    else:
+        raise ValueError(f'tipo di generatore sconosciuto: {kind}')
+    initial = {name: values[name] for name in controls}
+    presets = {name: {**initial, **parameters} for name, parameters in spec.get('presets', {}).items()}
+    for values in [initial, *presets.values()]:
+        if set(values) != set(controls):
+            raise ValueError('preset con controlli sconosciuti')
+        for name, value in values.items():
+            controls[name].validate(value)
+        for role in roles:
+            compose.validate(role, values)
+    def validate(role, parameters):
+        compose.validate(role, parameters)
+        for name, control in controls.items():
+            if name in parameters:
+                control.validate(parameters[name])
+    describe = (lambda: compose.last_decision) if kind == 'motif' else None
+    return RegisteredGenerator(Generator(compose, roles, validate, describe), controls,
+                               initial, presets, getattr(compose, 'reset', None))

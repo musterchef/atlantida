@@ -1,0 +1,95 @@
+{
+  "status": "draft",
+  "instrument_types": {
+    "acoustic_drum_kit": {
+      "name": "Acoustic drum kit",
+      "family": "drums"
+    },
+    "electronic_drum_kit": {
+      "name": "Electronic drum kit",
+      "family": "drums"
+    },
+    "percussion": {
+      "name": "Percussion",
+      "family": "percussion"
+    },
+    "analog_synth": {
+      "name": "Analog synthesizer",
+      "family": "synthesizer"
+    },
+    "analog_modular_synth": {
+      "name": "Analog modular synthesizer",
+      "family": "synthesizer"
+    },
+    "digital_synth": {
+      "name": "Digital synthesizer",
+      "family": "synthesizer"
+    },
+    "electric_guitar": {
+      "name": "Electric guitar",
+      "family": "guitar"
+    },
+    "steel_string_acoustic_guitar": {
+      "name": "Steel-string acoustic guitar",
+      "family": "guitar"
+    },
+    "classical_guitar": {
+      "name": "Classical guitar",
+      "family": "guitar"
+    },
+    "acoustic_piano": {
+      "name": "Acoustic piano",
+      "family": "keyboard"
+    },
+    "electric_piano": {
+      "name": "Electric piano",
+      "family": "keyboard"
+    },
+    "electric_bass": {
+      "name": "Electric bass",
+      "family": "bass"
+    },
+    "organ": {
+      "name": "Organ",
+      "family": "keyboard"
+    },
+    "strings": {
+      "name": "Strings",
+      "family": "strings"
+    },
+    "brass": {
+      "name": "Brass",
+      "family": "brass"
+    },
+    "woodwinds": {
+      "name": "Woodwinds",
+      "family": "woodwinds"
+    }
+  },
+  "sound_profiles": {
+    "sound_01": {
+      "name": "Modular patch to choose",
+      "instrument_type": "analog_modular_synth",
+      "timbre_descriptors": [],
+      "capabilities": null,
+      "destination_ref": null,
+      "preset_classification": null
+    },
+    "sound_02": {
+      "name": "Analog bass patch to choose",
+      "instrument_type": "analog_synth",
+      "timbre_descriptors": [],
+      "capabilities": null,
+      "destination_ref": null,
+      "preset_classification": null
+    },
+    "sound_03": {
+      "name": "Electronic kit to choose",
+      "instrument_type": "electronic_drum_kit",
+      "timbre_descriptors": [],
+      "capabilities": null,
+      "destination_ref": null,
+      "preset_classification": null
+    }
+  }
+}
