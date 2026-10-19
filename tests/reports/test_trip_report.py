@@ -90,3 +90,49 @@ def test_cli_rejects_colliding_output_paths_before_writing(tmp_path):
 def test_report_requires_profile_instead_of_inventing_elevation():
     with pytest.raises(ValueError):
         render_trip_report({'version': 1})
+
+
+def test_timeline_report_and_json_use_same_beat_allocation_without_changing_analysis(tmp_path, capsys):
+    from desnivel.cli.analyze_trip import main
+    from desnivel.music.timeline import allocate_timeline
+
+    result_path, html = tmp_path/'result.json', tmp_path/'report.html'
+    args = ['--gpx', 'gpx/tappa05_Firenze_San_Gimignano.gpx', '--config', 'presets/analisi-percorso.json',
+            '--grouping', 'presets/macrosezioni-percorso.json', '--output', str(result_path), '--html', str(html)]
+    assert main(args) == 0
+    original = json.loads(result_path.read_text())
+    assert main(args+['--timeline-session', 'presets/organico.json']) == 0
+    result = json.loads(result_path.read_text())
+    assert {k: v for k, v in result.items() if k != 'timeline'} == original
+    assert json.loads(EmbeddedAnalysis(html.read_text()).payload) == result
+    distances = [s['end_distance_m']-s['start_distance_m'] for s in result['grouping']['sections']]
+    expected = allocate_timeline(distances, target_beats=480, window_beats=4).to_dict()
+    assert {k: result['timeline'][k] for k in expected} == expected
+    assert result['timeline']['position']['source_index'] == 0
+    assert len(result['timeline']['spans']) == 33
+    assert '480 beat richiesti; 480 effettivi; 120 finestre' in capsys.readouterr().out
+
+
+def test_linear_reference_uses_time_instead_of_distance_and_includes_stops():
+    from desnivel.cli.analyze_trip import _linear_spans
+
+    track = Track('stops', np.array([0., 1., 2., 4., 10.]),
+                  {'cum_dist_m': np.array([0., 0., 100., 100., 200.])})
+    sections = [{'start_distance_m': 0, 'end_distance_m': 100},
+                {'start_distance_m': 100, 'end_distance_m': 200}]
+    spans = _linear_spans(track, sections, 100)
+    assert [s['duration_beats'] for s in spans] == [40, 60]
+    assert spans[0]['start_beat'] == 0 and spans[-1]['end_beat'] == 100
+
+
+def test_timeline_requires_grouping_and_reports_extension(tmp_path, capsys):
+    from desnivel.cli.analyze_trip import main
+
+    args = ['--gpx', 'gpx/tappa05_Firenze_San_Gimignano.gpx', '--config', 'presets/analisi-percorso.json']
+    with pytest.raises(SystemExit):
+        main(args+['--timeline-session', 'presets/organico.json'])
+    session = tmp_path/'session.json'
+    session.write_text(json.dumps({'window_beats': 4,
+                                  'timeline': {'target_beats': 4, 'min_windows': 2, 'distance_exponent': .5}}))
+    assert main(args+['--grouping', 'presets/macrosezioni-percorso.json', '--timeline-session', str(session)]) == 0
+    assert 'minimi garantiti: 4 → 264 beat' in capsys.readouterr().out

@@ -445,5 +445,10 @@
         }
       }
     }
-  ]
+  ],
+  "timeline": {
+    "target_beats": 480,
+    "min_windows": 2,
+    "distance_exponent": 0.5
+  }
 }

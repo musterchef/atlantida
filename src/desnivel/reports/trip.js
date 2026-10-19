@@ -199,5 +199,66 @@
     setRange(byId('range-start').valueAsNumber * 1000, byId('range-end').valueAsNumber * 1000);
   };
   byId('reset').onclick = () => {clearSelection(); setRange(0, total);};
+  function renderTimeline() {
+    const timeline = data.timeline;
+    byId('timeline-panel').hidden = !timeline;
+    if (!timeline) return;
+    byId('timeline-summary').textContent = `${number(timeline.requested_beats, 0)} beat richiesti → ${number(timeline.total_beats, 0)} beat effettivi · ${timeline.total_windows} finestre da ${number(timeline.window_beats)} beat · minimo ${timeline.min_windows} finestre per macrosezione · esponente ${number(timeline.distance_exponent)}`;
+    const reasons = {minimum_extension: 'Estensione per garantire i minimi', window_quantization: 'Arrotondamento alle finestre'};
+    byId('timeline-adjustments').textContent = timeline.adjustments.map(a => `${reasons[a.code] || a.code}: ${number(a.from_beats)} → ${number(a.to_beats)} beat`).join(' · ');
+    const svg = byId('timeline-chart'), width = W-L-R;
+    add(svg, 'text', {x: L, y: 18}, 'Percorso · quote di distanza');
+    add(svg, 'text', {x: L, y: 83}, 'Tempo lineare GPX · stesso totale di beat');
+    add(svg, 'text', {x: L, y: 148}, 'Timeline allocata · quote di beat');
+    const timelineRows = [];
+    for (const span of timeline.spans) {
+      const section = sections[span.source_index], color = familyColors.get(section.kind);
+      const distanceBar = add(svg, 'rect', {x: L+section.start_distance_m/total*width, y: 28,
+        width: (section.end_distance_m-section.start_distance_m)/total*width, height: 28, fill: color, stroke: 'white'});
+      add(distanceBar, 'title', {}, `${span.source_index+1}. ${section.kind} · ${number(section.end_distance_m-section.start_distance_m, 0)} m`);
+      const linear = timeline.linear_reference[span.source_index];
+      const linearBar = add(svg, 'rect', {x: L+linear.start_beat/timeline.total_beats*width, y: 93,
+        width: linear.duration_beats/timeline.total_beats*width, height: 28, fill: color, stroke: 'white'});
+      add(linearBar, 'title', {}, `${span.source_index+1}. ${section.kind} · lineare GPX ${number(linear.duration_beats)} beat`);
+      const musicBar = add(svg, 'rect', {x: L+span.start_beat/timeline.total_beats*width, y: 158,
+        width: span.duration_beats/timeline.total_beats*width, height: 28, fill: color, stroke: 'white'});
+      add(musicBar, 'title', {}, `${span.source_index+1}. ${section.kind} · beat ${number(span.start_beat)}–${number(span.end_beat)} · ${span.window_count} finestre`);
+      const row = document.createElement('tr'), name = document.createElement('td'), button = document.createElement('button');
+      button.textContent = `${span.source_index+1}. ${section.kind}`;
+      button.onclick = () => {
+        byId('timeline-position').value = span.start_window;
+        inspectTimeline(span.start_window);
+        clearSelection(); macroRows[span.source_index].classList.add('selected');
+        section.zone_indices.forEach(i => rows[i].classList.add('selected'));
+        focusRange(section);
+      };
+      name.appendChild(button); row.appendChild(name);
+      for (const text of [`${number(section.start_distance_m/1000)} → ${number(section.end_distance_m/1000)}`,
+        String(span.window_count), `${number(span.start_beat)} → ${number(span.end_beat)}`, number(span.duration_beats), number(linear.duration_beats)]) {
+        const cell = document.createElement('td'); cell.textContent = text; row.appendChild(cell);
+      }
+      timelineRows.push(row); byId('timeline-spans').appendChild(row);
+    }
+    const cursor = add(svg, 'line', {y1: 154, y2: 193, stroke: '#193039', 'stroke-width': 2});
+    function inspectTimeline(index) {
+      timelineRows.forEach(row => row.classList.remove('selected'));
+      const beat = index*timeline.window_beats;
+      cursor.setAttribute('x1', L+beat/timeline.total_beats*width);
+      cursor.setAttribute('x2', L+beat/timeline.total_beats*width);
+      const span = timeline.spans.find(s => index >= s.start_window && index < s.start_window+s.window_count);
+      if (!span) {
+        byId('timeline-inspection').textContent = `Timeline terminata · ${number(timeline.total_beats)} beat`;
+        return;
+      }
+      timelineRows[span.source_index].classList.add('selected');
+      const section = sections[span.source_index], remaining = span.start_window+span.window_count-index;
+      byId('timeline-inspection').textContent = `Beat ${number(beat)} · finestra ${index+1}/${timeline.total_windows} · macrosezione ${span.source_index+1}: ${section.kind} · ${remaining} finestre rimanenti nella macrosezione`;
+    }
+    byId('timeline-position').max = timeline.total_windows;
+    byId('timeline-position').value = timeline.position.window_index;
+    byId('timeline-position').oninput = event => inspectTimeline(Number(event.target.value));
+    inspectTimeline(timeline.position.window_index);
+  }
   render();
+  renderTimeline();
 })();

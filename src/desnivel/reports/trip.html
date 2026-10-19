@@ -39,6 +39,24 @@
       Nella fascia sotto la quota, i tratti tratteggiati indicano osservazioni diverse dalla zona assegnata.</p>
     <p id="inspection" class="inspection" aria-live="polite">Muovi il puntatore sui grafici o seleziona una zona nella tabella per leggere i dettagli.</p>
   </section>
+  <section id="timeline-panel" class="panel" aria-labelledby="timeline-title" hidden>
+    <h2 id="timeline-title">Timeline musicale in beat</h2>
+    <p id="timeline-summary"></p>
+    <p id="timeline-adjustments" role="status"></p>
+    <p class="muted">Le barre confrontano distanza, tempo lineare GPX e timeline allocata.
+      Le due viste temporali hanno lo stesso totale di beat. Il riferimento lineare conserva le proporzioni dei tempi caricati dal GPX,
+      senza minimi o quantizzazione; la timeline allocata garantisce finestre intere.</p>
+    <svg id="timeline-chart" viewBox="0 0 1100 215" role="img" aria-label="Confronto fra distanza, tempo lineare GPX e spazio musicale assegnato"></svg>
+    <label for="timeline-position">Esplora la timeline per finestre</label>
+    <input id="timeline-position" class="timeline-slider" type="range" min="0" step="1" value="0">
+    <p id="timeline-inspection" class="inspection" aria-live="polite"></p>
+    <p class="chart-note">Anteprima dell'allocazione. La navigazione non avvia note;
+      la sessione musicale attuale usa ancora il replay lineare.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Macrosezione</th><th>Da → a km</th><th>Finestre</th><th>Da → a beat</th><th>Beat allocati</th><th>Beat lineari GPX</th></tr></thead>
+      <tbody id="timeline-spans"></tbody>
+    </table></div>
+  </section>
   <section id="macro-panel" class="panel" aria-labelledby="macro-title" hidden>
     <h2 id="macro-title">Macrosezioni del percorso</h2>
     <p class="muted">Ogni macrosezione raggruppa soltanto zone consecutive della stessa famiglia.

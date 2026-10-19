@@ -71,4 +71,28 @@ checkCoordinates(grouped['sections-chart']);
 grouped.reset.onclick();
 assert(grouped.zones.children.every(r => !r.classes.has('selected')));
 assert(!grouped['macro-sections'].children[0].classes.has('selected'));
+const timed = run({...data,
+  grouping: {config: {families: {alpha: ['alpha'], beta: ['beta']}},
+    sections: data.zones.map((zone, index) => ({...zone, zone_indices: [index]}))},
+  timeline: {requested_beats: 32, total_beats: 32, total_windows: 8, window_beats: 4,
+    min_windows: 2, distance_exponent: .5, adjustments: [], position: {window_index: 0},
+    linear_reference: [{source_index: 0, start_beat: 0, end_beat: 4, duration_beats: 4},
+      {source_index: 1, start_beat: 4, end_beat: 32, duration_beats: 28}],
+    spans: [{source_index: 0, start_window: 0, window_count: 3, start_beat: 0, end_beat: 12, duration_beats: 12},
+      {source_index: 1, start_window: 3, window_count: 5, start_beat: 12, end_beat: 32, duration_beats: 20}]}
+});
+assert.equal(timed['timeline-panel'].hidden, false);
+assert.equal(timed['timeline-spans'].children.length, 2);
+assert.equal(timed['timeline-spans'].children[0].children[5].textContent, '4,00');
+assert(timed['timeline-chart'].children.some(node => node.textContent === 'Tempo lineare GPX · stesso totale di beat'));
+assert(timed['timeline-inspection'].textContent.includes('macrosezione 1: alpha'));
+timed['timeline-position'].oninput({target: {value: '3'}});
+assert(timed['timeline-inspection'].textContent.includes('macrosezione 2: beta'));
+assert(timed['timeline-inspection'].textContent.includes('5 finestre rimanenti'));
+timed['timeline-position'].oninput({target: {value: '8'}});
+assert(timed['timeline-inspection'].textContent.includes('Timeline terminata'));
+timed['timeline-spans'].children[1].children[0].children[0].onclick();
+assert.equal(timed['timeline-position'].value, 3);
+assert(timed['timeline-inspection'].textContent.includes('Beat 12'));
+checkCoordinates(timed['timeline-chart']);
 console.log('OK: report zones, arbitrary bands, macrosections, selection, pointer details, zoom, reset, invalid ranges and short profiles');
