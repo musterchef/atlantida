@@ -57,7 +57,13 @@ voci usano lo stesso dispositivo; i menu vengono forniti da Python.
 
 ## Replay e pianificazione
 
-Il viaggio avanza in secondi, moltiplicati per `--speed`, quando la sessione sta suonando. La distanza cumulativa interpolata del GPX determina la progressione usata per selezionare le sezioni. Il GPX controlla il contesto e l'organico delle sezioni; questo comando non applica la mappatura velocità/sforzo ai gate di `journey.compose`.
+In modalità `--timing linear` (predefinita), il viaggio avanza in secondi, moltiplicati per `--speed`, quando la sessione sta suonando. La distanza cumulativa interpolata del GPX determina la progressione usata per selezionare le sezioni. Il GPX controlla il contesto e l'organico delle sezioni; questo comando non applica la mappatura velocità/sforzo ai gate di `journey.compose`.
+
+Con `--timing allocated` il runtime usa la timeline in beat configurata in
+`organico.json`, richiede `--direction` e non accetta `--speed`. Le macrosezioni
+ricevono tutte le finestre assegnate; la sessione termina dopo la conclusione
+dell’ultima. Alla ripresa dopo un’interruzione viene ripetuta per intero la
+prima finestra non conclusa. Comandi e dettagli in [TIMELINE.md](TIMELINE.md).
 
 Live fornisce beat e stato Play/Stop. Stop spegne le note, cancella i piani e mette in pausa il viaggio. Play lo riprende dal punto raggiunto. Salti all'indietro e discontinuità comunicate dal dispositivo cancellano e ripianificano le note senza riportare il viaggio a una posizione ricavata dalle battute.
 

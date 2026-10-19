@@ -17,9 +17,12 @@ In `presets/organico.json`:
 | `generators` | Definizioni dei generatori, identificate da un nome locale |
 | `voices` | Voci della composizione, identificate dal valore da impostare in **Part** sul dispositivo |
 | `sections` | Assetti musicali con confini manuali; sostituiti dalle macrosezioni quando si usa `--direction` |
+| `timeline` | Parametri dell'allocazione in beat, letti da `analyze_trip --timeline-session` e da `ensemble --timing allocated` |
 
 Un beat è una semiminima. `window_beats: 4` non definisce da solo un metro.
-La velocità di replay si sceglie con `--speed`, non con il tempo musicale.
+Con `--timing linear` (predefinito) la velocità di replay si sceglie con `--speed`.
+Con `--timing allocated` la durata dipende da `timeline` e dal BPM di Live;
+`--direction` è richiesto e `--speed` non è accettato. Vedi [Timeline](TIMELINE.md).
 
 Ogni voce in `voices` contiene:
 

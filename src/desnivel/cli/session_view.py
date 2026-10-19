@@ -14,6 +14,10 @@ def render_session(state):
     rows = [f"DESNIVEL | {state['state']} | Live {'PLAY' if transport['playing'] else 'STOP'} | beat {transport['beat']:.2f}",
             f"Viaggio {trip['progress']:.2%} | {_time(trip['elapsed_s'])} / {_time(trip['duration_s'])} | {trip['distance_m']/1000:.2f} km | replay {trip['speed']:g}x",
             f"Director: {decision['section']} [{decision['from_progress']:.0%}, {decision['until_progress']:.0%}] | root MIDI {decision['root']} | {decision['scale']}"]
+    if state.get('timeline'):
+        timeline = state['timeline']
+        rows[1] = (f"Viaggio {trip['progress']:.2%} | {trip['distance_m']/1000:.2f} km | "
+                   f"timeline {timeline['beat']:g} / {timeline['total_beats']:g} beat")
     section_source = state.get('section', {}).get('trip')
     if section_source:
         rows.append(f"  Macrosezione {section_source['index']+1}: {section_source['kind']} | "

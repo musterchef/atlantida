@@ -161,14 +161,19 @@ def main(argv=None):
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--direction', type=Path,
                         help='Assetti musicali per le macrosezioni GPX, al posto delle sezioni manuali.')
-    parser.add_argument('--speed', type=float, default=1)
+    parser.add_argument('--speed', type=float, default=None, help='Velocità del replay lineare (default: 1).')
+    parser.add_argument('--timing', choices=('linear', 'allocated'), default='linear',
+                        help='Tempo GPX lineare oppure timeline musicale in beat.')
     parser.add_argument('--port', type=int, default=9006)
     parser.add_argument('--status-file', type=Path, default=Path('/tmp/desnivel-session/state.json'))
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args(argv)
     server = None
     try:
-        if not math.isfinite(args.speed) or args.speed <= 0 or not 1024 <= args.port <= 65535:
+        if args.timing == 'allocated' and (not args.direction or args.speed is not None):
+            raise ValueError('--timing allocated richiede --direction e non usa --speed')
+        speed = args.speed if args.speed is not None else 1.
+        if not math.isfinite(speed) or speed <= 0 or not 1024 <= args.port <= 65535:
             raise ValueError('velocità positiva e porta tra 1024 e 65535 richieste')
         config = json.loads(args.config.read_text())
         track = load_track(args.gpx)
@@ -180,7 +185,12 @@ def main(argv=None):
         else:
             server = VoiceDeviceServer({}, args.port)
             bridge = server.bridge
-        runtime = EnsembleRuntime(track, config, bridge, args.speed)
+        runtime = EnsembleRuntime(track, config, bridge, speed, timing=args.timing)
+        if runtime.timeline:
+            plan = runtime.timeline.timeline
+            print(f'Timeline allocated: {plan.total_beats:g} beat, {plan.total_windows} finestre.', flush=True)
+            for adjustment in plan.to_dict()['adjustments']:
+                print(f"Avviso timeline: {adjustment['code']}: {adjustment['from_beats']:g} → {adjustment['to_beats']:g} beat", flush=True)
         # Verifica la generazione in ogni sezione prima di avviare la sessione.
         for i, section in enumerate(config['sections']):
             phrases = runtime.session.plan(section['from_progress'], i*runtime.window, runtime.window)

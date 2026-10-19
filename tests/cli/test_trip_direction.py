@@ -160,3 +160,19 @@ def test_dry_run_checks_every_macrosection_without_opening_server(monkeypatch, c
     output = capsys.readouterr().out
     assert output.count('[km ') == 33
     assert 'ascent' in output and 'descent' in output and 'level' in output
+
+
+def test_allocated_dry_run_uses_same_budget_as_report(capsys):
+    from desnivel.cli.ensemble import main
+    assert main(['--gpx', 'gpx/tappa05_Firenze_San_Gimignano.gpx', '--config', 'presets/organico.json',
+                 '--direction', 'presets/direzione-viaggio.json', '--timing', 'allocated', '--dry-run']) == 0
+    assert 'Timeline allocated: 480 beat, 120 finestre.' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('extra', [[], ['--direction', 'presets/direzione-viaggio.json', '--speed', '200']])
+def test_allocated_rejects_missing_direction_or_ambiguous_speed(extra, capsys):
+    from desnivel.cli.ensemble import main
+    with pytest.raises(SystemExit):
+        main(['--gpx', 'gpx/tappa05_Firenze_San_Gimignano.gpx', '--config', 'presets/organico.json',
+              '--timing', 'allocated', '--dry-run', *extra])
+    assert 'richiede --direction e non usa --speed' in capsys.readouterr().err

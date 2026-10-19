@@ -64,3 +64,11 @@ def test_view_identifies_the_current_macrosections_and_the_sent_plan_separately(
     frame = render_session(state)
     assert 'Macrosezione 8: ascent | km 16.60–20.50 | 2 zone interne' in frame
     assert 'Assetto della macrosezione 7: level' in frame
+
+
+def test_allocated_view_shows_musical_budget_instead_of_replay_speed():
+    state = snapshot()
+    state['timeline'] = {'beat': 24, 'total_beats': 480}
+    text = render_session(state)
+    assert 'timeline 24 / 480 beat' in text
+    assert 'replay' not in text

@@ -12,6 +12,7 @@ Guida alla documentazione di **Desnivel**, organizzata per aree tematiche.
 | [Architettura](ARCHITETTURA.md) | Pipeline modulare, flusso dei dati, modelli musicali e organizzazione del codice. |
 | [Sessione multivoce Python](SESSIONE-MULTIVOCE.md) | Comando unico, replay, generatori, dispositivi e stato globale. |
 | [Configurazione](CONFIGURAZIONE.md) | Campi JSON, unità, limiti dei controlli, ruoli e precedenze. |
+| [Timeline musicale](TIMELINE.md) | Allocazione in beat, manager della posizione, report e ascolto nelle modalità lineare e allocata. |
 | [Voci e contesto musicale](RUOLI-MUSICALI.md) | Strutture esistenti per voci, dipendenze, richieste di pianificazione e contesto di sezione. |
 | [Stato del progetto](STATO.md) | Funzionalità operative verificate e sviluppi aperti. |
 | [Passaggio di consegne](PASSAGGIO-CONSEGNE.md) | Stato della prova a quattro voci, architettura, configurazioni, comandi e lavoro aperto per riprendere il progetto. |
@@ -42,6 +43,7 @@ Materiale di progettazione separato dalla documentazione del sistema attuale.
 - [Catalogo e assegnazioni per sezione](proposte/CATALOGO-E-SEZIONI.md): bozza JSON di vocabolario, strumenti e organico manuale.
 - [Plancia globale](proposte/PLANCIA.md): informazioni da mostrare e decisioni aperte sull’interfaccia.
 - [Sezioni guidate dal viaggio](proposte/SEZIONI-GUIDATE-DAL-VIAGGIO.md): assetti delle macrosezioni operativi e variazioni interne ancora da definire.
+- [Mappatura temporale](proposte/MAPPATURA-TEMPORALE.md): stato dell'integrazione della timeline e proposta di preavvisi per le transizioni musicali.
 
 ---
 

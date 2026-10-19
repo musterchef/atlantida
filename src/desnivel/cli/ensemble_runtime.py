@@ -1,6 +1,7 @@
-"""Sessione continua: viaggio indipendente dai beat, pianificazione e stato globale."""
+"""Sessione continua con replay lineare o timeline allocata in beat."""
 from __future__ import annotations
 
+from bisect import bisect_right
 from copy import deepcopy
 import math
 import time
@@ -11,10 +12,11 @@ from desnivel.adapters.voice_device import DeviceVoice
 from desnivel.cli.ensemble import EnsembleSession
 from desnivel.cli.generators import build_generator
 from desnivel.music.phrases import Phrase
+from desnivel.music.timeline import TimelineManager, allocate_timeline
 
 
 class EnsembleRuntime:
-    def __init__(self, track, config, bridge, speed=1., clock=time.monotonic):
+    def __init__(self, track, config, bridge, speed=1., clock=time.monotonic, *, timing="linear"):
         if not math.isfinite(speed) or speed <= 0:
             raise ValueError('speed deve essere positiva e finita')
         self.track, self.bridge, self.speed, self.clock = track, bridge, speed, clock
@@ -27,6 +29,23 @@ class EnsembleRuntime:
         self.distances = distances
         if not np.all(np.isfinite(distances)) or distances[-1] <= distances[0] or track.duration_s <= 0:
             raise ValueError('durata e distanza della traccia devono essere positive')
+        if timing not in ('linear', 'allocated'):
+            raise ValueError('timing deve essere linear o allocated')
+        self.timing = timing
+        self.timeline = None
+        self.pending_windows = []
+        self.next_window = 0
+        self.section_progress = tuple(s['from_progress'] for s in config['sections'])
+        if timing == 'allocated':
+            if any(not s.get('trip') for s in config['sections']):
+                raise ValueError('la modalità allocated richiede macrosezioni GPX')
+            settings = config['timeline']
+            if not isinstance(settings, dict) or set(settings) != {'target_beats', 'min_windows', 'distance_exponent'}:
+                raise ValueError('timeline richiede target_beats, min_windows e distance_exponent')
+            plan = allocate_timeline(
+                [s['trip']['end_distance_m']-s['trip']['start_distance_m'] for s in config['sections']],
+                window_beats=self.window, **settings)
+            self.timeline = TimelineManager(plan)
         self.transport_voice = config['transport_voice']
         if self.transport_voice not in config['voices']:
             raise ValueError('transport_voice non registrata')
@@ -69,6 +88,18 @@ class EnsembleRuntime:
 
     @property
     def progress(self):
+        if self.timeline:
+            if self.timeline.finished:
+                return 1.
+            span = self.timeline.current_span
+            fraction = self.timeline.window_index-span.start_window
+            if self.pending_windows and self.pending_windows[0][0] <= self.beat:
+                fraction += min(1., (self.beat-self.pending_windows[0][0])/self.window)
+            start = self.section_progress[span.source_index]
+            end = (self.section_progress[span.source_index+1]
+                   if span.source_index+1 < len(self.section_progress) else 1.)
+            # Il confine appartiene alla sezione successiva solo dopo il consumo.
+            return min(math.nextafter(end, start), start+(end-start)*fraction/span.window_count)
         distance = float(np.interp(self.track.t[0]+self.elapsed, self.track.t, self.distances))
         return min(1., max(0., (distance-self.distances[0])/(self.distances[-1]-self.distances[0])))
 
@@ -78,6 +109,9 @@ class EnsembleRuntime:
                 self.bridge.reset(name)
         self.sounding.clear()
         self.planned_start = None
+        self.pending_windows.clear()
+        if self.timeline:
+            self.next_window = self.timeline.window_index
         self.last_section = None
         self.last_decisions = None
         for registered in self.registry.values():
@@ -96,6 +130,8 @@ class EnsembleRuntime:
                 or type(epoch) is not int or epoch < 0):
             raise ValueError('stato del trasporto non valido')
         self.advance()
+        if self.instance == message['instance'] and beat >= self.beat and self.epoch == epoch:
+            self._consume_windows(beat)
         if self.instance != message['instance'] or self.epoch != epoch or beat < self.beat or not playing:
             self.reset()
         self.instance, self.transport_serial = message['instance'], message['serial']
@@ -104,19 +140,33 @@ class EnsembleRuntime:
     def advance(self):
         now = self.clock()
         delta, self.last_update = max(0., now-self.last_update), now
-        if self.playing and self.state == 'playing' and self.bridge.connected(self.transport_voice) and not self.error:
+        if (self.playing and self.state == 'playing' and self.bridge.connected(self.transport_voice) and not self.error
+                and not self.timeline):
             self.elapsed = min(self.track.duration_s, self.elapsed+delta*self.speed)
+
+    def _consume_windows(self, beat):
+        if not self.timeline or self.state != 'playing':
+            return
+        while self.pending_windows and beat >= self.pending_windows[0][0]+self.window:
+            self.pending_windows.pop(0)
+            self.timeline.advance()
 
     def tick(self):
         self.advance()
         if self.error:
             self.state = 'error'
             return
-        if self.elapsed >= self.track.duration_s:
+        self._consume_windows(self.beat)
+        if (self.timeline.finished if self.timeline else self.elapsed >= self.track.duration_s):
             self.state = 'finished'
             self.reset()
             return
-        assignments = self.session.director.assignments_at(self.progress)
+        plan_progress = self.progress
+        if self.timeline and self.next_window < self.timeline.timeline.total_windows:
+            ends = [span.end_window for span in self.timeline.timeline.spans]
+            index = bisect_right(ends, self.next_window)
+            plan_progress = self.section_progress[index]
+        assignments = self.session.director.assignments_at(plan_progress)
         if not self.bridge.connected(self.transport_voice):
             self.state = 'waiting_for_transport'
         elif not self.playing:
@@ -126,22 +176,27 @@ class EnsembleRuntime:
         else:
             self.state = 'playing'
         if self.state != 'playing':
-            if self.sounding:
+            if self.sounding or self.pending_windows:
                 self.reset()
             return
+        if self.timeline and self.next_window == self.timeline.timeline.total_windows:
+            return  # L'ultima finestra deve ancora concludersi in Live.
         start = math.ceil((self.beat+self.lead)/self.window)*self.window
         if start == self.planned_start:
             return
-        context = self.session.director.context_at(self.progress)
+        context = self.session.director.context_at(plan_progress)
         # I cambi di organico si applicano alla prossima finestra, con frasi vuote
         # per le parti uscenti: la finestra già iniziata può concludersi.
-        phrases = self.session.plan(self.progress, start, self.window)
+        phrases = self.session.plan(plan_progress, start, self.window)
         for name in self.sounding - phrases.keys():
             if self.bridge.connected(name):
                 self.bridge.destination(name)(start, Phrase(self.window, ()))
         self.sounding |= set(phrases)
         self.session.send(start, phrases)
         self.sounding = set(phrases)
+        if self.timeline:
+            self.pending_windows.append((start, self.next_window))
+            self.next_window += 1
         self.planned_start, self.last_section = start, context.name
         self.last_decisions = {**self.session.coordinator.last_plan, 'section': context.name,
                                'trip': self.section_sources[context.section_index]}
@@ -153,12 +208,20 @@ class EnsembleRuntime:
 
     def snapshot(self):
         context = self.session.director.context_at(self.progress)
-        return {'version': 1, 'state': self.state, 'error': self.error,
+        distance = self.distances[0]+self.progress*(self.distances[-1]-self.distances[0])
+        elapsed = (float(np.interp(distance, self.distances, self.track.t))-self.track.t[0]
+                   if self.timeline else self.elapsed)
+        return {'timing': self.timing,
+                'timeline': ({**self.timeline.snapshot(), 'total_beats': self.timeline.timeline.total_beats,
+                              'requested_beats': self.timeline.timeline.requested_beats,
+                              'adjustments': self.timeline.timeline.to_dict()['adjustments']}
+                             if self.timeline else None),
+                'version': 1, 'state': self.state, 'error': self.error,
                 'decisions': {'director': self.session.director.decision_at(self.progress),
                               'coordinator': self.last_decisions},
-                'trip': {'stage': self.track.stage_id, 'elapsed_s': self.elapsed,
+                'trip': {'stage': self.track.stage_id, 'elapsed_s': elapsed,
                          'duration_s': self.track.duration_s, 'progress': self.progress, 'speed': self.speed,
-                         'distance_m': float(np.interp(self.track.t[0]+self.elapsed, self.track.t, self.distances)),
+                         'distance_m': float(distance),
                          'total_distance_m': float(self.distances[-1])},
                 'section': {'index': context.section_index, 'name': context.name,
                             'root': context.root, 'scale': context.scale,

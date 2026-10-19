@@ -6,7 +6,7 @@ La prova corrente usa quattro file, con responsabilità distinte:
 
 | File | Cosa contiene | Chi lo legge |
 |---|---|---|
-| `organico.json` | Voci, generatori, impostazioni e preset; sezioni musicali manuali | `cli.ensemble` |
+| `organico.json` | Voci, generatori, impostazioni e preset; sezioni manuali; parametri della timeline in beat | `cli.ensemble`; `cli.analyze_trip --timeline-session` per l'anteprima |
 | `direzione-viaggio.json` | Assetti musicali per le famiglie e riferimenti ai criteri del percorso | `cli.trip_direction`, tramite `--direction` |
 | `analisi-percorso.json` | Campionamento per distanza, soglie delle fasce e persistenza | `trip.analysis`, tramite i comandi di analisi o di sessione |
 | `macrosezioni-percorso.json` | Appartenenza delle fasce alle famiglie | `trip.sections`, tramite i comandi di analisi o di sessione |

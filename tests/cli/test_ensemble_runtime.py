@@ -141,3 +141,94 @@ def test_inactive_reason_and_decisions_match_section_and_executed_plan():
     assert status['decisions']['director']['assignments']['voice_02']['source'] == 'section'
     runtime.session.set_role('voice_01', 'sustained_texture')
     assert runtime.snapshot()['decisions']['director']['assignments']['voice_01']['source'] == 'manual'
+
+
+def allocated_setup():
+    runtime, bridge, now, sent, receive = setup()
+    # Ricostruisce il runtime con macrosezioni sintetiche e lo stesso trasporto.
+    config = json.loads(Path('presets/organico.json').read_text())
+    config['voices'] = {k: v for k, v in config['voices'].items() if k in ('voice_01', 'voice_02')}
+    for i, section in enumerate(config['sections']):
+        section['assignments'] = {k: v for k, v in section['assignments'].items() if k in config['voices']}
+        section['trip'] = {'start_distance_m': i*10, 'end_distance_m': (i+1)*10}
+    config['timeline'] = {'target_beats': 24, 'min_windows': 2, 'distance_exponent': .5}
+    runtime = EnsembleRuntime(runtime.track, config, bridge, clock=lambda: now[0], timing='allocated')
+    serial = [0]
+    def receive(beat=0, playing=1, epoch=0):
+        for voice in config['voices']:
+            serial[0] += 1
+            message = dict(version=1, voice=voice, instance=voice, reply_port=9100+int(voice[-1]),
+                           serial=serial[0], action='hello',
+                           transport=dict(beat=beat, playing=playing, epoch=epoch))
+            bridge.handle(message)
+            runtime.on_message(bridge, message)
+    return runtime, bridge, now, sent, receive
+
+
+def test_allocated_plays_every_window_and_finishes_only_after_last_end():
+    runtime, bridge, now, sent, receive = allocated_setup()
+    sections = []
+    for beat in (0, 4, 8, 12, 16, 20):
+        now[0] += .1
+        receive(beat)
+        runtime.tick()
+        sections.append(runtime.last_decisions['section'])
+    assert sections == ['opening', 'opening', 'development', 'development', 'closing', 'closing']
+    assert runtime.timeline.window_index == 4
+    assert runtime.state == 'playing'
+    assert runtime.next_window == 6
+    receive(24); runtime.tick()
+    assert runtime.state == 'playing'
+    assert runtime.timeline.window_index == 5
+    receive(28); runtime.tick()
+    assert runtime.state == 'finished'
+    assert runtime.progress == 1
+    assert runtime.snapshot()['timeline']['beat'] == 24
+    assert not runtime.sounding
+
+
+def test_allocated_stop_and_loop_reanchor_without_skipping_windows():
+    runtime, bridge, now, sent, receive = allocated_setup()
+    receive(); runtime.tick()
+    receive(8); runtime.tick()
+    assert runtime.timeline.window_index == 1
+    receive(9, playing=0); runtime.tick()
+    assert runtime.next_window == 1
+    now[0] = 100
+    runtime.tick()
+    assert runtime.timeline.window_index == 1
+    receive(0, epoch=1); runtime.tick()
+    assert runtime.next_window == 2
+    assert runtime.last_decisions['section'] == 'opening'
+    assert runtime.planned_start == 4
+    receive(0, epoch=2); runtime.tick()
+    assert runtime.timeline.window_index == 1
+    assert runtime.next_window == 2
+
+
+def test_allocated_wall_clock_and_forward_seek_do_not_skip_unplanned_sections():
+    runtime, bridge, now, sent, receive = allocated_setup()
+    receive(); runtime.tick()
+    now[0] = .1
+    receive(100); runtime.tick()
+    assert runtime.timeline.window_index == 1
+    assert runtime.next_window == 2
+    assert runtime.last_decisions['section'] == 'opening'
+    assert runtime.elapsed == 0
+
+
+def test_allocated_missing_device_freezes_cursor_and_replans_current_window():
+    runtime, bridge, now, sent, receive = allocated_setup()
+    receive(); runtime.tick()
+    receive(8); runtime.tick()
+    receive(12); runtime.tick()
+    assert runtime.last_decisions['section'] == 'development'
+    now[0] = 5
+    runtime.tick()
+    assert runtime.state == 'waiting_for_transport'
+    index = runtime.timeline.window_index
+    assert runtime.next_window == index
+    assert not runtime.pending_windows
+    receive(0, epoch=1); runtime.tick()
+    assert runtime.timeline.window_index == index
+    assert runtime.next_window == index+1

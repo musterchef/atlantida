@@ -139,3 +139,7 @@ sue zone originali nella tabella di dettaglio. Il puntatore mostra insieme
 macrosezione, zona e fascia osservata. La configurazione delle famiglie è
 consultabile accanto ai criteri di analisi. Il report visualizza il
 raggruppamento ricevuto senza ricalcolarlo nel browser.
+
+L'opzione `--timeline-session presets/organico.json` aggiunge al report
+l'[anteprima della timeline musicale in beat](TIMELINE.md), utilizzando le
+stesse macrosezioni. Richiede `--grouping` e non modifica zone o profilo.
