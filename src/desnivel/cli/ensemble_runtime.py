@@ -47,6 +47,7 @@ class EnsembleRuntime:
                                          'dependencies': list(spec.get('dependencies', []))}
                                    for name, spec in config['voices'].items()}
         session_config = deepcopy(config)
+        self.section_sources = tuple(deepcopy(section.get('trip')) for section in config['sections'])
         destinations = {}
         for name, voice in session_config['voices'].items():
             definition = config['generators'][voice['generator']]
@@ -142,7 +143,8 @@ class EnsembleRuntime:
         self.session.send(start, phrases)
         self.sounding = set(phrases)
         self.planned_start, self.last_section = start, context.name
-        self.last_decisions = {**self.session.coordinator.last_plan, 'section': context.name}
+        self.last_decisions = {**self.session.coordinator.last_plan, 'section': context.name,
+                               'trip': self.section_sources[context.section_index]}
 
     def fail(self, error):
         self.error = str(error)
@@ -159,7 +161,8 @@ class EnsembleRuntime:
                          'distance_m': float(np.interp(self.track.t[0]+self.elapsed, self.track.t, self.distances)),
                          'total_distance_m': float(self.distances[-1])},
                 'section': {'index': context.section_index, 'name': context.name,
-                            'root': context.root, 'scale': context.scale},
+                            'root': context.root, 'scale': context.scale,
+                            'trip': self.section_sources[context.section_index]},
                 'transport': {'voice': self.transport_voice, 'playing': self.playing,
                               'beat': self.beat, 'epoch': self.epoch},
                 'planning': {'next_start': self.planned_start, 'section': self.last_section,

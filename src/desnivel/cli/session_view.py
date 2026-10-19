@@ -14,6 +14,11 @@ def render_session(state):
     rows = [f"DESNIVEL | {state['state']} | Live {'PLAY' if transport['playing'] else 'STOP'} | beat {transport['beat']:.2f}",
             f"Viaggio {trip['progress']:.2%} | {_time(trip['elapsed_s'])} / {_time(trip['duration_s'])} | {trip['distance_m']/1000:.2f} km | replay {trip['speed']:g}x",
             f"Director: {decision['section']} [{decision['from_progress']:.0%}, {decision['until_progress']:.0%}] | root MIDI {decision['root']} | {decision['scale']}"]
+    section_source = state.get('section', {}).get('trip')
+    if section_source:
+        rows.append(f"  Macrosezione {section_source['index']+1}: {section_source['kind']} | "
+                    f"km {section_source['start_distance_m']/1000:.2f}–{section_source['end_distance_m']/1000:.2f} | "
+                    f"{len(section_source['zone_indices'])} zone interne")
     for name, voice in state['voices'].items():
         connection = 'collegato' if voice['connected'] else 'SCOLLEGATO'
         if voice['active']:
@@ -31,6 +36,8 @@ def render_session(state):
         rows.append('Coordinator: nessun piano in attesa.')
     else:
         rows.append(f"Coordinator: piano inviato [{plan['start']:g}, {plan['start']+plan['length_beats']:g}] beat | sezione {plan['section']}")
+        if plan.get('trip'):
+            rows.append(f"  Assetto della macrosezione {plan['trip']['index']+1}: {plan['trip']['kind']}")
         rows.append('  Ordine generatori: ' + (' -> '.join(plan['order']) or 'nessuna voce attiva'))
         for name in plan['order']:
             voice = plan['voices'][name]

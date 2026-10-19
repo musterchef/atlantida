@@ -25,9 +25,17 @@
 - Generazione melodica da motivo con sviluppo su più finestre, ritmo variabile, pause, dinamica e conclusioni sulla tonica; preset letterale per il confronto.
 - Collegamento delle parti al trasporto di Live e controlli compositivi esposti dal motore Python.
 - Vista globale nel terminale e snapshot JSON con avanzamento, collegamenti, ruoli e decisioni effettive di Director e Coordinator.
-- Esecuzione di melodia e accompagnamento verificata all'ascolto in Live.
+- Direzione dalle macrosezioni del GPX con assetti musicali configurati per famiglia; modalità con sezioni manuali disponibile.
+- Prova a quattro voci: melodia, accompagnamento, atmosfera sostenuta e pattern percussivi configurati. Esecuzione delle quattro parti confermata all'ascolto in Live da Marco; organico e comportamenti sono un banco di prova da affinare.
 
-[Sessione multivoce](SESSIONE-MULTIVOCE.md) · [Melodia](MELODIA.md) · [Dispositivo MIDI](VOCE-M4L.md)
+[Sessione multivoce](SESSIONE-MULTIVOCE.md) · [Configurazione](CONFIGURAZIONE.md) · [Passaggio di consegne](PASSAGGIO-CONSEGNE.md)
+
+### 5. Analisi e macrosezioni del percorso
+- Classificazione del profilo altimetrico per distanza con soglie e persistenza configurabili.
+- Raggruppamento delle zone adiacenti in famiglie configurate, mantenendo le zone originali.
+- Report HTML locale con quota, pendenza, zone, macrosezioni e misure di concordanza.
+
+[Analisi del percorso](ANALISI-PERCORSO.md)
 
 ---
 

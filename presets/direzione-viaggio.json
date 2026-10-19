@@ -1,0 +1,114 @@
+{
+  "analysis": "analisi-percorso.json",
+  "grouping": "macrosezioni-percorso.json",
+  "families": {
+    "ascent": {
+      "root": 57,
+      "scale": "minor",
+      "assignments": {
+        "voice_01": {
+          "role": "melody",
+          "parameters": {
+            "activity": 0.55,
+            "step_beats": 1,
+            "articulation": 0.8,
+            "velocity": 88
+          }
+        },
+        "voice_02": {
+          "role": "bass_line",
+          "parameters": {
+            "density": 0.8,
+            "syncopation": 0.1,
+            "articulation": 0.85
+          }
+        },
+        "voice_03": {
+          "role": "sustained_texture",
+          "parameters": {
+            "velocity": 55
+          }
+        },
+        "voice_04": {
+          "role": "percussion",
+          "parameters": {
+            "pattern": 1,
+            "velocity_ratio": 0.85
+          }
+        }
+      }
+    },
+    "descent": {
+      "root": 57,
+      "scale": "minor",
+      "assignments": {
+        "voice_01": {
+          "role": "melody",
+          "parameters": {
+            "activity": 0.85,
+            "step_beats": 0.5,
+            "articulation": 0.65,
+            "velocity": 82
+          }
+        },
+        "voice_02": {
+          "role": "bass_line",
+          "parameters": {
+            "density": 1.2,
+            "syncopation": 0.35,
+            "articulation": 0.65
+          }
+        },
+        "voice_03": {
+          "role": "sustained_texture",
+          "parameters": {
+            "velocity": 48
+          }
+        },
+        "voice_04": {
+          "role": "percussion",
+          "parameters": {
+            "pattern": 2,
+            "velocity_ratio": 0.9
+          }
+        }
+      }
+    },
+    "level": {
+      "root": 57,
+      "scale": "minor",
+      "assignments": {
+        "voice_01": {
+          "role": "melody",
+          "parameters": {
+            "activity": 0.4,
+            "step_beats": 1.5,
+            "articulation": 0.9,
+            "velocity": 75
+          }
+        },
+        "voice_02": {
+          "role": "bass_line",
+          "parameters": {
+            "density": 0.5,
+            "syncopation": 0.05,
+            "articulation": 0.9
+          }
+        },
+        "voice_03": {
+          "role": "sustained_texture",
+          "parameters": {
+            "velocity": 45
+          }
+        },
+        "voice_04": {
+          "role": "percussion",
+          "parameters": {
+            "pattern": 0,
+            "velocity_ratio": 0.75
+          }
+        }
+      }
+    }
+  }
+}

@@ -75,6 +75,273 @@
           "articulation": 0.5
         }
       }
+    },
+    "atmosphere": {
+      "type": "motif",
+      "degrees": [
+        0
+      ],
+      "settings": {
+        "octave": 1,
+        "velocity": 52
+      },
+      "presets": {
+        "soft": {
+          "velocity": 40
+        },
+        "present": {
+          "velocity": 65
+        }
+      }
+    },
+    "percussion": {
+      "type": "percussion_pattern",
+      "lanes": {
+        "kick": 36,
+        "snare": 38,
+        "hat": 42
+      },
+      "patterns": [
+        {
+          "name": "sparse",
+          "length_beats": 4,
+          "hits": [
+            {
+              "beat": 0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 0,
+              "lane": "kick",
+              "velocity": 94
+            },
+            {
+              "beat": 1,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 2,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 2,
+              "lane": "kick",
+              "velocity": 94
+            },
+            {
+              "beat": 3,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 3,
+              "lane": "snare",
+              "velocity": 83
+            }
+          ]
+        },
+        {
+          "name": "steady",
+          "length_beats": 4,
+          "hits": [
+            {
+              "beat": 0.0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 0,
+              "lane": "kick",
+              "velocity": 94
+            },
+            {
+              "beat": 0.5,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 1.0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 1,
+              "lane": "snare",
+              "velocity": 83
+            },
+            {
+              "beat": 1.5,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 2.0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 2,
+              "lane": "kick",
+              "velocity": 94
+            },
+            {
+              "beat": 2.5,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 3.0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 3,
+              "lane": "snare",
+              "velocity": 83
+            },
+            {
+              "beat": 3.5,
+              "lane": "hat",
+              "velocity": 38
+            }
+          ]
+        },
+        {
+          "name": "driving",
+          "length_beats": 4,
+          "hits": [
+            {
+              "beat": 0.0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 0,
+              "lane": "kick",
+              "velocity": 94
+            },
+            {
+              "beat": 0.25,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 0.5,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 0.75,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 1.0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 1,
+              "lane": "snare",
+              "velocity": 83
+            },
+            {
+              "beat": 1.25,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 1.5,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 1.5,
+              "lane": "kick",
+              "velocity": 94
+            },
+            {
+              "beat": 1.75,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 2.0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 2,
+              "lane": "kick",
+              "velocity": 94
+            },
+            {
+              "beat": 2.25,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 2.5,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 2.75,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 3.0,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 3,
+              "lane": "snare",
+              "velocity": 83
+            },
+            {
+              "beat": 3.25,
+              "lane": "hat",
+              "velocity": 38
+            },
+            {
+              "beat": 3.5,
+              "lane": "hat",
+              "velocity": 57
+            },
+            {
+              "beat": 3.5,
+              "lane": "kick",
+              "velocity": 94
+            },
+            {
+              "beat": 3.75,
+              "lane": "hat",
+              "velocity": 38
+            }
+          ]
+        }
+      ],
+      "settings": {
+        "pattern": 0,
+        "velocity_ratio": 0.85,
+        "gate_beats": 0.1
+      },
+      "presets": {
+        "sparse": {
+          "pattern": 0
+        },
+        "steady": {
+          "pattern": 1
+        },
+        "driving": {
+          "pattern": 2
+        }
+      }
     }
   },
   "voices": {
@@ -90,6 +357,16 @@
       "dependencies": [
         "voice_01"
       ]
+    },
+    "voice_03": {
+      "name": "Atmosphere",
+      "generator": "atmosphere",
+      "destination": "device_03"
+    },
+    "voice_04": {
+      "name": "Drums",
+      "generator": "percussion",
+      "destination": "device_04"
     }
   },
   "sections": [
@@ -101,6 +378,18 @@
       "assignments": {
         "voice_01": {
           "role": "melody"
+        },
+        "voice_03": {
+          "role": "sustained_texture",
+          "parameters": {
+            "velocity": 45
+          }
+        },
+        "voice_04": {
+          "role": "percussion",
+          "parameters": {
+            "pattern": 0
+          }
         }
       }
     },
@@ -115,6 +404,18 @@
         },
         "voice_02": {
           "role": "bass_line"
+        },
+        "voice_03": {
+          "role": "sustained_texture",
+          "parameters": {
+            "velocity": 55
+          }
+        },
+        "voice_04": {
+          "role": "percussion",
+          "parameters": {
+            "pattern": 1
+          }
         }
       }
     },
@@ -129,6 +430,18 @@
         },
         "voice_02": {
           "role": "bass_line"
+        },
+        "voice_03": {
+          "role": "sustained_texture",
+          "parameters": {
+            "velocity": 45
+          }
+        },
+        "voice_04": {
+          "role": "percussion",
+          "parameters": {
+            "pattern": 0
+          }
         }
       }
     }

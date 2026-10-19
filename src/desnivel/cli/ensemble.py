@@ -159,6 +159,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=main.__doc__)
     parser.add_argument('--gpx', type=Path, required=True)
     parser.add_argument('--config', type=Path, required=True)
+    parser.add_argument('--direction', type=Path,
+                        help='Assetti musicali per le macrosezioni GPX, al posto delle sezioni manuali.')
     parser.add_argument('--speed', type=float, default=1)
     parser.add_argument('--port', type=int, default=9006)
     parser.add_argument('--status-file', type=Path, default=Path('/tmp/desnivel-session/state.json'))
@@ -170,6 +172,9 @@ def main(argv=None):
             raise ValueError('velocità positiva e porta tra 1024 e 65535 richieste')
         config = json.loads(args.config.read_text())
         track = load_track(args.gpx)
+        if args.direction:
+            from desnivel.cli.trip_direction import load_trip_sections
+            config['sections'] = load_trip_sections(track, args.direction)
         if args.dry_run:
             bridge = VoiceDeviceBridge({}, lambda *args: None)
         else:
@@ -179,7 +184,10 @@ def main(argv=None):
         # Verifica la generazione in ogni sezione prima di avviare la sessione.
         for i, section in enumerate(config['sections']):
             phrases = runtime.session.plan(section['from_progress'], i*runtime.window, runtime.window)
-            print(f"{section['name']}: " + ', '.join(f'{name} ({len(p.notes)} note)' for name, p in phrases.items()), flush=True)
+            origin = section.get('trip')
+            location = (f" #{i+1} [km {origin['start_distance_m']/1000:.2f}–{origin['end_distance_m']/1000:.2f}]"
+                        if origin else '')
+            print(f"{section['name']}{location}: " + ', '.join(f'{name} ({len(p.notes)} note)' for name, p in phrases.items()), flush=True)
         runtime.reset()
     except (ValueError, KeyError, TypeError, OSError) as error:
         if server:

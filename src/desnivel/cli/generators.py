@@ -5,6 +5,7 @@ from desnivel.adapters.voice_device import Control
 from desnivel.cli.ensemble import Generator
 from desnivel.music.melodic.generator import MotifGenerator, ROLES
 from desnivel.music.bass.voice import BassVoice
+from desnivel.music.percussion.generator import PercussionGenerator, ROLES as PERCUSSION_ROLES
 
 
 @dataclass
@@ -34,6 +35,12 @@ def build_generator(spec):
                     'articulation': Control(.05, 1)}
         roles = ('bass_line',)
         values = asdict(compose.settings)
+    elif kind == 'percussion_pattern':
+        compose = PercussionGenerator(spec['lanes'], spec['patterns'], spec.get('settings'))
+        controls = {'pattern': Control(0, len(compose.patterns)-1, True),
+                    'velocity_ratio': Control(.05, 1), 'gate_beats': Control(.01, 1)}
+        roles = PERCUSSION_ROLES
+        values = compose.settings
     else:
         raise ValueError(f'tipo di generatore sconosciuto: {kind}')
     initial = {name: values[name] for name in controls}
@@ -50,6 +57,6 @@ def build_generator(spec):
         for name, control in controls.items():
             if name in parameters:
                 control.validate(parameters[name])
-    describe = (lambda: compose.last_decision) if kind == 'motif' else None
+    describe = (lambda: compose.last_decision) if kind in ('motif', 'percussion_pattern') else None
     return RegisteredGenerator(Generator(compose, roles, validate, describe), controls,
                                initial, presets, getattr(compose, 'reset', None))

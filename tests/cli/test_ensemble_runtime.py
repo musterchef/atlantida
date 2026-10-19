@@ -14,6 +14,11 @@ def setup():
     bridge = VoiceDeviceBridge({}, lambda *args: sent.append(args), clock=lambda: now[0])
     track = Track('test', np.array([0., 10.]), {'cum_dist_m': np.array([0., 100.])})
     config = json.loads(Path('presets/organico.json').read_text())
+    # Queste prove isolano trasporto e organico variabile con due voci.
+    # La configurazione completa a quattro è verificata in test_trip_direction.
+    config['voices'] = {name: spec for name, spec in config['voices'].items() if name in ('voice_01', 'voice_02')}
+    for section in config['sections']:
+        section['assignments'] = {name: spec for name, spec in section['assignments'].items() if name in config['voices']}
     runtime = EnsembleRuntime(track, config, bridge, speed=2, clock=lambda: now[0])
     serials = {}
     def receive(voice='voice_01', beat=0., playing=1, epoch=0):

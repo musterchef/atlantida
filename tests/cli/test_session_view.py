@@ -53,3 +53,14 @@ def test_view_reports_actual_planning_order_notes_and_reference_parts():
     assert 'riferimenti: a' in frame
     assert '0 note MIDI@beat: silenzio' in frame
     assert '224, 228' in frame
+
+
+def test_view_identifies_the_current_macrosections_and_the_sent_plan_separately():
+    state = snapshot()
+    state['section'] = {'trip': {'index': 7, 'kind': 'ascent', 'start_distance_m': 16600,
+                                 'end_distance_m': 20500, 'zone_indices': [8, 9]}}
+    state['decisions']['coordinator'] = {'start': 224, 'length_beats': 4, 'section': 'level',
+                                         'trip': {'index': 6, 'kind': 'level'}, 'order': [], 'voices': {}}
+    frame = render_session(state)
+    assert 'Macrosezione 8: ascent | km 16.60–20.50 | 2 zone interne' in frame
+    assert 'Assetto della macrosezione 7: level' in frame
