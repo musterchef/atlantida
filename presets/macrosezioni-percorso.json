@@ -1,0 +1,7 @@
+{
+  "families": {
+    "ascent": ["climb", "steep_climb"],
+    "descent": ["descent", "steep_descent"],
+    "level": ["level"]
+  }
+}

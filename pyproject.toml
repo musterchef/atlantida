@@ -22,10 +22,14 @@ desnivel-live-bass = "desnivel.cli.live_bass:main"
 desnivel-voice-device = "desnivel.cli.voice_device:main"
 desnivel-ensemble = "desnivel.cli.ensemble:main"
 desnivel-analyze-bass = "desnivel.cli.analyze_bass:main"
+desnivel-analyze-trip = "desnivel.cli.analyze_trip:main"
 desnivel-capture-snake = "desnivel.cli.capture_snake:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"desnivel.reports" = ["*.html", "*.css", "*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

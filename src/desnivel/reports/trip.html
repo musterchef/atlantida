@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desnivel · Analisi del percorso</title>
+  <style>/* REPORT_STYLE */</style>
+</head>
+<body>
+<main>
+  <header><p class="eyebrow">DESNIVEL / LETTURA DEL VIAGGIO</p>
+    <h1>Profilo e zone del percorso</h1>
+    <p id="source" class="muted"></p>
+  </header>
+  <noscript>Attiva JavaScript per visualizzare i grafici del report locale.</noscript>
+  <section class="summary" aria-label="Riepilogo">
+    <div><span>Distanza</span><strong id="distance"></strong></div>
+    <div><span>Zone confermate</span><strong id="zone-count"></strong></div>
+    <div><span>Finestra di osservazione</span><strong id="observation"></strong></div>
+    <div><span>Persistenza richiesta</span><strong id="persistence"></strong></div>
+  </section>
+  <section class="panel" aria-labelledby="profile-title">
+    <div class="panel-heading"><div><h2 id="profile-title">Il viaggio, lungo la distanza</h2>
+      <p class="muted">Quota e pendenza condividono la stessa posizione sul percorso.</p></div>
+      <form id="range-form" class="range">
+        <label>Da km <input id="range-start" type="number" min="0" step="any" value="0" required></label>
+        <label>A km <input id="range-end" type="number" min="0" step="any" required></label>
+        <button type="submit">Inquadra</button><button id="reset" type="button">Tutto il percorso</button>
+      </form>
+    </div>
+    <p id="range-error" role="alert"></p>
+    <div id="legend" class="legend" aria-label="Fasce configurate"></div>
+    <p id="macro-status" class="muted"></p>
+    <div id="macro-legend" class="legend" aria-label="Famiglie delle macrosezioni" hidden></div>
+    <svg id="sections-chart" viewBox="0 0 1100 110" role="img" aria-label="Macrosezioni e zone incluse" hidden></svg>
+    <svg id="elevation-chart" viewBox="0 0 1100 290" role="img" aria-label="Profilo altimetrico con zone confermate"></svg>
+    <svg id="slope-chart" viewBox="0 0 1100 240" role="img" aria-label="Pendenza osservata e soglie di classificazione"></svg>
+    <p class="chart-note">Sfondi colorati: zone confermate. Linee tratteggiate: soglie dal JSON.
+      Nella fascia sotto la quota, i tratti tratteggiati indicano osservazioni diverse dalla zona assegnata.</p>
+    <p id="inspection" class="inspection" aria-live="polite">Muovi il puntatore sui grafici o seleziona una zona nella tabella per leggere i dettagli.</p>
+  </section>
+  <section id="macro-panel" class="panel" aria-labelledby="macro-title" hidden>
+    <h2 id="macro-title">Macrosezioni del percorso</h2>
+    <p class="muted">Ogni macrosezione raggruppa soltanto zone consecutive della stessa famiglia.
+      Selezionala per osservare le variazioni interne nei grafici e nella tabella delle zone.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Macrosezione</th><th>Da → a km</th><th>Zone incluse</th><th>Pendenza media</th><th>Dislivello netto</th></tr></thead>
+      <tbody id="macro-sections"></tbody>
+    </table></div>
+  </section>
+  <section class="panel" aria-labelledby="zones-title">
+    <h2 id="zones-title">Zone e misure di verifica</h2>
+    <p class="muted">Seleziona una zona per ingrandirla. La concordanza misura quanta distanza ha una fascia locale uguale alla zona confermata;
+      non misura l'affidabilità del GPS. Le variazioni brevi possono restare nella zona precedente.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Zona</th><th>Da → a km</th><th>Pendenza media</th><th>Dislivello netto</th><th>Concordanza</th></tr></thead>
+      <tbody id="zones"></tbody>
+    </table></div>
+  </section>
+  <details class="panel"><summary>Configurazione e origine dei dati</summary>
+    <p>Analisi offline del profilo altimetrico. La quota proviene dal loader GPX ed è interpolata ai confini e ai centri degli intervalli di analisi.
+      Le zone dipendono dalle soglie e dalla persistenza elencate qui sotto. Questo report non assegna comportamenti musicali.</p>
+    <pre id="config"></pre>
+    <div id="grouping-config" hidden><h3>Raggruppamento delle macrosezioni</h3><pre id="families-config"></pre></div>
+  </details>
+</main>
+<script id="analysis-data" type="application/json">REPORT_DATA</script>
+<script>/* REPORT_SCRIPT */</script>
+</body>
+</html>

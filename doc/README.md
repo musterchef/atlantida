@@ -24,6 +24,7 @@ Guida alla documentazione di **Desnivel**, organizzata per aree tematiche.
 |---|---|
 | [Dispositivo MIDI di voce](VOCE-M4L.md) | Device comune, collegamento Python, controlli e prova di esecuzione. |
 | [Dati del viaggio](DATI-VIAGGIO.md) | Lettura GPX, calcolo continuo delle metriche (quota, pendenza, sforzo) e formato OSC. |
+| [Analisi del percorso](ANALISI-PERCORSO.md) | Zone del profilo altimetrico, macrosezioni configurabili, report visuale e misure di verifica. |
 | [Sequencer Snake](SNAKE.md) | Banco di prova per la linea melodica: integrazione del sequencer Snake, bridge M4L e telemetria. |
 | [Generazione melodica](MELODIA.md) | Motivo, sviluppo delle frasi, controlli e riproducibilità. |
 | [Generatore del basso](BASSO.md) | Banco di prova per l'accompagnamento: logica di contrappunto e dialogo con la melodia, controlli live e player. |
@@ -38,6 +39,7 @@ Materiale di progettazione separato dalla documentazione del sistema attuale.
 - [Ruoli musicali e organico](proposte/RUOLI-MUSICALI.md): impostazione condivisa, vocabolario proposto e decisioni aperte.
 - [Catalogo e assegnazioni per sezione](proposte/CATALOGO-E-SEZIONI.md): bozza JSON di vocabolario, strumenti e organico manuale.
 - [Plancia globale](proposte/PLANCIA.md): informazioni da mostrare e decisioni aperte sull’interfaccia.
+- [Sezioni guidate dal viaggio](proposte/SEZIONI-GUIDATE-DAL-VIAGGIO.md): separazione fra analisi e assegnazioni musicali, con collegamento ancora da definire.
 
 ---
 
