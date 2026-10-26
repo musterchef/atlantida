@@ -22,7 +22,13 @@ In `presets/organico.json`:
 Un beat è una semiminima. `window_beats: 4` non definisce da solo un metro.
 Con `--timing linear` (predefinito) la velocità di replay si sceglie con `--speed`.
 Con `--timing allocated` la durata dipende da `timeline` e dal BPM di Live;
-`--direction` è richiesto e `--speed` non è accettato. Vedi [Timeline](TIMELINE.md).
+`--direction` è richiesto e `--speed` non è accettato.
+La sessione usa `timeline.beats_per_km: 12`: il totale dipende dalla distanza
+GPX ed è quantizzato a finestre intere. `min_windows: 2` garantisce 8 beat
+per macrosezione con la finestra corrente. Se non entrano, il sistema
+segnala una scala insufficiente. In alternativa si può specificare
+`target_beats`, escludendo `beats_per_km`, per un totale esplicito con
+estensione automatica dei minimi. Vedi [Timeline](TIMELINE.md).
 
 Ogni voce in `voices` contiene:
 

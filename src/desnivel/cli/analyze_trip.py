@@ -7,7 +7,7 @@ import numpy as np
 
 from desnivel.trip.analysis import analyze_track
 from desnivel.trip.loader import load_track
-from desnivel.trip.sections import group_zones
+from desnivel.trip.sections import group_zones, measure_section_bridges
 from desnivel.reports.trip import render_trip_report
 from desnivel.music.timeline import allocate_timeline, TimelineManager
 
@@ -27,11 +27,42 @@ def _linear_spans(track, sections, total_beats):
              'duration_beats': end-start} for index, (start, end) in enumerate(zip(beats, beats[1:]))]
 
 
+def analyze_trip(gpx, config, *, grouping=None, pause_context=None, timeline_session=None):
+    """Prepara gli stessi dati per report singoli e raccolte di tappe."""
+    if (pause_context or timeline_session) and not grouping:
+        raise ValueError('contesto locale e timeline richiedono il raggruppamento')
+    track = load_track(gpx)
+    result = analyze_track(track, json.loads(config.read_text()))
+    if grouping:
+        result['grouping'] = group_zones(result, json.loads(grouping.read_text()))
+    if pause_context:
+        families = result['grouping']['config']['families']
+        if any(name not in families for pair in pause_context for name in pair):
+            raise ValueError('--pause-context richiede famiglie presenti nel raggruppamento')
+        result['section_context'] = [measure_section_bridges(
+            result['grouping']['sections'], flank_kind=flank, middle_kind=middle)
+            for flank, middle in pause_context]
+    if timeline_session:
+        session = json.loads(timeline_session.read_text(encoding='utf-8'))
+        settings = session['timeline']
+        if not isinstance(settings, dict) or set(settings) not in ({'target_beats', 'min_windows', 'distance_exponent'},
+                                                                      {'beats_per_km', 'min_windows', 'distance_exponent'}):
+            raise ValueError('timeline richiede beats_per_km oppure target_beats, con min_windows e distance_exponent')
+        sections = result['grouping']['sections']
+        timeline = allocate_timeline([s['end_distance_m']-s['start_distance_m'] for s in sections],
+                                     window_beats=session['window_beats'], **settings)
+        result['timeline'] = {**timeline.to_dict(), 'position': TimelineManager(timeline).snapshot(),
+                              'linear_reference': _linear_spans(track, sections, timeline.total_beats)}
+    return result
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--gpx', type=Path, required=True)
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--grouping', type=Path, help='Famiglie JSON per raggruppare le zone in macrosezioni.')
+    parser.add_argument('--pause-context', nargs=2, action='append', metavar=('FLANK', 'MIDDLE'),
+                        help='Misura MIDDLE tra due FLANK, per esempio ascent level; ripetibile, richiede --grouping.')
     parser.add_argument('--timeline-session', type=Path,
                         help='Sessione JSON da cui leggere window_beats e timeline per l’anteprima musicale.')
     parser.add_argument('--output', type=Path, help='Salva zone, misure e configurazione in JSON.')
@@ -39,23 +70,13 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.timeline_session and not args.grouping:
         parser.error('--timeline-session richiede --grouping')
+    if args.pause_context and not args.grouping:
+        parser.error('--pause-context richiede --grouping')
     if args.output and args.html and args.output.resolve() == args.html.resolve():
         parser.error('JSON e HTML richiedono percorsi distinti')
     try:
-        track = load_track(args.gpx)
-        result = analyze_track(track, json.loads(args.config.read_text()))
-        if args.grouping:
-            result['grouping'] = group_zones(result, json.loads(args.grouping.read_text()))
-        if args.timeline_session:
-            session = json.loads(args.timeline_session.read_text(encoding='utf-8'))
-            settings = session['timeline']
-            if not isinstance(settings, dict) or set(settings) != {'target_beats', 'min_windows', 'distance_exponent'}:
-                raise ValueError('timeline richiede target_beats, min_windows e distance_exponent')
-            sections = result['grouping']['sections']
-            timeline = allocate_timeline([s['end_distance_m']-s['start_distance_m'] for s in sections],
-                                         window_beats=session['window_beats'], **settings)
-            result['timeline'] = {**timeline.to_dict(), 'position': TimelineManager(timeline).snapshot(),
-                                  'linear_reference': _linear_spans(track, sections, timeline.total_beats)}
+        result = analyze_trip(args.gpx, args.config, grouping=args.grouping,
+                              pause_context=args.pause_context, timeline_session=args.timeline_session)
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(result, ensure_ascii=False, allow_nan=False, indent=2)+'\n', encoding='utf-8')

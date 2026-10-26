@@ -112,3 +112,33 @@ def test_manager_seek_uses_exclusive_end_boundaries_and_independent_cursors():
         timeline.spans[0].window_count = 100
     with pytest.raises(AttributeError):
         manager.timeline = other.timeline
+
+
+def test_distance_scale_sets_proportional_totals_and_retains_local_compression():
+    short = allocate_timeline([9000, 1000], beats_per_km=12, window_beats=4)
+    long = allocate_timeline([18000, 2000], beats_per_km=12, window_beats=4)
+    assert short.requested_beats == 120 and long.requested_beats == 240
+    assert short.total_beats == 120 and long.total_beats == 240
+    assert short.to_dict()['beats_per_km'] == 12
+    assert short.spans[0].window_count > short.spans[1].window_count
+    # La durata totale dipende dai km, non dal numero di macrosezioni.
+    split = allocate_timeline([2000]*5, beats_per_km=12, window_beats=4)
+    assert split.total_beats == short.total_beats
+
+
+def test_distance_scale_rounds_to_windows_and_rejects_insufficient_scale():
+    plan = allocate_timeline([1001], beats_per_km=12, window_beats=4)
+    assert plan.requested_beats == pytest.approx(12.012)
+    assert plan.total_beats == 16
+    assert [a['code'] for a in plan.to_dict()['adjustments']] == ['window_quantization']
+    with pytest.raises(ValueError, match='insufficiente per i minimi'):
+        allocate_timeline([100]*10, beats_per_km=12, window_beats=4)
+
+
+@pytest.mark.parametrize('changes', [
+    {}, {'target_beats': 100, 'beats_per_km': 12}, {'beats_per_km': 0},
+    {'beats_per_km': -1}, {'beats_per_km': float('inf')}, {'beats_per_km': True},
+])
+def test_distance_scale_requires_one_valid_duration_source(changes):
+    with pytest.raises(ValueError):
+        allocate_timeline([1000], window_beats=4, **changes)

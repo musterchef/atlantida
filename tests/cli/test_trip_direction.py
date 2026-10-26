@@ -166,7 +166,7 @@ def test_allocated_dry_run_uses_same_budget_as_report(capsys):
     from desnivel.cli.ensemble import main
     assert main(['--gpx', 'gpx/tappa05_Firenze_San_Gimignano.gpx', '--config', 'presets/organico.json',
                  '--direction', 'presets/direzione-viaggio.json', '--timing', 'allocated', '--dry-run']) == 0
-    assert 'Timeline allocated: 480 beat, 120 finestre.' in capsys.readouterr().out
+    assert 'Timeline allocated: 724 beat, 181 finestre (12 beat/km).' in capsys.readouterr().out
 
 
 @pytest.mark.parametrize('extra', [[], ['--direction', 'presets/direzione-viaggio.json', '--speed', '200']])

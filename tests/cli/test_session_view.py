@@ -68,7 +68,8 @@ def test_view_identifies_the_current_macrosections_and_the_sent_plan_separately(
 
 def test_allocated_view_shows_musical_budget_instead_of_replay_speed():
     state = snapshot()
-    state['timeline'] = {'beat': 24, 'total_beats': 480}
+    state['timeline'] = {'beat': 24, 'total_beats': 480, 'beats_per_km': 12}
     text = render_session(state)
     assert 'timeline 24 / 480 beat' in text
+    assert '12 beat/km' in text
     assert 'replay' not in text

@@ -36,10 +36,13 @@ class Timeline:
     min_windows: int
     distance_exponent: float
     spans: tuple[TimelineSpan, ...]
+    beats_per_km: float | None = None
 
     def __post_init__(self):
         _positive(self.requested_beats, 'target_beats')
         _positive(self.window_beats, 'window_beats')
+        if self.beats_per_km is not None:
+            _positive(self.beats_per_km, 'beats_per_km')
         if type(self.min_windows) is not int or self.min_windows < 1:
             raise ValueError('min_windows deve essere un intero positivo')
         if (type(self.distance_exponent) not in (int, float)
@@ -83,6 +86,7 @@ class Timeline:
             adjustments.append({'code': 'minimum_extension', 'from_beats': self.quantized_beats,
                                 'to_beats': self.total_beats})
         return {'requested_beats': self.requested_beats, 'total_beats': self.total_beats,
+                'beats_per_km': self.beats_per_km,
                 'total_windows': self.total_windows, 'window_beats': self.window_beats,
                 'min_windows': self.min_windows, 'distance_exponent': self.distance_exponent,
                 'adjustments': adjustments,
@@ -92,7 +96,8 @@ class Timeline:
                            'duration_beats': s.window_count*self.window_beats} for s in self.spans]}
 
 
-def allocate_timeline(distances_m: Sequence[float], *, target_beats: float,
+def allocate_timeline(distances_m: Sequence[float], *, target_beats: float | None = None,
+                      beats_per_km: float | None = None,
                       window_beats: float, min_windows: int = 2,
                       distance_exponent: float = .5) -> Timeline:
     """Riserva i minimi e assegna il residuo con pesi metrici e maggiori resti."""
@@ -101,6 +106,12 @@ def allocate_timeline(distances_m: Sequence[float], *, target_beats: float,
         raise ValueError('almeno una distanza richiesta')
     for value in distances:
         _positive(value, 'distanza')
+    if (target_beats is None) == (beats_per_km is None):
+        raise ValueError('specificare uno solo tra target_beats e beats_per_km')
+    if beats_per_km is not None:
+        _positive(beats_per_km, 'beats_per_km')
+        distance_km = math.fsum(distances)/1000
+        target_beats = distance_km*beats_per_km
     _positive(target_beats, 'target_beats')
     _positive(window_beats, 'window_beats')
     if type(min_windows) is not int or min_windows < 1:
@@ -111,6 +122,11 @@ def allocate_timeline(distances_m: Sequence[float], *, target_beats: float,
     ratio = target_beats/window_beats
     if not math.isfinite(ratio):
         raise ValueError('numero di finestre non rappresentabile')
+    if beats_per_km is not None and math.ceil(ratio) < len(distances)*min_windows:
+        required = len(distances)*min_windows*window_beats/distance_km
+        raise ValueError(f'scala {beats_per_km:g} beat/km insufficiente per i minimi: '
+                         f'scegliere almeno {required:.6g} beat/km per questa tappa '
+                         'oppure rivedere i minimi o il raggruppamento')
     total = max(math.ceil(ratio), len(distances)*min_windows)
     if not math.isfinite(total*window_beats):
         raise ValueError('durata effettiva non rappresentabile')
@@ -134,7 +150,7 @@ def allocate_timeline(distances_m: Sequence[float], *, target_beats: float,
         count = min_windows+extra
         spans.append(TimelineSpan(index, cursor, count))
         cursor += count
-    return Timeline(target_beats, window_beats, min_windows, distance_exponent, tuple(spans))
+    return Timeline(target_beats, window_beats, min_windows, distance_exponent, tuple(spans), beats_per_km)
 
 
 class TimelineManager:

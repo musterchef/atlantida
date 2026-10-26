@@ -447,7 +447,7 @@
     }
   ],
   "timeline": {
-    "target_beats": 480,
+    "beats_per_km": 12,
     "min_windows": 2,
     "distance_exponent": 0.5
   }

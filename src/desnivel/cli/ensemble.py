@@ -188,7 +188,8 @@ def main(argv=None):
         runtime = EnsembleRuntime(track, config, bridge, speed, timing=args.timing)
         if runtime.timeline:
             plan = runtime.timeline.timeline
-            print(f'Timeline allocated: {plan.total_beats:g} beat, {plan.total_windows} finestre.', flush=True)
+            basis = f' ({plan.beats_per_km:g} beat/km)' if plan.beats_per_km is not None else ''
+            print(f'Timeline allocated: {plan.total_beats:g} beat, {plan.total_windows} finestre{basis}.', flush=True)
             for adjustment in plan.to_dict()['adjustments']:
                 print(f"Avviso timeline: {adjustment['code']}: {adjustment['from_beats']:g} → {adjustment['to_beats']:g} beat", flush=True)
         # Verifica la generazione in ogni sezione prima di avviare la sessione.

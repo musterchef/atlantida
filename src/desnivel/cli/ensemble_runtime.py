@@ -40,8 +40,9 @@ class EnsembleRuntime:
             if any(not s.get('trip') for s in config['sections']):
                 raise ValueError('la modalità allocated richiede macrosezioni GPX')
             settings = config['timeline']
-            if not isinstance(settings, dict) or set(settings) != {'target_beats', 'min_windows', 'distance_exponent'}:
-                raise ValueError('timeline richiede target_beats, min_windows e distance_exponent')
+            if not isinstance(settings, dict) or set(settings) not in ({'target_beats', 'min_windows', 'distance_exponent'},
+                                                                      {'beats_per_km', 'min_windows', 'distance_exponent'}):
+                raise ValueError('timeline richiede beats_per_km oppure target_beats, con min_windows e distance_exponent')
             plan = allocate_timeline(
                 [s['trip']['end_distance_m']-s['trip']['start_distance_m'] for s in config['sections']],
                 window_beats=self.window, **settings)
@@ -214,6 +215,7 @@ class EnsembleRuntime:
         return {'timing': self.timing,
                 'timeline': ({**self.timeline.snapshot(), 'total_beats': self.timeline.timeline.total_beats,
                               'requested_beats': self.timeline.timeline.requested_beats,
+                              'beats_per_km': self.timeline.timeline.beats_per_km,
                               'adjustments': self.timeline.timeline.to_dict()['adjustments']}
                              if self.timeline else None),
                 'version': 1, 'state': self.state, 'error': self.error,

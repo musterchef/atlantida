@@ -106,11 +106,12 @@ def test_timeline_report_and_json_use_same_beat_allocation_without_changing_anal
     assert {k: v for k, v in result.items() if k != 'timeline'} == original
     assert json.loads(EmbeddedAnalysis(html.read_text()).payload) == result
     distances = [s['end_distance_m']-s['start_distance_m'] for s in result['grouping']['sections']]
-    expected = allocate_timeline(distances, target_beats=480, window_beats=4).to_dict()
+    session = json.loads(Path('presets/organico.json').read_text())
+    expected = allocate_timeline(distances, window_beats=session['window_beats'], **session['timeline']).to_dict()
     assert {k: result['timeline'][k] for k in expected} == expected
     assert result['timeline']['position']['source_index'] == 0
     assert len(result['timeline']['spans']) == 33
-    assert '480 beat richiesti; 480 effettivi; 120 finestre' in capsys.readouterr().out
+    assert f"{expected['total_beats']:g} effettivi; {expected['total_windows']} finestre" in capsys.readouterr().out
 
 
 def test_linear_reference_uses_time_instead_of_distance_and_includes_stops():
@@ -136,3 +137,37 @@ def test_timeline_requires_grouping_and_reports_extension(tmp_path, capsys):
                                   'timeline': {'target_beats': 4, 'min_windows': 2, 'distance_exponent': .5}}))
     assert main(args+['--grouping', 'presets/macrosezioni-percorso.json', '--timeline-session', str(session)]) == 0
     assert 'minimi garantiti: 4 → 264 beat' in capsys.readouterr().out
+
+
+def test_pause_context_is_optional_and_preserves_original_grouping(tmp_path):
+    from desnivel.cli.analyze_trip import main
+    from desnivel.trip.sections import measure_section_bridges
+
+    output, html = tmp_path/'analysis.json', tmp_path/'analysis.html'
+    args = ['--gpx', 'gpx/tappa05_Firenze_San_Gimignano.gpx', '--config', 'presets/analisi-percorso.json',
+            '--grouping', 'presets/macrosezioni-percorso.json', '--output', str(output), '--html', str(html)]
+    assert main(args) == 0
+    baseline = json.loads(output.read_text())
+    assert main(args+['--pause-context', 'ascent', 'level']) == 0
+    result = json.loads(output.read_text())
+    assert {k: v for k, v in result.items() if k != 'section_context'} == baseline
+    assert result['section_context'] == [measure_section_bridges(
+        baseline['grouping']['sections'], flank_kind='ascent', middle_kind='level')]
+    assert result['section_context'][0]['candidates']
+    assert json.loads(EmbeddedAnalysis(html.read_text()).payload) == result
+    assert main(args+['--pause-context', 'ascent', 'level', '--pause-context', 'descent', 'level']) == 0
+    combined = json.loads(output.read_text())
+    assert combined['section_context'] == result['section_context']+[measure_section_bridges(
+        baseline['grouping']['sections'], flank_kind='descent', middle_kind='level')]
+    assert combined['section_context'][1]['candidates']
+    assert {k: v for k, v in combined.items() if k != 'section_context'} == baseline
+    assert json.loads(EmbeddedAnalysis(html.read_text()).payload) == combined
+    with pytest.raises(SystemExit):
+        main(args+['--pause-context', 'missing', 'level'])
+
+
+def test_pause_context_requires_grouping():
+    from desnivel.cli.analyze_trip import main
+
+    with pytest.raises(SystemExit):
+        main(['--gpx', 'unused.gpx', '--config', 'unused.json', '--pause-context', 'ascent', 'level'])

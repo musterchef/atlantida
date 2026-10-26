@@ -18,6 +18,8 @@ def render_session(state):
         timeline = state['timeline']
         rows[1] = (f"Viaggio {trip['progress']:.2%} | {trip['distance_m']/1000:.2f} km | "
                    f"timeline {timeline['beat']:g} / {timeline['total_beats']:g} beat")
+        if timeline.get('beats_per_km') is not None:
+            rows[1] += f" | {timeline['beats_per_km']:g} beat/km"
     section_source = state.get('section', {}).get('trip')
     if section_source:
         rows.append(f"  Macrosezione {section_source['index']+1}: {section_source['kind']} | "
