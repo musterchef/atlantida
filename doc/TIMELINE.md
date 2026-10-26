@@ -16,7 +16,8 @@ e consuma la timeline seguendo i beat del trasporto. `--timing linear`
 allocate_timeline(
     distances_m,
     *,
-    target_beats,
+    target_beats=None,
+    beats_per_km=None,
     window_beats,
     min_windows=2,
     distance_exponent=0.5,
@@ -41,14 +42,25 @@ durate in beat. `adjustments` distingue:
 - `window_quantization`: aumento necessario per avere finestre intere;
 - `minimum_extension`: ulteriore aumento necessario per garantire i minimi.
 
+La modalità per chilometri produce soltanto la quantizzazione; se i minimi
+non entrano nella durata proporzionale, segnala un errore. L’estensione
+automatica resta disponibile con un totale esplicito `target_beats`.
+
 Ogni adattamento riporta `from_beats` e `to_beats`. Il comando stampa gli
 avvisi corrispondenti, senza bloccare l'allocazione.
 
 ## Allocazione
 
-Il budget viene arrotondato verso l'alto a finestre intere. Se non basta
-per tutte le macrosezioni, viene esteso al numero di sezioni moltiplicato
-per il minimo. Dopo la riserva dei minimi, le finestre residue sono
+La durata deriva da una sola fonte, scelta esplicitamente:
+
+- `beats_per_km`: somma delle distanze in km moltiplicata per la scala;
+- `target_beats`: durata totale esplicita, indipendente dalla distanza.
+
+Specificare entrambe o nessuna produce un errore. La durata viene
+arrotondata verso l'alto a finestre intere. Con `beats_per_km`, se non basta
+per i minimi il calcolo si interrompe indicando una scala sufficiente:
+non viene allungata automaticamente una tappa in base al numero di sezioni.
+Con `target_beats`, il totale viene invece esteso fino a coprire i minimi. Dopo la riserva dei minimi, le finestre residue sono
 distribuite con pesi proporzionali a `metri ** distance_exponent`.
 
 Le parti intere delle quote vengono assegnate subito; le finestre rimaste
@@ -89,14 +101,22 @@ In `presets/organico.json` la sezione `timeline` contiene:
 
 ```json
 {
-  "target_beats": 480,
+  "beats_per_km": 12,
   "min_windows": 2,
   "distance_exponent": 0.5
 }
 ```
 
 La finestra viene letta dal campo `window_beats` della stessa sessione,
-attualmente 4. Non viene creato un file JSON aggiuntivo.
+attualmente 4. Il minimo di 2 finestre rimane 8 beat per macrosezione.
+`beats_per_km` è positivo e finito e sostituisce `target_beats` nella stessa
+configurazione; non viene creato un file JSON aggiuntivo.
+
+La scala corrente assegna 12 beat per km al totale della tappa. Il totale
+viene arrotondato alla finestra successiva: due distanze molto vicine possono
+quindi ottenere lo stesso numero di beat. La distribuzione interna conserva
+l'esponente 0,5 e i minimi, quindi i singoli tratti non hanno tutti lo stesso
+rapporto beat/km. Il report mostra la scala e la durata effettiva.
 
 ```sh
 .venv/bin/python -m desnivel.cli.analyze_trip \
@@ -118,6 +138,12 @@ e un cursore per esplorare le finestre. La navigazione nel browser legge
 gli intervalli esportati e non avvia audio o controlla il manager Python.
 Selezionare una riga inquadra il tratto nel profilo del percorso.
 
+Nel riquadro «Durata al BPM scelto» si può modificare il BPM (inizialmente
+120) per leggere la durata totale, di una finestra e della macrosezione
+selezionata. Il calcolo `beat × 60 / BPM` assume tempo costante e arrotonda
+al secondo. Valori vuoti, non positivi o non finiti sono segnalati. Il
+campo aggiorna soltanto la stima nel browser: non modifica il piano o Live.
+
 Il campo `timeline.linear_reference` proietta le durate delle macrosezioni
 nel tempo del `Track` sullo stesso totale di beat della timeline allocata,
 senza minimi o quantizzazione. Le proporzioni temporali sono quelle del
@@ -126,7 +152,7 @@ iniziali appartengono alla prima sezione; quelle sui confini interni alla
 sezione uscente. La tabella confronta beat allocati e beat lineari GPX.
 
 Con i valori confermati per Firenze–San Gimignano il piano contiene
-33 macrosezioni, 120 finestre e 480 beat effettivi. L'anteprima non modifica
+33 macrosezioni, 181 finestre e 724 beat effettivi con la scala di 12 beat/km. L'anteprima non modifica
 il rilevamento delle 49 zone né il raggruppamento.
 
 

@@ -143,3 +143,75 @@ raggruppamento ricevuto senza ricalcolarlo nel browser.
 L'opzione `--timeline-session presets/organico.json` aggiunge al report
 l'[anteprima della timeline musicale in beat](TIMELINE.md), utilizzando le
 stesse macrosezioni. Richiede `--grouping` e non modifica zone o profilo.
+
+## Pianure tra salite o discese: confronto locale
+
+Con `--grouping`, l'opzione `--pause-context ascent level` aggiunge una
+misura delle macrosezioni `level` immediatamente precedute e seguite da
+`ascent`. Ripetendo l'opzione con `--pause-context descent level` si
+misurano anche le pianure tra due discese nello stesso report. Le pianure
+tra una salita e una discesa non corrispondono a nessuna delle due terne.
+I due nomi sono argomenti espliciti e devono appartenere alle
+famiglie configurate; il calcolo è disponibile anche per altre coppie.
+
+`trip.sections.measure_section_bridges(sections, flank_kind=..., middle_kind=...)`
+legge le macrosezioni originali e restituisce, per ogni terna:
+
+- gli indici delle tre macrosezioni;
+- le loro lunghezze in metri;
+- il riferimento locale `2 × prima × dopo / (prima + dopo)`;
+- il rapporto `lunghezza intermedia / riferimento locale`.
+
+I risultati sono esportati nella lista `section_context`, un elemento per
+ogni coppia richiesta, nel JSON e incorporati
+nell'HTML. Il report mostra una tabella con la famiglia dei tratti adiacenti: selezionare una riga inquadra i tre
+tratti nel profilo. Anche i rapporti superiori al 100% sono mostrati. Se non
+ci sono terne corrispondenti, il report indica zero sezioni.
+
+Non viene applicata una soglia né effettuato un nuovo raggruppamento.
+Zone, macrosezioni, timeline e ascolto mantengono il comportamento corrente.
+Il confronto serve a valutare una futura soglia per le pause interne.
+
+```sh
+.venv/bin/python -m desnivel.cli.analyze_trip \
+  --gpx gpx/tappa05_Firenze_San_Gimignano.gpx \
+  --config presets/analisi-percorso.json \
+  --grouping presets/macrosezioni-percorso.json \
+  --pause-context ascent level \
+  --pause-context descent level \
+  --timeline-session presets/organico.json \
+  --output output/analisi-percorso.json \
+  --html output/analisi-percorso.html
+```
+
+## Report di tutte le tappe
+
+Il comando `cli.analyze_trips` analizza i file `.gpx` presenti direttamente
+nella cartella indicata, ordinati per nome. Riutilizza la stessa funzione
+`cli.analyze_trip.analyze_trip` del comando singolo, con identiche
+configurazioni e misure.
+
+```sh
+.venv/bin/python -m desnivel.cli.analyze_trips \
+  --gpx-dir gpx \
+  --config presets/analisi-percorso.json \
+  --grouping presets/macrosezioni-percorso.json \
+  --pause-context ascent level \
+  --pause-context descent level \
+  --timeline-session presets/organico.json \
+  --output-dir output/tappe
+```
+
+La cartella di uscita contiene:
+
+- `index.html`: selettore della tappa, report incorporato e collegamento per
+  aprire il report completo in un'altra scheda;
+- `report-<nome GPX>.html`: report autonomo di ciascuna tappa;
+- `report-<nome GPX>.json`: dati della stessa analisi.
+
+Aprire `output/tappe/index.html` nel browser. La selezione cambia il report
+visualizzato; non avvia una sessione musicale. Le pagine si leggono da file
+locale senza server o connessione a Internet. Per aggiornare le analisi dopo
+una modifica ai parametri, rilanciare il comando e ricaricare la pagina.
+La generazione sovrascrive i file corrispondenti alle tappe presenti; non
+elimina eventuali report di tappe rimosse dalla cartella GPX.

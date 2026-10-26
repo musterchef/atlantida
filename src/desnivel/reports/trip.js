@@ -203,7 +203,24 @@
     const timeline = data.timeline;
     byId('timeline-panel').hidden = !timeline;
     if (!timeline) return;
-    byId('timeline-summary').textContent = `${number(timeline.requested_beats, 0)} beat richiesti → ${number(timeline.total_beats, 0)} beat effettivi · ${timeline.total_windows} finestre da ${number(timeline.window_beats)} beat · minimo ${timeline.min_windows} finestre per macrosezione · esponente ${number(timeline.distance_exponent)}`;
+    const bpmInput = byId('timeline-bpm');
+    bpmInput.value = '120';
+    let selectedSpan = null;
+    function updateDuration() {
+      const bpm = bpmInput.valueAsNumber;
+      if (!Number.isFinite(bpm) || bpm <= 0 || !Number.isFinite(timeline.total_beats / bpm * 60)) {
+        byId('timeline-duration').textContent = 'Inserisci un BPM positivo e finito per calcolare la durata.';
+        return;
+      }
+      const duration = beats => {
+        const seconds = Math.round(beats / bpm * 60);
+        return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+      };
+      byId('timeline-duration').textContent = `Totale: ${duration(timeline.total_beats)} · Finestra da ${number(timeline.window_beats, 0)} beat: ${duration(timeline.window_beats)}`
+        + (selectedSpan ? ` · Macrosezione ${selectedSpan.source_index+1}: ${duration(selectedSpan.duration_beats)}` : '');
+    }
+    bpmInput.oninput = updateDuration;
+    byId('timeline-summary').textContent = (timeline.beats_per_km == null ? '' : `${number(timeline.beats_per_km)} beat/km · `) + `${number(timeline.requested_beats, 0)} beat richiesti → ${number(timeline.total_beats, 0)} beat effettivi · ${timeline.total_windows} finestre da ${number(timeline.window_beats)} beat · minimo ${timeline.min_windows} finestre per macrosezione · esponente ${number(timeline.distance_exponent)}`;
     const reasons = {minimum_extension: 'Estensione per garantire i minimi', window_quantization: 'Arrotondamento alle finestre'};
     byId('timeline-adjustments').textContent = timeline.adjustments.map(a => `${reasons[a.code] || a.code}: ${number(a.from_beats)} → ${number(a.to_beats)} beat`).join(' · ');
     const svg = byId('timeline-chart'), width = W-L-R;
@@ -246,6 +263,8 @@
       cursor.setAttribute('x1', L+beat/timeline.total_beats*width);
       cursor.setAttribute('x2', L+beat/timeline.total_beats*width);
       const span = timeline.spans.find(s => index >= s.start_window && index < s.start_window+s.window_count);
+      selectedSpan = span;
+      updateDuration();
       if (!span) {
         byId('timeline-inspection').textContent = `Timeline terminata · ${number(timeline.total_beats)} beat`;
         return;
@@ -259,6 +278,38 @@
     byId('timeline-position').oninput = event => inspectTimeline(Number(event.target.value));
     inspectTimeline(timeline.position.window_index);
   }
+  function renderSectionContext() {
+    const contexts = data.section_context;
+    byId('context-panel').hidden = !contexts || !contexts.length;
+    if (!contexts || !contexts.length) return;
+    const body = byId('context-sections');
+    body.replaceChildren();
+    byId('context-summary').textContent = contexts.map(context => `${context.candidates.length} sezioni ${context.middle_kind} tra due ${context.flank_kind}`).join(' · ') + '. Seleziona una riga per inquadrare i tre tratti.';
+    for (const context of contexts) for (const item of context.candidates) {
+      const middle = sections.find(s => s.index === item.middle_index);
+      const before = sections.find(s => s.index === item.before_index);
+      const after = sections.find(s => s.index === item.after_index);
+      const row = document.createElement('tr'), name = document.createElement('td');
+      const button = document.createElement('button');
+      button.textContent = `${middle.index+1}. ${middle.kind}`;
+      button.onclick = () => {
+        clearSelection();
+        for (const section of [before, middle, after]) {
+          macroRows[sections.indexOf(section)].classList.add('selected');
+          section.zone_indices.forEach(i => rows[i].classList.add('selected'));
+        }
+        focusRange({start_distance_m: before.start_distance_m, end_distance_m: after.end_distance_m});
+      };
+      name.appendChild(button); row.appendChild(name);
+      for (const text of [`${number(middle.start_distance_m/1000)} → ${number(middle.end_distance_m/1000)}`,
+        number(item.before_distance_m, 0), number(item.middle_distance_m, 0), number(item.after_distance_m, 0),
+        number(item.reference_distance_m, 0), percent(item.distance_ratio), context.flank_kind]) {
+        const cell = document.createElement('td'); cell.textContent = text; row.appendChild(cell);
+      }
+      body.appendChild(row);
+    }
+  }
   render();
   renderTimeline();
+  renderSectionContext();
 })();

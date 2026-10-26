@@ -32,3 +32,25 @@ fasce originali. Il primo livello è operativo. Per le variazioni interne sono
 ancora da definire precedenza delle impostazioni, ripristino dei valori e
 tempi delle transizioni. I cambi locali non devono
 implicare automaticamente un cambio di organico o il riavvio della frase.
+
+## Pause interne e impegno altimetrico
+
+Stato: criteri concordati; disponibile soltanto la misura del contesto
+locale nel [report di analisi](../ANALISI-PERCORSO.md). La selezione delle
+pause, il nuovo raggruppamento e il punteggio altimetrico non sono implementati.
+
+Per una pianura tra due salite o tra due discese, il riferimento locale è
+la media armonica delle lunghezze dei due tratti adiacenti della stessa
+famiglia. Entrambi i confronti sono disponibili nel report. Il rapporto tra lunghezza della
+pianura e riferimento sarà confrontato con una soglia configurabile, ancora
+da calibrare sui percorsi. Sotto la soglia la pianura potrà essere una pausa
+interna; alla soglia o sopra rimarrà autonoma. Le sezioni originali e i loro
+riferimenti devono essere conservati; la valutazione precede eventuali
+raggruppamenti e l'allocazione finale dei beat.
+
+Separatamente, si propone di riconoscere la salita con maggiore impegno
+altimetrico, sommando sui tratti della salita `lunghezza in km × pendenza
+positiva percentuale²`. Il calcolo userà le pendenze smussate dell'analisi.
+Il punteggio non rappresenta la fatica effettiva del ciclista e non attribuisce
+categorie ufficiali. Eventuali classi e conseguenze musicali restano da
+valutare dopo il confronto con i percorsi e l'esperienza del viaggio.

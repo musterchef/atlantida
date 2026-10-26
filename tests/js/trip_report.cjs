@@ -74,7 +74,7 @@ assert(!grouped['macro-sections'].children[0].classes.has('selected'));
 const timed = run({...data,
   grouping: {config: {families: {alpha: ['alpha'], beta: ['beta']}},
     sections: data.zones.map((zone, index) => ({...zone, zone_indices: [index]}))},
-  timeline: {requested_beats: 32, total_beats: 32, total_windows: 8, window_beats: 4,
+  timeline: {beats_per_km: 12, requested_beats: 32, total_beats: 32, total_windows: 8, window_beats: 4,
     min_windows: 2, distance_exponent: .5, adjustments: [], position: {window_index: 0},
     linear_reference: [{source_index: 0, start_beat: 0, end_beat: 4, duration_beats: 4},
       {source_index: 1, start_beat: 4, end_beat: 32, duration_beats: 28}],
@@ -82,17 +82,64 @@ const timed = run({...data,
       {source_index: 1, start_window: 3, window_count: 5, start_beat: 12, end_beat: 32, duration_beats: 20}]}
 });
 assert.equal(timed['timeline-panel'].hidden, false);
+assert(timed['timeline-summary'].textContent.includes('12,00 beat/km'));
 assert.equal(timed['timeline-spans'].children.length, 2);
 assert.equal(timed['timeline-spans'].children[0].children[5].textContent, '4,00');
 assert(timed['timeline-chart'].children.some(node => node.textContent === 'Tempo lineare GPX · stesso totale di beat'));
 assert(timed['timeline-inspection'].textContent.includes('macrosezione 1: alpha'));
+assert(timed['timeline-duration'].textContent.includes('Totale: 0 min 16 s'));
+timed['timeline-bpm'].value = '60';
+timed['timeline-bpm'].oninput();
+assert(timed['timeline-duration'].textContent.includes('Totale: 0 min 32 s'));
+assert(timed['timeline-duration'].textContent.includes('Macrosezione 1: 0 min 12 s'));
+for (const invalid of ['', '0', '-20', 'Infinity']) {
+  timed['timeline-bpm'].value = invalid;
+  timed['timeline-bpm'].oninput();
+  assert(timed['timeline-duration'].textContent.includes('Inserisci un BPM'));
+}
+timed['timeline-bpm'].value = '60';
+timed['timeline-bpm'].oninput();
 timed['timeline-position'].oninput({target: {value: '3'}});
 assert(timed['timeline-inspection'].textContent.includes('macrosezione 2: beta'));
 assert(timed['timeline-inspection'].textContent.includes('5 finestre rimanenti'));
+assert(timed['timeline-duration'].textContent.includes('Macrosezione 2: 0 min 20 s'));
 timed['timeline-position'].oninput({target: {value: '8'}});
 assert(timed['timeline-inspection'].textContent.includes('Timeline terminata'));
 timed['timeline-spans'].children[1].children[0].children[0].onclick();
 assert.equal(timed['timeline-position'].value, 3);
 assert(timed['timeline-inspection'].textContent.includes('Beat 12'));
 checkCoordinates(timed['timeline-chart']);
-console.log('OK: report zones, arbitrary bands, macrosections, selection, pointer details, zoom, reset, invalid ranges and short profiles');
+assert.equal(e['context-panel'].hidden, true);
+const contextZones = [
+  {...data.zones[0], index: 0, kind: 'up', start_distance_m: 0, end_distance_m: 100},
+  {...data.zones[0], index: 1, kind: 'flat', start_distance_m: 100, end_distance_m: 300},
+  {...data.zones[1], index: 2, kind: 'up', start_distance_m: 300, end_distance_m: 400}
+];
+const contextData = {...data, zones: contextZones,
+  grouping: {config: {families: {up: ['alpha'], flat: ['beta']}},
+    sections: contextZones.map(z => ({...z, zone_indices: [z.index]}))},
+  section_context: [{flank_kind: 'up', middle_kind: 'flat', candidates: [
+    {before_index: 0, middle_index: 1, after_index: 2,
+      before_distance_m: 100, middle_distance_m: 200, after_distance_m: 100,
+      reference_distance_m: 100, distance_ratio: 2}
+  ]}]};
+const contextView = run(contextData);
+assert.equal(contextView['context-panel'].hidden, false);
+assert.equal(contextView['context-sections'].children.length, 1);
+assert.equal(contextView['context-sections'].children[0].children[6].textContent, '200,0%');
+contextView['context-sections'].children[0].children[0].children[0].onclick();
+assert(contextView['macro-sections'].children.every(row => row.classes.has('selected')));
+assert(contextView.zones.children.every(row => row.classes.has('selected')));
+const emptyContext = run({...contextData, section_context: [{...contextData.section_context[0], candidates: []}]});
+assert.equal(emptyContext['context-sections'].children.length, 0);
+assert(emptyContext['context-summary'].textContent.startsWith('0 sezioni'));
+console.log('OK: report zones, macrosections, timeline, local context, selection, zoom and empty candidates');
+
+const bothContexts = run({...contextData, section_context: [
+  contextData.section_context[0],
+  {...contextData.section_context[0], flank_kind: 'down'}
+]});
+assert.equal(bothContexts['context-sections'].children.length, 2);
+assert(bothContexts['context-summary'].textContent.includes('tra due up'));
+assert(bothContexts['context-summary'].textContent.includes('tra due down'));
+assert.equal(bothContexts['context-sections'].children[1].children[7].textContent, 'down');

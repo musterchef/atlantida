@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desnivel · Tappe del viaggio</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,sans-serif;color:#193039;background:#f3f5f4;color-scheme:light}
+    *{box-sizing:border-box}body{margin:0;height:100dvh;display:flex;flex-direction:column}
+    header{padding:16px 24px;background:white;border-bottom:1px solid #dbe3df;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    h1{font-size:18px;margin:0}label{font-size:14px}select{font:inherit;max-width:100%;min-width:0;padding:9px;border:1px solid #b9cbc3;border-radius:6px;flex:1}
+    a{font-size:14px;color:#216758}select:focus-visible,a:focus-visible{outline:3px solid #13806c;outline-offset:3px}
+    iframe{width:100%;flex:1;min-height:0;border:0}noscript{padding:16px}
+    @media(max-width:650px){header{padding:12px;gap:10px}h1{width:100%}select{flex-basis:75%}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Desnivel · Tappe del viaggio</h1>
+    <label for="stage-select">Tappa</label>
+    <select id="stage-select">REPORT_OPTIONS</select>
+    <a id="open-report" href="FIRST_REPORT" target="_blank" rel="noopener">Apri report completo ↗</a>
+  </header>
+  <noscript>Seleziona un report dall’elenco:<ul>REPORT_LINKS</ul></noscript>
+  <iframe id="stage-report" src="FIRST_REPORT" title="Report della tappa selezionata"></iframe>
+  <script>/* INDEX_SCRIPT */</script>
+</body>
+</html>

@@ -43,6 +43,13 @@
     <h2 id="timeline-title">Timeline musicale in beat</h2>
     <p id="timeline-summary"></p>
     <p id="timeline-adjustments" role="status"></p>
+    <div class="timeline-duration">
+      <h3>Durata al BPM scelto</h3>
+      <label for="timeline-bpm">BPM <input id="timeline-bpm" type="number" min="0" step="any" value="120" inputmode="decimal"></label>
+      <p id="timeline-duration" aria-live="polite"></p>
+      <p class="chart-note">Stima a BPM costante: secondi = beat × 60 / BPM. I tempi sono arrotondati al secondo.
+        Questo campo non cambia l'allocazione né il tempo di Ableton.</p>
+    </div>
     <p class="muted">Le barre confrontano distanza, tempo lineare GPX e timeline allocata.
       Le due viste temporali hanno lo stesso totale di beat. Il riferimento lineare conserva le proporzioni dei tempi caricati dal GPX,
       senza minimi o quantizzazione; la timeline allocata garantisce finestre intere.</p>
@@ -64,6 +71,17 @@
     <div class="table-scroll"><table>
       <thead><tr><th>Macrosezione</th><th>Da → a km</th><th>Zone incluse</th><th>Pendenza media</th><th>Dislivello netto</th></tr></thead>
       <tbody id="macro-sections"></tbody>
+    </table></div>
+  </section>
+  <section id="context-panel" class="panel" aria-labelledby="context-title" hidden>
+    <h2 id="context-title">Sezioni intermedie e contesto locale</h2>
+    <p id="context-summary" class="muted"></p>
+    <p class="muted">Il riferimento è la media armonica delle lunghezze delle due sezioni adiacenti.
+      Il rapporto confronta la lunghezza intermedia con questo riferimento; può superare il 100%.
+      Non è applicata una soglia: tutte le macrosezioni restano autonome.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Sezione intermedia</th><th>Da → a km</th><th>Prima (m)</th><th>Intermedia (m)</th><th>Dopo (m)</th><th>Riferimento (m)</th><th>Rapporto</th><th>Tra due sezioni</th></tr></thead>
+      <tbody id="context-sections"></tbody>
     </table></div>
   </section>
   <section class="panel" aria-labelledby="zones-title">
