@@ -81,3 +81,52 @@ def test_same_family_never_merges_across_a_distance_gap():
 def test_invalid_or_incomplete_membership_is_rejected(config):
     with pytest.raises(ValueError):
         group_zones(analysis(), config)
+
+
+def test_local_bridge_uses_both_flanks_symmetrically_without_changing_sections():
+    from desnivel.trip.sections import measure_section_bridges
+
+    def sections(lengths):
+        cursor, result = 0, []
+        for i, (kind, length) in enumerate(zip(['up', 'flat', 'up'], lengths)):
+            result.append(dict(index=i, kind=kind, start_distance_m=cursor, end_distance_m=cursor+length))
+            cursor += length
+        return result
+
+    source = sections([2000, 200, 300])
+    original = deepcopy(source)
+    first = measure_section_bridges(source, flank_kind='up', middle_kind='flat')['candidates'][0]
+    reverse = measure_section_bridges(sections([300, 200, 2000]), flank_kind='up', middle_kind='flat')['candidates'][0]
+    assert first['reference_distance_m'] == pytest.approx(2*2000*300/2300)
+    assert first['distance_ratio'] == pytest.approx(200/first['reference_distance_m'])
+    assert first['reference_distance_m'] == reverse['reference_distance_m']
+    assert source == original
+    assert [first[k] for k in ('before_index', 'middle_index', 'after_index')] == [0, 1, 2]
+    # Anche le pianure molto lunghe sono mostrate per calibrare la futura soglia.
+    long_flat = measure_section_bridges(sections([100, 1000, 100]), flank_kind='up', middle_kind='flat')
+    assert long_flat['candidates'][0]['distance_ratio'] == 10
+
+
+def test_local_bridge_requires_both_adjacent_flanks_and_leaves_edges_out():
+    from desnivel.trip.sections import measure_section_bridges
+
+    sections = [dict(index=i, kind=kind, start_distance_m=i*100, end_distance_m=(i+1)*100)
+                for i, kind in enumerate(['flat', 'up', 'flat', 'down', 'flat', 'up', 'flat'])]
+    assert not measure_section_bridges(sections, flank_kind='up', middle_kind='flat')['candidates']
+    assert not measure_section_bridges([], flank_kind='up', middle_kind='flat')['candidates']
+    with pytest.raises(ValueError):
+        measure_section_bridges(sections, flank_kind='up', middle_kind='up')
+
+
+def test_level_between_descents_uses_same_reference_and_excludes_mixed_flanks():
+    from desnivel.trip.sections import measure_section_bridges
+
+    sections = [dict(index=i, kind=kind, start_distance_m=start, end_distance_m=end)
+                for i, (kind, start, end) in enumerate([
+                    ('descent', 0, 2000), ('level', 2000, 2200), ('descent', 2200, 2500),
+                    ('level', 2500, 2700), ('ascent', 2700, 3000)])]
+    candidates = measure_section_bridges(sections, flank_kind='descent', middle_kind='level')['candidates']
+    assert len(candidates) == 1
+    assert candidates[0]['middle_index'] == 1
+    assert candidates[0]['reference_distance_m'] == pytest.approx(2*2000*300/2300)
+    assert candidates[0]['distance_ratio'] == pytest.approx(200/(2*2000*300/2300))
