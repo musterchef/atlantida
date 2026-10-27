@@ -27,6 +27,7 @@ class Voice:
     dependencies: tuple[str, ...] = ()
     supported_roles: tuple[str, ...] = ()
     describe: Callable[[], dict] | None = None
+    optional_dependencies: tuple[str, ...] = ()
 
 
 class MusicCoordinator:
@@ -68,7 +69,7 @@ class MusicCoordinator:
         order = []
         while pending:
             ready = [name for name, voice in pending.items()
-                     if set(voice.dependencies) <= available]
+                     if (set(voice.dependencies) | (set(voice.optional_dependencies) & active.keys())) <= available]
             if not ready:
                 raise ValueError('dipendenze mancanti o cicliche tra le voci')
             for name in ready:
@@ -78,7 +79,8 @@ class MusicCoordinator:
         decisions = {}
         for name in order:
             voice = active[name]
-            dependencies = MappingProxyType({key: phrases[key] for key in voice.dependencies})
+            references = (*voice.dependencies, *(key for key in voice.optional_dependencies if key in phrases))
+            dependencies = MappingProxyType({key: phrases[key] for key in references})
             assignment = assignments[name] if assignments is not None else None
             phrase = voice.generate(PlanningRequest(
                 start, length_beats, context, dependencies,
@@ -89,7 +91,7 @@ class MusicCoordinator:
             phrases[name] = phrase
             decisions[name] = {
                 'role': assignment.role if assignment else None,
-                'dependencies': list(voice.dependencies),
+                'dependencies': list(references),
                 'parameters': dict(assignment.parameters) if assignment else {},
                 'notes': [asdict(note) for note in phrase.notes],
                 'composition': dict(voice.describe()) if voice.describe else None,

@@ -40,9 +40,15 @@ class EnsembleSession:
             generator = generators[spec['generator']]
             self._generators[name] = generator
             voices[name] = Voice(generator.generate, tuple(spec.get('dependencies', ())),
-                                 generator.supported_roles, generator.describe)
+                                 generator.supported_roles, generator.describe,
+                                 tuple(spec.get('optional_dependencies', ())))
             self._destinations[name] = destinations[spec['destination']]
         self.director = MusicDirector(config['sections'])
+        for voice in voices.values():
+            optional = voice.optional_dependencies
+            if (any(name not in voices for name in optional)
+                    or len(set(optional)) != len(optional) or set(optional) & set(voice.dependencies)):
+                raise ValueError('dipendenze facoltative sconosciute, duplicate o già obbligatorie')
         self._section_progress = tuple(section['from_progress'] for section in config['sections'])
         # Valida tutte le sezioni prima della prima generazione o trasmissione.
         for section in config['sections']:
@@ -56,7 +62,8 @@ class EnsembleSession:
                     self._generators[name].validate(assignment.role, assignment.parameters)
             pending, available = set(assignments), set()
             while pending:
-                ready = {name for name in pending if set(voices[name].dependencies) <= available}
+                ready = {name for name in pending if (set(voices[name].dependencies)
+                         | (set(voices[name].optional_dependencies) & assignments.keys())) <= available}
                 if not ready:
                     raise ValueError('dipendenze mancanti o cicliche nella sezione')
                 pending -= ready

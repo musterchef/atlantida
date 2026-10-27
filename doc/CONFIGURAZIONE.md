@@ -37,7 +37,8 @@ Ogni voce in `voices` contiene:
 | `name` | Nome descrittivo mostrato nella vista globale; opzionale |
 | `generator` | Nome di una definizione presente in `generators` |
 | `destination` | Identificativo della destinazione; nella sessione ogni voce ne richiede una distinta |
-| `dependencies` | Identificativi delle voci le cui frasi vengono fornite al generatore; lista opzionale |
+| `dependencies` | Voci richieste: devono essere assegnate nella sezione quando la voce dipendente è attiva |
+| `optional_dependencies` | Voci lette quando sono assegnate nella sezione; se attive vengono generate prima della voce dipendente. Nomi registrati, distinti e separati da `dependencies` |
 
 `destination` non è una porta MIDI o UDP. Le porte **Receive** vengono
 comunicate dai dispositivi al collegamento: devono essere distinte.
@@ -179,19 +180,115 @@ gli stessi parametri producono le stesse note. Una finestra non può
 contenere più di 128 attacchi. Il generatore produce una `Phrase` che usa
 lo stesso adattatore e lo stesso dispositivo delle altre voci.
 
-Nel preset fornito, `lanes` associa `kick` a 36, `snare` a 38 e `hat` a 42.
-Sono le note da predisporre nel Drum Rack della prova. Per cambiare i pad
-si modifica questa mappa; il codice non contiene tali note o nomi.
+## Parametri del generatore `percussion_phrase`
 
-| Indice | Nome | Attacchi per ciclo di quattro beat |
-|---|---|---:|
-| 0 | `sparse` | 7 |
-| 1 | `steady` | 12 |
-| 2 | `driving` | 22 |
+La prova corrente usa `music/percussion/development.py`. Supporta
+`percussion` con frasi di riferimento dichiarate nelle dipendenze. Sviluppa
+un materiale su richieste consecutive e lo adatta agli attacchi delle
+frasi ricevute; il contesto armonico non determina le note percussive.
 
-I preset omonimi selezionano gli indici corrispondenti. Se si riordina la
-lista `patterns`, occorre aggiornare i riferimenti numerici nei preset e
-nelle assegnazioni musicali.
+| Campo della definizione | Contenuto |
+|---|---|
+| `lanes` | Nomi locali associati a note MIDI distinte, come per `percussion_pattern` |
+| `material` | Un materiale con `name`, `length_beats` e `hits`, con gli stessi vincoli dei pattern espliciti |
+| `anchor_beats` | Lista non vuota di posizioni distinte presenti nel materiale; tutti gli attacchi a queste posizioni sono protetti dalle trasformazioni locali |
+| `development` | Lista non vuota di operazioni; deve iniziare con `statement` |
+| `interaction` | `support_source`, `support_lanes`, `answer_source`, `answer_lanes`: sorgenti e canali per sostegno e risposta. Ogni canale va assegnato una volta a una delle due funzioni |
+
+Il materiale corrente, `spaced_impacts`, distribuisce 40 attacchi su 32 beat.
+La configurazione della prova copre i 16 pad del 909 Core Kit:
+
+| Nota MIDI | Canale | Suono |
+|---|---|---|
+| 36 | `low` | Bass Drum |
+| 37 | `rim` | Rim Shot |
+| 38 | `mid` | Snare Drum |
+| 39 | `clap` | Hand Clap |
+| 40 | `kick_alt` | Bass Drum alternativa |
+| 41 | `snare_alt` | Snare Drum |
+| 42 | `high` | Closed Hi Hat |
+| 43 | `snare_alt_2` | Snare Drum |
+| 44 | `tom_low` | Low Tom |
+| 45 | `tom_mid` | Mid Tom |
+| 46 | `hat_open` | Open Hi Hat |
+| 47 | `tom_high` | Hi Tom |
+| 48 | `crash` | Crash |
+| 49 | `crash_alt` | Crash alternativo |
+| 50 | `ride` | Ride |
+| 51 | `ride_alt` | Ride alternativo |
+
+I nomi locali distinguono i pad; il timbro effettivo dipende dal Rack caricato.
+Entrambe le casse appartengono a `support_lanes`; gli altri pad a
+`answer_lanes`. Le posizioni protette sono definite in `anchor_beats`.
+Gli attacchi sono su una griglia di 0,25 beat; i sostegni proposti ogni
+quattro beat vengono adattati alla frase ricevuta.
+La prova imposta `displacement_beats: 0`; il preset manuale `displaced`
+lo porta a 0,25 beat. Mappa, attacchi, posizioni protette e sequenza di
+sviluppo sono definiti in `organico.json`.
+
+Ogni ciclo del materiale applica un'operazione della lista `development`;
+la lista viene ripercorsa in ordine. Le operazioni disponibili sono:
+
+- `statement`: presenta il materiale integrale;
+- `subtract`: elimina una parte degli attacchi non protetti;
+- `displace`: sposta una parte degli attacchi non protetti di
+  `displacement_beats`, in anticipo o in ritardo, tornando all'inizio del
+  ciclo se supera il confine;
+- `accent`: modifica la velocity degli attacchi selezionati di un massimo
+  di 64 unità MIDI moltiplicato per `variation`, limitando il risultato a 1…127;
+- `silence`: sospende l'intero ciclo, inclusi gli attacchi protetti.
+
+La selezione degli attacchi e il verso delle trasformazioni dipendono da
+`seed` e indice del ciclo. Sono riproducibili a parità di sequenza delle richieste, parametri e frasi
+di riferimento. Le durate MIDI sono limitate ai confini delle finestre.
+In caso di coincidenza durante le trasformazioni locali sulla stessa nota,
+l’attacco protetto ha precedenza. L’interazione successiva può spostarlo
+o ometterlo per rispettare le frasi di riferimento.
+
+| Controllo | Predefinito | Intervallo nella sessione | Effetto |
+|---|---:|---|---|
+| `variation` | 0,7 | 0…1 | Quota degli attacchi non protetti trasformati, arrotondata verso l'alto; intensità della modifica degli accenti. A zero tutte le operazioni diventano `statement`, inclusa `silence` |
+| `displacement_beats` | 0,25 | 0…1 beat | Ampiezza dello spostamento temporale |
+| `velocity_ratio` | 0,85 | 0,05…1 | Moltiplicatore della velocity finale di tutti gli attacchi |
+| `gate_beats` | 0,1 | 0,01…1 beat | Durata massima, accorciata alla fine della finestra e prima del prossimo attacco della stessa nota |
+| `seed` | 7 | Intero 0…2147483647 | Selezione riproducibile degli attacchi e del verso delle trasformazioni |
+| `support_tolerance_beats` | 0,5 | 0…1 beat | Distanza massima per allineare un colpo di sostegno a un attacco della sorgente |
+| `answer_clearance_beats` | 0,25 | 0…1 beat | Distanza minima degli attacchi di risposta dagli attacchi della sorgente principale |
+
+Nella prova, `voice_04` richiede la frase di `voice_01` e legge quella di
+`voice_02` come dipendenza facoltativa. I canali `low` e `kick_alt` cercano l'attacco più
+vicino della frase di `voice_02` entro la tolleranza: lo raggiungono e mediano
+la propria velocity con quella della sorgente. Se manca un attacco vicino,
+il colpo viene omesso. In caso di parità di distanza prevale l'attacco con
+velocity maggiore, poi quello precedente.
+
+I canali elencati in `answer_lanes` omettono gli attacchi troppo vicini a quelli di
+`voice_01`, lasciandogli spazio. Usano le posizioni del materiale rimaste
+dopo lo sviluppo, senza aggiungere colpi per ogni nota melodica. Se la
+frase melodica è silenziosa, le risposte vengono omesse. Se entrambe le
+frasi sono silenziose, anche la percussione è silenziosa.
+
+La sorgente di risposta è obbligatoria; la sua assenza produce un errore.
+La sorgente di sostegno può essere inattiva: in quel caso i colpi di
+sostegno sono omessi e la decisione espone `support_available: false`.
+L'interazione legge soltanto gli attacchi delle frasi della finestra corrente,
+non l'audio o le frasi future. Cambiare la partizione delle finestre può
+cambiare quali attacchi sono disponibili vicino ai confini. Attacchi sulla
+stessa nota e allo stesso beat vengono uniti conservando la velocity maggiore.
+
+La sequenza corrente è `statement`, `statement`, `subtract`, `displace`,
+`statement`, `accent`, `silence`, `displace`: otto cicli di 32 beat.
+Il primo ciclo comincia alla prima frase pianificata, indipendentemente
+dal beat assoluto di Live. La posizione avanza della durata di ciascuna
+richiesta; ripianificare lo stesso inizio riutilizza la stessa posizione.
+Il cambio di famiglia del terreno conserva lo sviluppo. Il reset del
+runtime, compresi Stop e discontinuità del trasporto, lo riporta all'inizio.
+
+Il piano descrive materiale, posizione logica e operazioni dei cicli nella
+plancia. I preset `statement`, `displaced` e `reduced` regolano i controlli
+sullo stesso materiale. Una richiesta può coprire al massimo 128 cicli e
+produrre al massimo 128 attacchi. Il generatore di pattern espliciti resta
+disponibile come tipo distinto.
 
 ## Precedenza e applicazione delle modifiche
 

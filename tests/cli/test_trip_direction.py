@@ -108,11 +108,21 @@ def test_internal_band_change_keeps_same_context_and_phrase_development(directio
     assert runtime.last_decisions['voices']['voice_03']['notes'][0]['pitch'] == 69
     percussion = runtime.last_decisions['voices']['voice_04']
     assert percussion['role'] == 'percussion'
-    assert percussion['composition']['pattern'] == 'driving'
-    assert {note['pitch'] for note in percussion['notes']} == {36, 38, 42}
+    assert percussion['composition']['method'] == 'percussion_phrase'
+    assert percussion['composition']['logical_start'] == 8
+    assert percussion['composition']['material'] == 'spaced_impacts'
+    interaction = percussion['composition']['interaction']
+    assert interaction['available_sources'] == ['voice_01', 'voice_02']
+    supporting_attacks = {n['beat'] for n in runtime.last_decisions['voices']['voice_02']['notes']}
+    assert all(n['beat'] in supporting_attacks for n in percussion['notes'] if n['pitch'] in (36, 40))
+    foreground_attacks = [n['beat'] for n in runtime.last_decisions['voices']['voice_01']['notes']]
+    assert all(all(abs(n['beat']-b) >= .25 for b in foreground_attacks)
+               for n in percussion['notes'] if n['pitch'] not in (36, 40))
+    assert {note['pitch'] for note in percussion['notes']} <= set(range(36, 52))
+    assert {note['pitch'] for note in percussion['notes']} - {36, 38, 42}
     plans = {port: message for port, _, message in sent if message['kind'] == 'plan'}
     assert {note['pitch'] for note in plans[9103]['plan']['phrase']['notes']} == {69}
-    assert {note['pitch'] for note in plans[9104]['plan']['phrase']['notes']} == {36, 38, 42}
+    assert list(plans[9104]['plan']['phrase']['notes']) == percussion['notes']
     json.dumps(runtime.snapshot(), allow_nan=False)
 
 

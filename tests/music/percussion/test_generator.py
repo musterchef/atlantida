@@ -1,7 +1,5 @@
 """Frasi percussive, fase fra finestre e compatibilità con il player comune."""
 from copy import deepcopy
-import json
-from pathlib import Path
 
 import pytest
 
@@ -12,7 +10,16 @@ from desnivel.music.percussion.generator import PercussionGenerator
 
 
 def definition():
-    return json.loads(Path('presets/organico.json').read_text())['generators']['percussion']
+    return {'type': 'percussion_pattern', 'lanes': {'kick': 36, 'snare': 38, 'hat': 42},
+            'patterns': [
+                {'name': 'first', 'length_beats': 4,
+                 'hits': [{'beat': 0, 'lane': 'kick', 'velocity': 90}]},
+                {'name': 'single', 'length_beats': 4,
+                 'hits': [{'beat': 0, 'lane': 'kick', 'velocity': 90}]},
+                {'name': 'quarters', 'length_beats': 4,
+                 'hits': [{'beat': i*.25, 'lane': 'hat', 'velocity': 60} for i in range(16)]}],
+            'settings': {'pattern': 0, 'velocity_ratio': .85, 'gate_beats': .1},
+            'presets': {'quarters': {'pattern': 2}}}
 
 
 def generator(spec=None):
@@ -59,14 +66,14 @@ def test_percussion_uses_registered_controls_and_common_device_destination():
     registered = build_generator(definition())
     assert registered.generator.supported_roles == ('percussion',)
     assert set(registered.controls) == {'pattern', 'velocity_ratio', 'gate_beats'}
-    assert registered.presets['driving']['pattern'] == 2
+    assert registered.presets['quarters']['pattern'] == 2
     sent = []
     bridge = VoiceDeviceBridge({'part': DeviceVoice()}, lambda *args: sent.append(args))
     bridge.handle(dict(version=1, voice='part', instance='test', reply_port=9104, serial=1, action='hello'))
     phrase = registered.generator.generate(request(pattern=2))
     bridge.destination('part')(4, phrase)
     assert sent[-1][0] == 9104
-    assert len(sent[-1][2]['plan']['phrase']['notes']) == 22
+    assert len(sent[-1][2]['plan']['phrase']['notes']) == 16
 
 
 @pytest.mark.parametrize('problem', ['unknown_lane', 'duplicate_pitch', 'duplicate_hit', 'outside_cycle',

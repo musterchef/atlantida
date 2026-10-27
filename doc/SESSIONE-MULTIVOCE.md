@@ -42,9 +42,9 @@ Nella configurazione fornita:
 | `voice_04` | `Desnivel_Voice` prima del Drum Rack, Receive `9104`, Python `9006` |
 
 Impostare l'identificativo in **Part** e premere **Connect** sulle istanze,
-quindi avviare il trasporto di Live. Il Drum Rack deve avere cassa sulla
-nota MIDI 36, rullante su 38 e charleston su 42, come configurato in
-`generators.percussion.lanes`. Lo strumento atmosferico riceve una nota
+quindi avviare il trasporto di Live. La prova usa il 909 Core Kit con i
+16 pad sulle note MIDI 36…51. La mappa completa è configurata in
+`generators.percussion.lanes` e descritta nel riferimento di configurazione. Lo strumento atmosferico riceve una nota
 sostenuta monofonica per finestra: il suono si sceglie nello strumento Live.
 Tutte le voci attive devono essere collegate, altrimenti la sessione attende
 in `waiting_for_devices`.
@@ -123,11 +123,11 @@ esplicite del preset, modificabili nel JSON:
 | `ascent` | 0,55 / 1 / 0,8 / 88 | 0,8 / 0,1 / 0,85 |
 | `descent` | 0,85 / 0,5 / 0,65 / 82 | 1,2 / 0,35 / 0,65 |
 
-| Famiglia | `voice_03`: ruolo / velocity | `voice_04`: pattern / rapporto velocity |
+| Famiglia | `voice_03`: ruolo / velocity | `voice_04`: rapporto velocity |
 |---|---|---|
-| `level` | `sustained_texture` / 45 | `sparse` (0) / 0,75 |
-| `ascent` | `sustained_texture` / 55 | `steady` (1) / 0,85 |
-| `descent` | `sustained_texture` / 48 | `driving` (2) / 0,9 |
+| `level` | `sustained_texture` / 45 | 0,75 |
+| `ascent` | `sustained_texture` / 55 | 0,85 |
+| `descent` | `sustained_texture` / 48 | 0,9 |
 
 `voice_03` usa un'istanza indipendente di `motif` con `degrees: [0]` e
 `octave: 1`: con il contesto fornito produce la nota MIDI 69. La durata è
@@ -166,15 +166,25 @@ Collega il generatore presente in `music/bass/` attraverso `music/bass/voice.py`
 
 I controlli esposti sono `density`, `syncopation`, `rhythm_follow`, `melody_follow`, `mobility`, `variation` e `articulation`. Le altre impostazioni del generatore, incluso il registro, si configurano in `settings`. Le regole compositive sono descritte in [BASSO.md](BASSO.md).
 
-### `percussion_pattern`
+### `percussion_phrase`
 
-Implementato in `music/percussion/generator.py`. Supporta il ruolo
-`percussion` e ripete pattern espliciti del JSON, con mappa delle note
-separata dagli attacchi. Espone selezione del pattern, rapporto di velocity
-e durata MIDI massima delle note. Le definizioni e i vincoli sono nel
-[riferimento di configurazione](CONFIGURAZIONE.md#parametri-del-generatore-percussion_pattern).
-I nomi dei pad, le note MIDI e gli attacchi della prova risiedono nel JSON;
-Director, Coordinator e dispositivo continuano a usare le interfacce comuni.
+La prova usa `music/percussion/development.py`, con il ruolo `percussion`.
+Legge la frase di `voice_01` e, quando attiva, quella di `voice_02`.
+Il materiale di 32 beat attraversa le finestre di pianificazione e segue
+una sequenza configurata di ripetizioni, sottrazioni, spostamenti, accenti
+e sospensioni. Alcuni attacchi sono protetti dalle trasformazioni locali.
+I colpi di sostegno si allineano agli attacchi vicini della seconda
+sorgente; le risposte lasciano spazio agli attacchi della prima. La plancia
+espone operazione, posizione logica, sorgenti effettive, sostegni e risposte omesse. Cambiare
+famiglia del terreno conserva la posizione; Stop e reset la azzerano.
+
+Le famiglie regolano soltanto il rapporto di velocity della voce. I
+controlli di sviluppo e i preset sono descritti nel
+[riferimento di configurazione](CONFIGURAZIONE.md#parametri-del-generatore-percussion_phrase).
+La mappa in `organico.json` copre i 16 pad MIDI 36…51 del 909 Core Kit
+della prova, con entrambe le casse assegnate al sostegno. Il timbro dipende dai suoni caricati su quei pad. Le note MIDI e le
+regole ritmiche risiedono nel modulo della voce e nella sua configurazione;
+Director, Coordinator e dispositivo usano le interfacce comuni.
 
 ## Stato globale
 

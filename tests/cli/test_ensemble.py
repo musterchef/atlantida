@@ -103,3 +103,11 @@ def test_load_json_file_and_deliver_phrase(tmp_path):
         {'out_a': lambda start, result: sent.append((start, result))})
     session.send(8, session.plan(0, 8, 4))
     assert sent == [(8, phrase)]
+
+
+@pytest.mark.parametrize('optional', [['missing'], ['b', 'b'], ['a']])
+def test_invalid_optional_dependencies_are_rejected(optional):
+    data = config()
+    data['voices']['b']['optional_dependencies'] = optional
+    with pytest.raises(ValueError, match='facoltative'):
+        setup(data)

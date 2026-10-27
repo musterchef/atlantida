@@ -32,7 +32,6 @@
         "voice_04": {
           "role": "percussion",
           "parameters": {
-            "pattern": 1,
             "velocity_ratio": 0.85
           }
         }
@@ -68,7 +67,6 @@
         "voice_04": {
           "role": "percussion",
           "parameters": {
-            "pattern": 2,
             "velocity_ratio": 0.9
           }
         }
@@ -104,7 +102,6 @@
         "voice_04": {
           "role": "percussion",
           "parameters": {
-            "pattern": 0,
             "velocity_ratio": 0.75
           }
         }

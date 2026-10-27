@@ -10,11 +10,15 @@ In [`music/coordinator.py`](../src/desnivel/music/coordinator.py), `Voice` conti
 |---|---|
 | `generate` | Funzione che riceve un `PlanningRequest` e restituisce una `Phrase` |
 | `dependencies` | Tupla degli identificativi delle parti richieste dal generatore |
+| `optional_dependencies` | Parti lette se attive nella sezione o fornite come sorgenti; se attive partecipano all’ordinamento delle dipendenze |
 | `supported_roles` | Tupla dei ruoli dichiarati dal generatore |
 
 Gli identificativi sono le chiavi della mappa passata a `MusicCoordinator`. Il Coordinator li usa per risolvere le dipendenze e raccogliere i risultati.
 
-`MusicCoordinator.plan` verifica che le sorgenti fornite non coincidano con le voci da generare e che coprano la durata richiesta. Verifica dipendenze mancanti o cicliche prima di chiamare i generatori. Quindi li esegue nell'ordine delle dipendenze e controlla la durata di ciascuna frase restituita.
+`MusicCoordinator.plan` verifica che le sorgenti fornite non coincidano con le voci da generare e che coprano la durata richiesta. Verifica dipendenze mancanti o cicliche prima di chiamare i generatori. Le dipendenze facoltative inattive non vengono richieste; quelle attive
+partecipano al controllo dei cicli. Quindi esegue i generatori nell’ordine
+delle dipendenze e controlla la durata di ciascuna frase restituita. La
+decisione registra le sole sorgenti effettivamente passate al generatore.
 
 ## Ingressi dei generatori
 

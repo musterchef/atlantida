@@ -64,7 +64,8 @@ class EnsembleRuntime:
         self.sounding = set()
         self.registry = {}
         self.voice_descriptions = {name: {'name': spec.get('name', name), 'generator': spec['generator'],
-                                         'dependencies': list(spec.get('dependencies', []))}
+                                         'dependencies': list(spec.get('dependencies', [])),
+                                         'optional_dependencies': list(spec.get('optional_dependencies', []))}
                                    for name, spec in config['voices'].items()}
         session_config = deepcopy(config)
         self.section_sources = tuple(deepcopy(section.get('trip')) for section in config['sections'])

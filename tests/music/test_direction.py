@@ -76,3 +76,41 @@ def test_coordinator_orders_independent_voices_and_passes_common_context():
 def test_invalid_dependencies_rejected_before_generating(voices):
     with pytest.raises(ValueError, match='dipendenze'):
         MusicCoordinator(voices).plan(0, 4)
+
+
+def test_optional_dependencies_wait_for_active_voice_and_are_omitted_when_inactive():
+    from desnivel.music.arrangement import Assignment
+    phrase = Phrase(4, (Note(0, 60, 1, 90),))
+    calls = []
+    def generate(name):
+        def run(request):
+            calls.append((name, dict(request.dependencies)))
+            return phrase
+        return run
+    coordinator = MusicCoordinator({
+        'listener': Voice(generate('listener'), ('source',), ('part',), optional_dependencies=('other',)),
+        'other': Voice(generate('other'), supported_roles=('part',)),
+        'source': Voice(generate('source'), supported_roles=('part',)),
+    })
+    active = {name: Assignment('part', {}) for name in ('listener', 'other', 'source')}
+    coordinator.plan(0, 4, assignments=active)
+    assert calls[-1][0] == 'listener'
+    assert calls[-1][1] == {'source': phrase, 'other': phrase}
+    calls.clear()
+    del active['other']
+    coordinator.plan(4, 4, assignments=active)
+    assert calls[-1] == ('listener', {'source': phrase})
+    assert coordinator.last_plan['voices']['listener']['dependencies'] == ['source']
+
+
+def test_optional_cycle_is_rejected_before_any_generation():
+    calls = []
+    def generate(request):
+        calls.append(request)
+    coordinator = MusicCoordinator({
+        'a': Voice(generate, optional_dependencies=('b',)),
+        'b': Voice(generate, optional_dependencies=('a',)),
+    })
+    with pytest.raises(ValueError, match='cicliche'):
+        coordinator.plan(0, 4)
+    assert not calls
