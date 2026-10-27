@@ -88,25 +88,47 @@ La scelta manuale del ruolo persiste tra sezioni nella stessa sessione Python; `
 
 ## Protocollo e arresto
 
-I messaggi sono OSC con una stringa JSON, versione `1`:
+I messaggi sono OSC con il JSON versione `1` codificato in UTF-8,
+un argomento intero OSC per ciascun byte:
 
 - dispositivo → Python: `/desnivel/v1/voice/control`;
 - Python → dispositivo: `/desnivel/v1/voice/message`.
+
+Il dispositivo usa `udpsend` e `udpreceive` nel formato ordinario dei
+messaggi OSC. Gli script convertono gli argomenti numerici in JSON e
+viceversa. Anche il passaggio dei piani dall'interfaccia al player usa byte
+numerici. I payload JSON variabili non diventano simboli Max a ogni
+aggiornamento del trasporto. Il server limita il JSON in uscita a 12.000
+byte per mantenere il pacchetto OSC sotto il limite UDP.
 
 Le richieste contengono voce, identificativo dell'istanza, seriale, porta di risposta e azione (`hello`, `transport`, `role`, `preset`, `parameter`, `panic`). L’azione `role` contiene l’identificativo del ruolo manuale oppure `null` per seguire la sezione. Lo stato restituisce ruoli supportati, ruolo effettivo, ruolo della sezione, modalità (`section` o `manual`) e stato di attivazione della parte. La lettura del trasporto aggiunge beat, stato di riproduzione e contatore locale delle discontinuità. Le risposte distinguono stato, errore e piano.
 
 Il dispositivo invia `hello` ogni secondo. Dopo oltre tre secondi senza conferma cancella i piani e spegne le note. Python rifiuta due istanze attive con la stessa voce o la stessa porta di ricezione; un collegamento scaduto può essere sostituito. I piani sono indirizzati anche all'identificativo dell'istanza.
 
+Il player riutilizza gruppi di oggetti nativi per i timestamp degli eventi.
+Ogni gruppo contiene `timepoint`, gate a singola esecuzione e memoria delle
+coppie MIDI. Gli eventi allo stesso timestamp vengono emessi in ordine,
+con note-off prima dei note-on. I gruppi scaduti vengono disarmati e
+riutilizzati, mantenendo gli oggetti necessari ai note-off ancora futuri.
+Il numero di gruppi cresce solo quando aumenta il picco di timestamp
+contemporaneamente pianificati. Stop e Panic svuotano i piani e disarmano
+i gruppi; la rimozione del dispositivo elimina anche gli oggetti conservati.
+La ricompilazione del JavaScript rimuove gli oggetti dinamici residui.
+
 Il player cancella i piani a Stop, arretramento del trasporto e Panic. Rifiuta piani tardivi e sovrapposizioni della stessa altezza all'interno della frase. Il passo temporale è un tick Max, pari a 1/480 di semiminima.
 
 ## Verifiche
 
-I test Python verificano controlli, destinazioni separate, duplicati, conflitti tra istanze e collegamento con `EnsembleSession`. I test JavaScript simulano messaggi e player. I test del builder verificano contenitore e connessioni del sorgente.
+I test Python verificano controlli, destinazioni separate, duplicati, conflitti tra istanze e collegamento con `EnsembleSession`. I test JavaScript simulano messaggi e player, compresi 1.000 aggiornamenti
+del trasporto a byte e 1.000 finestre con numero di oggetti stabile dopo
+il riscaldamento. Questi controlli non misurano il jitter audio in Live. I test del builder verificano contenitore e connessioni del sorgente.
 
 La prova manuale in Live ha confermato l'invio della frase da file e la produzione di suono. La correzione di Connect ripetuto è verificata dal test JavaScript; la relativa prova manuale in Live resta da eseguire.
 
 ## Riferimenti tecnici
 
+- [Cycling '74 — udpreceive](https://docs.cycling74.com/reference/udpreceive/): ricezione OSC e rinvio alla coda a bassa priorità.
+- [Cycling '74 — timepoint](https://docs.cycling74.com/reference/timepoint/): esecuzione su trasporto e aggiornamento del timestamp.
 - [Cycling '74 — udpsend](https://docs.cycling74.com/reference/udpsend/): trasmissione dei messaggi Max come pacchetti OSC compatibili.
 - [Cycling '74 — textedit](https://docs.cycling74.com/reference/textedit/): ingresso dell'identificativo della parte.
 - [Cycling '74 — MIDI](https://docs.cycling74.com/userguide/midi/): formattazione e uscita dei messaggi MIDI.

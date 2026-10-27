@@ -4,6 +4,9 @@ var voiceId='', replyPort=9101, instance='', serial=0, acknowledged=-1;
 var backendPort=9006, beat=0, playing=0, epoch=0, lastTick=-1;
 var connected=false, lastReply=0, state=null, snapshot='', parameterNames=[], presetNames=[];
 var selectedParameter=0, patch=this.patcher;
+// I payload variabili restano byte numerici, senza simboli Max per ogni JSON.
+function utf8bytes(text){var binary=unescape(encodeURIComponent(text)), out=[];for(var i=0;i<binary.length;i++)out.push(binary.charCodeAt(i));return out;}
+function utf8text(bytes){var binary='';for(var i=0;i<bytes.length;i++){if(bytes[i]<0||bytes[i]>255||Math.floor(bytes[i])!==bytes[i])throw new Error('byte non valido');binary+=String.fromCharCode(bytes[i]);}return decodeURIComponent(escape(binary));}
 function status(text){outlet(2,String(text));}
 function ui(name){return patch.getnamed(name);}
 function playerReset(){outlet(1,'panic');}
@@ -22,7 +25,7 @@ function request(action, extra){
     if(!connected)return;
     var m={version:1,voice:voiceId,instance:instance,reply_port:replyPort,serial:++serial,action:action,transport:{beat:beat,playing:playing,epoch:epoch}};
     for(var key in extra)m[key]=extra[key];
-    outlet(0,'/desnivel/v1/voice/control',JSON.stringify(m));
+    outlet(0,['/desnivel/v1/voice/control'].concat(utf8bytes(JSON.stringify(m))));
 }
 function clock(ticks,running){
     ticks=Number(ticks);running=Number(running);
@@ -35,12 +38,12 @@ function heartbeat(){
     if(new Date().getTime()-lastReply>3000){playerReset();status('Python not responding');}
     request('hello',{});
 }
-function receive(text){
+function receive(){
     try{
-        var m=JSON.parse(String(text));
+        var m=JSON.parse(utf8text(arrayfromargs(arguments)));
         if(!connected || m.version!==1 || m.voice!==voiceId || m.instance!==instance)return;
         if(m.kind==='error'){reflectRole();status(m.error);return;}
-        if(m.kind==='plan'){if(new Date().getTime()-lastReply>3000)return;outlet(1,'plan',JSON.stringify(m.plan));return;}
+        if(m.kind==='plan'){if(new Date().getTime()-lastReply>3000)return;outlet(1,['planbytes'].concat(utf8bytes(JSON.stringify(m.plan))));return;}
         if(m.kind!=='state' || m.serial<acknowledged)return;
         acknowledged=m.serial;lastReply=new Date().getTime();
         var signature=JSON.stringify([m.role,m.role_mode,m.supported_roles,m.active,m.next_entry_progress,m.section_role,m.preset,m.presets,m.controls]);

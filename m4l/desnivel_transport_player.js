@@ -1,9 +1,9 @@
 // Piani assoluti: gli attacchi sono eseguiti da timepoint nativi, non da JS.
 inlets=1;outlets=1;
 var plans={}, groups={}, nodes=[], nodeSerial=0, nowTicks=0, lastTick=-1, playing=0, session=null, lastError='';
-var patch=this.patcher, retired={}, lastSerial=-1;
+var patch=this.patcher, retired={}, lastSerial=-1, pool=[];
 function status(s) {outlet(0,s);}
-function removeGroup(g) {for(var i=0;i<g.nodes.length;i++)patch.remove(g.nodes[i]);}
+function removeGroup(g) {g.gate.message(0);pool.push(g);}
 function removeNodes() {for(var key in groups)removeGroup(groups[key]);groups={};nodes=[];}
 function object() {
     var args=arrayfromargs(arguments), o=patch.newdefault.apply(patch,[800,600].concat(args));
@@ -37,20 +37,30 @@ function compile() {
         var signature=JSON.stringify(values);
         if(groups[tick] && groups[tick].signature===signature)continue;
         if(groups[tick])removeGroup(groups[tick]);
-        nodes=[];
-        var tp=object('timepoint',Number(tick)), gate=object('gate',1,1);
-        var close=object('t','b','b'), zero=object('int',0);
-        var spec=['t'];for(var k=0;k<values.length;k++)spec.push('b');
-        var trigger=object.apply(null,spec);
-        patch.connect(tp,0,gate,1);patch.connect(gate,0,close,0);
-        patch.connect(close,1,zero,0);patch.connect(zero,0,gate,0);
-        patch.connect(close,0,trigger,0);
-        for(var z=0;z<values.length;z++) {
-            var msg=object('pack',values[z][0],values[z][1]);
-            patch.connect(trigger,values.length-1-z,msg,0);patch.connect(msg,0,output,0);
+        var g=pool.pop();
+        if(!g){
+            nodes=[];
+            var tp=object('timepoint',0), gate=object('gate',1,0);
+            var close=object('t','b','b'), zero=object('int',0);
+            var input=object('t','l'), memory=object('zl','reg','@zlmaxsize',512), pairs=object('zl','iter',2,'@zlmaxsize',512);
+            patch.connect(tp,0,gate,1);patch.connect(gate,0,close,0);
+            patch.connect(close,1,zero,0);patch.connect(zero,0,gate,0);
+            patch.connect(close,0,memory,0);patch.connect(input,0,memory,1);
+            patch.connect(memory,0,pairs,0);patch.connect(pairs,0,output,0);
+            g={nodes:nodes,tp:tp,gate:gate,input:input};
         }
-        groups[tick]={signature:signature,nodes:nodes};
+        var flat=[];for(var z=0;z<values.length;z++)flat.push(values[z][0],values[z][1]);
+        g.gate.message(0);
+        g.input.message.apply(g.input,flat);
+        g.tp.message(Number(tick));
+        g.signature=signature;g.gate.message(1);groups[tick]=g;
     }
+}
+function planbytes(){
+    try{var bytes=arrayfromargs(arguments), binary='';for(var i=0;i<bytes.length;i++){
+        if(bytes[i]<0||bytes[i]>255||Math.floor(bytes[i])!==bytes[i])throw new Error('byte non valido');
+        binary+=String.fromCharCode(bytes[i]);
+    }plan(decodeURIComponent(escape(binary)));}catch(e){status(String(e));}
 }
 function plan(text) {
     try {
@@ -77,13 +87,14 @@ function plan(text) {
         var key=String(p.start), previous=plans[key];
         if(previous && previous.revision>=p.revision)return;
         for(var other in plans)if(other!==key && p.start<plans[other].start+plans[other].phrase.length_beats && plans[other].start<p.start+p.phrase.length_beats)throw new Error('finestre sovrapposte');
-        plans[key]=p;compile();status('pronto beat '+p.start);
+        plans[key]=p;compile();status('pronto');
     }catch(e){var msg=String(e);if(msg!==lastError){status(msg);lastError=msg;}}
 }
 function panic(){clear();status('stop');}
-function notifydeleted(){clear();}
+function notifydeleted(){clear();for(var i=0;i<pool.length;i++)for(var j=0;j<pool[i].nodes.length;j++)patch.remove(pool[i].nodes[j]);pool=[];}
 
 function loadbang() {
+    groups={};plans={};pool=[];nodes=[];
     var o=patch.firstobject;
     while(o){var next=o.nextobject;if(String(o.varname).indexOf('desnivel_runtime_')===0)patch.remove(o);o=next;}
 }

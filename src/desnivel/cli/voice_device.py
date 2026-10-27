@@ -21,12 +21,12 @@ class VoiceDeviceServer:
         self.on_message = on_message
 
         def send(port, address, message):
-            payload = json.dumps(message, separators=(',', ':'), allow_nan=False)
-            if len(payload.encode()) > 60000:
+            payload = json.dumps(message, separators=(',', ':'), allow_nan=False).encode('utf-8')
+            if len(payload) > 12000:
                 raise ValueError('messaggio troppo grande per UDP')
             if port not in self.clients:
                 self.clients[port] = SimpleUDPClient('127.0.0.1', port)
-            self.clients[port].send_message(address, payload)
+            self.clients[port].send_message(address, list(payload))
 
         self.bridge = VoiceDeviceBridge(voices, send)
         dispatcher = Dispatcher()
@@ -36,9 +36,9 @@ class VoiceDeviceServer:
     def _receive(self, address, *args):
         message = None
         try:
-            if len(args) != 1 or not isinstance(args[0], str):
-                raise ValueError('attesa una stringa JSON')
-            message = json.loads(args[0])
+            if not args or any(type(value) is not int or not 0 <= value <= 255 for value in args):
+                raise ValueError('attesi byte UTF-8 come interi OSC')
+            message = json.loads(bytes(args).decode('utf-8'))
             if not isinstance(message, dict):
                 raise ValueError('atteso un oggetto JSON')
             self.bridge.handle(message)

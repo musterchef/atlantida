@@ -19,6 +19,8 @@ def test_device_has_valid_connections_and_native_midi_output():
     assert boxes['midi_out']['text'] == 'midiout'
     assert boxes['notes_unpack']['varname'] == 'notes_unpack'
     assert boxes['notes_flush']['varname'] == 'notes_flush'
+    assert boxes['receive']['text'] == 'udpreceive 9101 @defer 1'
+    assert boxes['route']['text'] == 'route /desnivel/v1/voice/message'
     assert all('bass' not in box.get('text', '').lower() for box in boxes.values())
     ui = [b['presentation_rect'] for b in boxes.values() if b.get('presentation')]
     assert all(x >= 0 and y >= 0 and x+w <= 650 and y+h <= 169 for x,y,w,h in ui)
