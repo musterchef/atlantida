@@ -56,7 +56,7 @@ def test_manual_cli_prints_a_valid_bass_command_without_network(monkeypatch, tmp
     config.write_text('{}')
     weights = tmp_path / 'weights.json'
     weights.write_text('{}')
-    monkeypatch.setattr(analyze_bass, 'load_track', lambda path: None)
+    monkeypatch.setattr(analyze_bass, 'load_track', lambda path, **kwargs: None)
     monkeypatch.setattr(analyze_bass, 'build_metric_samples', lambda track: (
         MetricSample(100, MetricName.DISTANCE_TOTAL_M, 1000),))
     monkeypatch.setattr(analyze_bass, 'compose', lambda *args: [change(0, 2)])

@@ -1,1 +1,1 @@
-"""Dati del viaggio: caricamento GPX, configurazione e metriche neutrali."""
+"""Dati del viaggio: caricamento FIT/GPX, configurazione e metriche neutrali."""

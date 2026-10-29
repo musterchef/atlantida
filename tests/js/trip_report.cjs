@@ -6,6 +6,7 @@ class Element {
   append(...children) {children.forEach(x => this.appendChild(x));}
   replaceChildren(...children) {this.children = [...children];}
   setAttribute(key, value) {this.attributes[key] = String(value);}
+  addEventListener(name, listener) {this['on'+name] = listener;}
   getBoundingClientRect() {return {left: 0, width: 1100};}
   scrollIntoView() {}
   get valueAsNumber() {return this.value === '' ? NaN : Number(this.value);}
@@ -17,6 +18,7 @@ function run(data) {
     createTextNode: text => ({textContent: text})};
   document.getElementById('analysis-data').textContent = JSON.stringify(data);
   vm.runInNewContext(fs.readFileSync('src/desnivel/reports/trip.js', 'utf8'), {document});
+  vm.runInNewContext(fs.readFileSync('src/desnivel/reports/trip_quality.js', 'utf8'), {document, Node: Element});
   return elements;
 }
 const data = {stage: 'test', total_distance_m: 400, config: {slope_window_m: 100, min_zone_distance_m: 100,
@@ -85,7 +87,7 @@ assert.equal(timed['timeline-panel'].hidden, false);
 assert(timed['timeline-summary'].textContent.includes('12,00 beat/km'));
 assert.equal(timed['timeline-spans'].children.length, 2);
 assert.equal(timed['timeline-spans'].children[0].children[5].textContent, '4,00');
-assert(timed['timeline-chart'].children.some(node => node.textContent === 'Tempo lineare GPX · stesso totale di beat'));
+assert(timed['timeline-chart'].children.some(node => node.textContent === 'Tempo lineare del viaggio · stesso totale di beat'));
 assert(timed['timeline-inspection'].textContent.includes('macrosezione 1: alpha'));
 assert(timed['timeline-duration'].textContent.includes('Totale: 0 min 16 s'));
 timed['timeline-bpm'].value = '60';
@@ -143,3 +145,50 @@ assert.equal(bothContexts['context-sections'].children.length, 2);
 assert(bothContexts['context-summary'].textContent.includes('tra due up'));
 assert(bothContexts['context-summary'].textContent.includes('tra due down'));
 assert.equal(bothContexts['context-sections'].children[1].children[7].textContent, 'down');
+
+const p1 = {source_index: 1, segment_index: 1, lat: 45, lon: 7, time_utc: null,
+  source_distance_m: 0, elevation_m: null, incoming_interval: null};
+const p2 = {...p1, source_index: 2};
+const interval = {start: p1, end: p2, neighbors: [p1, p2], speed_kmh: 0, distance_m: 0, duration_s: 1};
+const quality = {points: 2, segments: 1, missing_time_points: 0, missing_elevation_points: 2,
+  invalid_coordinate_points: 0, available_speed_intervals: 1, unavailable_speed_intervals: 0,
+  unavailable_reasons: {}, speed_median_kmh: 0, speed_p95_kmh: 0,
+  fastest_intervals: [interval, {...interval, end: {...p2, source_index: 3}}]};
+const checked = run({...data, source_quality: quality});
+assert.equal(checked['quality-panel'].hidden, false);
+assert.equal(checked['quality-intervals'].children.length, 2);
+assert.equal(checked['quality-points'].children.length, 2);
+assert(checked['quality-selection'].textContent.includes('Punti 1 → 2'));
+checkCoordinates(checked['quality-map']);
+checked['quality-intervals'].children[1].children[0].children[0].onclick();
+assert(checked['quality-selection'].textContent.includes('Punti 1 → 3'));
+const unavailable = run({...data, source_quality: {...quality, fastest_intervals: []}});
+assert(unavailable['quality-selection'].textContent.includes('Nessun intervallo'));
+console.log('OK: source intervals, selection, missing values and coincident coordinates');
+const filtered = run({...data, source_quality: quality, source_filter: {
+  max_speed_kmh: 70, max_removed_points: 2, max_gap_s: 30, min_detour_ratio: .5, removed_points: 1,
+  reconnections: [{removed_source_indices: [2], start_source_index: 1, end_source_index: 3,
+    duration_s: 10, original_distance_m: 500, reconnected_distance_m: 50, reconnected_speed_kmh: 18}],
+  unresolved_intervals: [{start_source_index: 4, end_source_index: 5,
+    duration_s: 1, distance_m: 100, speed_kmh: 360, reason: 'above_speed_limit'}]
+}});
+assert.equal(filtered['quality-filter'].hidden, false);
+assert(filtered['quality-filter-summary'].textContent.includes('70,0 km/h'));
+assert.equal(filtered['quality-reconnections'].children.length, 1);
+assert.equal(filtered['quality-unresolved'].children.length, 1);
+assert(filtered['quality-unresolved'].children[0].children[4].textContent.includes('riconnessione non verificata'));
+console.log('OK: verified reconnections and unresolved intervals remain distinct in the report');
+const separated = run({...data,
+  profile: [{distance_m: 0, elevation_m: 100, travel_segment_index: 0},
+    {distance_m: 200, elevation_m: 100, travel_segment_index: 0},
+    {distance_m: 200, elevation_m: 500, travel_segment_index: 1},
+    {distance_m: 400, elevation_m: 500, travel_segment_index: 1}],
+  windows: data.windows.map((w, i) => ({...w, travel_segment_index: i < 2 ? 0 : 1})),
+  travel_selection: {segment_count: 2, observed_duration_s: 20, source_duration_s: 3620,
+    interruptions: [{reason: 'recording_gap', duration_s: 3600}]}
+});
+assert.equal(separated['elevation-chart'].children.filter(n => n.tag === 'polyline').length, 2);
+assert(separated['travel-summary'].textContent.includes('2 tratti osservati'));
+assert(separated['travel-summary'].textContent.includes('interruzioni escluse'));
+checkCoordinates(separated['elevation-chart']);
+console.log('OK: elevation segments remain separate across excluded interruptions');

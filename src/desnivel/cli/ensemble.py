@@ -164,13 +164,14 @@ def main(argv=None):
     from desnivel.trip.loader import load_track
 
     parser = argparse.ArgumentParser(description=main.__doc__)
-    parser.add_argument('--gpx', type=Path, required=True)
+    from desnivel.cli.track_source import add_track_arguments
+    add_track_arguments(parser)
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--direction', type=Path,
-                        help='Assetti musicali per le macrosezioni GPX, al posto delle sezioni manuali.')
+                        help='Assetti musicali per le macrosezioni del viaggio, al posto delle sezioni manuali.')
     parser.add_argument('--speed', type=float, default=None, help='Velocità del replay lineare (default: 1).')
     parser.add_argument('--timing', choices=('linear', 'allocated'), default='linear',
-                        help='Tempo GPX lineare oppure timeline musicale in beat.')
+                        help='Tempo lineare del viaggio oppure timeline musicale in beat.')
     parser.add_argument('--port', type=int, default=9006)
     parser.add_argument('--status-file', type=Path, default=Path('/tmp/desnivel-session/state.json'))
     parser.add_argument('--dry-run', action='store_true')
@@ -183,7 +184,7 @@ def main(argv=None):
         if not math.isfinite(speed) or speed <= 0 or not 1024 <= args.port <= 65535:
             raise ValueError('velocità positiva e porta tra 1024 e 65535 richieste')
         config = json.loads(args.config.read_text())
-        track = load_track(args.gpx)
+        track = load_track(args.gpx, timing_reference=args.timing_reference)
         if args.direction:
             from desnivel.cli.trip_direction import load_trip_sections
             config['sections'] = load_trip_sections(track, args.direction)

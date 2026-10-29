@@ -8,6 +8,7 @@ import random
 from pathlib import Path
 
 from desnivel.trip.loader import load_track
+from desnivel.cli.track_source import add_track_arguments
 from desnivel.trip.metrics import build_metric_samples
 from desnivel.music.patterns import rule_from_dict
 from desnivel.music.journey import compose
@@ -18,7 +19,7 @@ from desnivel.sinks.schedule import ScheduledMessage, play_schedule
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--gpx", type=Path, required=True)
+    add_track_arguments(p)
     modes = p.add_mutually_exclusive_group(required=True)
     modes.add_argument("--rules", type=Path)
     modes.add_argument("--stage-music", type=Path)
@@ -33,7 +34,7 @@ def main(argv=None):
     if not math.isfinite(args.speed) or args.speed <= 0:
         p.error("speed deve essere finita e positiva")
     try:
-        samples = build_metric_samples(load_track(args.gpx))
+        samples = build_metric_samples(load_track(args.gpx, timing_reference=args.timing_reference))
         if args.stage_music:
             if not args.preset:
                 p.error("--stage-music richiede --preset")

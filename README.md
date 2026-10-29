@@ -26,7 +26,7 @@ Il sistema è concepito per governare un insieme di voci musicali coordinate che
 
 ### 3. Struttura del sistema (La tecnologia)
 Il motore è organizzato in strati indipendenti:
-1. **Analisi del viaggio (`trip`)**: elabora le tracce GPX, ricampiona i punti a intervalli regolari e calcola grandezze fisiche oggettive (velocità, quota, pendenza, stima di sforzo).
+1. **Analisi del viaggio (`trip`)**: legge FIT e GPX, seleziona i tratti osservati, ricampiona i punti e calcola velocità, quota, pendenza e stima di sforzo. Nei FIT usa gli eventi di pausa e ripresa registrati; nei GPX può usare un FIT corrispondente come riferimento temporale.
 2. **Motore compositivo (`music`)**: traduce le metriche fisiche e le relazioni tra le parti in strutture musicali astratte (`Pattern`, `Phrase`), indipendenti dallo strumento finale.
 3. **Adattatori e trasporto (`adapters`, `sinks`)**: traducono i modelli musicali nei protocolli di controllo richiesti dalle destinazioni (OSC, MIDI).
 4. **Ambiente di ascolto**: il clock musicale (BPM) è gestito dal sistema sonoro ricevente ed è svincolato dalla velocità di replay del viaggio. Come primo banco di prova per ascoltare il sistema in esecuzione, il progetto utilizza attualmente Ableton Live con un sequencer di riferimento per la linea melodica e un generatore per la linea di basso.

@@ -9,6 +9,7 @@ description = "Musica generativa basata sui dati di un viaggio: traduzione delle
 requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.24",
+    "fitdecode>=0.11,<0.12",
 ]
 
 [project.optional-dependencies]

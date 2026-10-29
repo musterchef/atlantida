@@ -58,7 +58,7 @@ def derive_channels(
     t_unix = raw["t_unix"]
     n = lat.size
 
-    # Tempo: se mancante o irregolare, ricostruito come progressione costante.
+    # I tratti consegnati dal loader hanno orari reali strettamente crescenti.
     elapsed = _elapsed_from_unix(t_unix)
 
     # Distanze tra punti consecutivi (il primo è 0).
@@ -118,19 +118,9 @@ def derive_channels(
 
 
 def _elapsed_from_unix(t_unix: np.ndarray) -> np.ndarray:
-    """Tempo trascorso (s) dall'inizio. Se i tempi sono tutti NaN, usa
-    una griglia uniforme a 1 Hz come fallback. Se sono parziali, riempie
-    i buchi per interpolazione lineare sull'indice."""
+    """Tempo trascorso reale; non ricostruisce timestamp mancanti."""
     if t_unix.size == 0:
         return t_unix.copy()
-    if np.all(np.isnan(t_unix)):
-        return np.arange(t_unix.size, dtype=float)
-    # Riempimento dei NaN con interpolazione lineare sull'indice.
-    idx = np.arange(t_unix.size, dtype=float)
-    mask = np.isnan(t_unix)
-    if mask.any():
-        t_unix = t_unix.copy()
-        t_unix[mask] = np.interp(idx[mask], idx[~mask], t_unix[~mask])
-    elapsed = t_unix - t_unix[0]
-    # Garanzia di monotonia non-decrescente.
-    return np.maximum.accumulate(elapsed)
+    if not np.isfinite(t_unix).all() or np.any(np.diff(t_unix) <= 0):
+        raise ValueError('timestamp finiti e strettamente crescenti richiesti per derivare le metriche')
+    return t_unix-t_unix[0]

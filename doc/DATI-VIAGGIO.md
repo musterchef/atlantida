@@ -1,6 +1,14 @@
 # Dati del viaggio e metriche OSC
 
-Il modulo `desnivel.trip` carica le tracce GPX, ricampiona i punti a intervalli regolari e pubblica le grandezze fisiche del percorso via OSC.
+Il modulo `desnivel.trip` legge FIT e GPX, seleziona i tratti osservati e
+ricampiona ciascun tratto a intervalli regolari. Il comando
+`desnivel.cli.stream_metrics` pubblica le grandezze fisiche via OSC.
+
+Il FIT fornisce gli eventi timer di pausa e ripresa. Un GPX può utilizzare
+gli eventi del FIT corrispondente tramite `--timing-reference`; senza
+riferimento le soste sono stimate dalle coordinate. Lettura, provenienza
+dei canali e criteri sono descritti in
+[ANALISI-PERCORSO.md](ANALISI-PERCORSO.md#sorgenti-fit-e-gpx).
 
 ---
 
@@ -12,7 +20,7 @@ Ogni misura viene trasmessa con due argomenti numerici:
 /desnivel/v1/trip/metric/<nome>  elapsed_s  value
 ```
 
-- **`elapsed_s`**: tempo relativo dall'inizio della tappa (in secondi), corrispondente alla fine dell'intervallo di misura. Quota e distanza totale sono disponibili anche all'istante iniziale. Rimane coerente con il tempo reale del viaggio anche durante replay accelerati.
+- **`elapsed_s`**: secondi dall'inizio dei tratti osservati concatenati, escluse le interruzioni, corrispondenti alla fine dell'intervallo di misura. Quota e distanza totale sono disponibili anche all'istante iniziale. Il replay accelerato non cambia il valore del timestamp.
 - **`value`**: valore numerico della grandezza, nell'unità specificata.
 
 ### Frequenza di campionamento e aggregazione
@@ -26,8 +34,8 @@ Ogni misura viene trasmessa con due argomenti numerici:
 | Metrica | Unità | Descrizione e calcolo |
 |---|---|---|
 | `distance_delta_m` | m | Distanza percorsa nel secondo trascorso. |
-| `distance_total_m` | m | Distanza complessiva percorsa dall'inizio della tappa. |
-| `elevation_m` | m | Quota sul livello del mare, filtrata con mediana sui dati grezzi. |
+| `distance_total_m` | m | Distanza osservata complessiva, senza ricostruire gli spostamenti attraverso le interruzioni. |
+| `elevation_m` | m | Quota riportata dalla sorgente, filtrata con mediana sui dati grezzi. |
 | `speed_kmh` | km/h | Velocità oraria calcolata come `distance_delta_m / durata × 3.6`. |
 | `slope_ratio` | rapporto | Pendenza del terreno (rapporto dislivello / distanza percorsa). Un valore di `0.08` indica una salita dell'8%. |
 | `effort_estimate` | 0.0 – 1.0 | Indice composito di sforzo, ottenuto combinando velocità normalizzata e pendenza positiva. |
@@ -49,7 +57,8 @@ I pesi e le velocità di riferimento sono configurabili in `src/desnivel/trip/co
 ## Gestione dei valori mancanti
 
 - I campi non disponibili nella traccia originale (ad esempio quote assenti) non vengono trasmessi; l'assenza di un messaggio non equivale a zero.
-- Se la traccia contiene solo alcune quote, le quote mancanti vengono interpolate linearmente in base alla posizione dei punti nella sequenza GPX.
+- Se un tratto contiene solo alcune quote, quelle mancanti vengono interpolate linearmente in base alla posizione dei punti nella sequenza. I tratti separati da interruzioni sono trattati indipendentemente.
+- Le finestre di movimento che attraversano una giunzione o un intervallo segnalato come non valido non producono misure di velocità, pendenza o sforzo.
 
 ---
 

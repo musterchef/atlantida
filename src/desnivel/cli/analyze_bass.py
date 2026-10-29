@@ -8,18 +8,19 @@ import shlex
 from desnivel.music.bass.analysis import recommend_bass
 from desnivel.music.journey import compose
 from desnivel.trip.loader import load_track
+from desnivel.cli.track_source import add_track_arguments
 from desnivel.trip.metrics import build_metric_samples
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--gpx', type=Path, required=True)
+    add_track_arguments(parser)
     parser.add_argument('--stage-music', type=Path, required=True)
     parser.add_argument('--preset', type=Path, default=Path('presets/misto.json'),
                         help='Interpretazione del viaggio usata anche nel replay.')
     args = parser.parse_args(argv)
     try:
-        samples = build_metric_samples(load_track(args.gpx))
+        samples = build_metric_samples(load_track(args.gpx, timing_reference=args.timing_reference))
         changes = compose(samples, json.loads(args.stage_music.read_text()),
                           json.loads(args.preset.read_text()))
         recommendation = recommend_bass(changes, max(s.elapsed_s for s in samples))

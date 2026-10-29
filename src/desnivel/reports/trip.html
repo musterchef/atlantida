@@ -11,13 +11,52 @@
   <header><p class="eyebrow">DESNIVEL / LETTURA DEL VIAGGIO</p>
     <h1>Profilo e zone del percorso</h1>
     <p id="source" class="muted"></p>
+    <p id="travel-summary" class="muted" hidden></p>
+    <p id="recording-summary" class="muted" hidden></p>
   </header>
   <noscript>Attiva JavaScript per visualizzare i grafici del report locale.</noscript>
   <section class="summary" aria-label="Riepilogo">
-    <div><span>Distanza</span><strong id="distance"></strong></div>
+    <div><span>Distanza osservata</span><strong id="distance"></strong></div>
     <div><span>Zone confermate</span><strong id="zone-count"></strong></div>
     <div><span>Finestra di osservazione</span><strong id="observation"></strong></div>
     <div><span>Persistenza richiesta</span><strong id="persistence"></strong></div>
+  </section>
+  <section id="quality-panel" class="panel" aria-labelledby="quality-title" hidden>
+    <h2 id="quality-title">Dati originali: verifica della velocità GPS</h2>
+    <div id="quality-filter" hidden>
+      <h3>Esclusioni applicate al caricamento</h3>
+      <p id="quality-filter-summary"></p>
+      <p class="muted">Il file originale rimane intatto. Le riconnessioni usano coordinate e orari dei punti conservati.
+        I tratti non risolti conservano punti e distanza, ma non forniscono velocità, pendenza di movimento o stima di sforzo.
+        La distanza totale può quindi contenere ancora salti segnalati come non risolti.</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Punti esclusi</th><th>Adiacenti conservati</th><th>Tempo</th><th>Distanza prima → dopo</th><th>Velocità ricalcolata</th></tr></thead>
+        <tbody id="quality-reconnections"></tbody>
+      </table></div>
+      <h3>Intervalli non risolti: misure di movimento escluse</h3>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Punti</th><th>Distanza</th><th>Tempo</th><th>Velocità sorgente</th><th>Motivo</th></tr></thead>
+        <tbody id="quality-unresolved"></tbody>
+      </table></div>
+    </div>
+    <h3>Intervalli originali da ispezionare</h3>
+    <p id="quality-summary"></p>
+    <p class="muted">Velocità calcolata fra coordinate consecutive e relativi orari originali, prima di interpolazione e filtri.
+      Gli intervalli sono ordinati dal più veloce: la posizione in questa lista non è una classificazione di errore.
+      I punti originali restano disponibili per l'ispezione, comprese le esclusioni del filtro. Gli orari sono UTC.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Dettaglio</th><th>Punti sorgente</th><th>Da → a km sorgente</th><th>Distanza</th><th>Tempo</th><th>Velocità derivata</th><th>Inizio UTC</th></tr></thead>
+      <tbody id="quality-intervals"></tbody>
+    </table></div>
+    <p id="quality-selection" class="inspection" aria-live="polite"></p>
+    <svg id="quality-map" viewBox="0 0 1100 330" role="img" aria-label="Coordinate dei punti vicini all'intervallo selezionato"></svg>
+    <p class="chart-note">Schema locale delle coordinate, nord in alto. Freccia rossa: intervallo selezionato; grigio: punti adiacenti.
+      La distanza sorgente è cumulata senza correggere i salti e può differire da quella del profilo dopo il filtro.
+      I punti sono numerati da 1 nella sorgente; nei FIT l'indice identifica il secondo di registrazione consolidato.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Punto</th><th>Segmento</th><th>Orario UTC</th><th>Latitudine</th><th>Longitudine</th><th>Quota</th><th>Δ m dal precedente</th><th>Δ s</th><th>km/h derivati</th></tr></thead>
+      <tbody id="quality-points"></tbody>
+    </table></div>
   </section>
   <section class="panel" aria-labelledby="profile-title">
     <div class="panel-heading"><div><h2 id="profile-title">Il viaggio, lungo la distanza</h2>
@@ -36,6 +75,7 @@
     <svg id="elevation-chart" viewBox="0 0 1100 290" role="img" aria-label="Profilo altimetrico con zone confermate"></svg>
     <svg id="slope-chart" viewBox="0 0 1100 240" role="img" aria-label="Pendenza osservata e soglie di classificazione"></svg>
     <p class="chart-note">Sfondi colorati: zone confermate. Linee tratteggiate: soglie dal JSON.
+      Il profilo non collega tratti separati da interruzioni escluse.
       Nella fascia sotto la quota, i tratti tratteggiati indicano osservazioni diverse dalla zona assegnata.</p>
     <p id="inspection" class="inspection" aria-live="polite">Muovi il puntatore sui grafici o seleziona una zona nella tabella per leggere i dettagli.</p>
   </section>
@@ -50,17 +90,17 @@
       <p class="chart-note">Stima a BPM costante: secondi = beat × 60 / BPM. I tempi sono arrotondati al secondo.
         Questo campo non cambia l'allocazione né il tempo di Ableton.</p>
     </div>
-    <p class="muted">Le barre confrontano distanza, tempo lineare GPX e timeline allocata.
-      Le due viste temporali hanno lo stesso totale di beat. Il riferimento lineare conserva le proporzioni dei tempi caricati dal GPX,
+    <p class="muted">Le barre confrontano distanza, tempo lineare del viaggio e timeline allocata.
+      Le due viste temporali hanno lo stesso totale di beat. Il riferimento lineare conserva le proporzioni dei tempi osservati, esclusi soste prolungate e tratti non registrati,
       senza minimi o quantizzazione; la timeline allocata garantisce finestre intere.</p>
-    <svg id="timeline-chart" viewBox="0 0 1100 215" role="img" aria-label="Confronto fra distanza, tempo lineare GPX e spazio musicale assegnato"></svg>
+    <svg id="timeline-chart" viewBox="0 0 1100 215" role="img" aria-label="Confronto fra distanza, tempo lineare del viaggio e spazio musicale assegnato"></svg>
     <label for="timeline-position">Esplora la timeline per finestre</label>
     <input id="timeline-position" class="timeline-slider" type="range" min="0" step="1" value="0">
     <p id="timeline-inspection" class="inspection" aria-live="polite"></p>
     <p class="chart-note">Anteprima dell'allocazione. La navigazione non avvia note;
       per ascoltare questo piano usa ensemble con --timing allocated.</p>
     <div class="table-scroll"><table>
-      <thead><tr><th>Macrosezione</th><th>Da → a km</th><th>Finestre</th><th>Da → a beat</th><th>Beat allocati</th><th>Beat lineari GPX</th></tr></thead>
+      <thead><tr><th>Macrosezione</th><th>Da → a km</th><th>Finestre</th><th>Da → a beat</th><th>Beat allocati</th><th>Beat lineari</th></tr></thead>
       <tbody id="timeline-spans"></tbody>
     </table></div>
   </section>
@@ -94,7 +134,7 @@
     </table></div>
   </section>
   <details class="panel"><summary>Configurazione e origine dei dati</summary>
-    <p>Analisi offline del profilo altimetrico. La quota proviene dal loader GPX ed è interpolata ai confini e ai centri degli intervalli di analisi.
+    <p>Analisi offline del profilo altimetrico. La quota proviene dalla sorgente FIT o GPX ed è interpolata ai confini e ai centri degli intervalli di analisi.
       Le zone dipendono dalle soglie e dalla persistenza elencate qui sotto. Questo report non assegna comportamenti musicali.</p>
     <pre id="config"></pre>
     <div id="grouping-config" hidden><h3>Raggruppamento delle macrosezioni</h3><pre id="families-config"></pre></div>
@@ -102,5 +142,6 @@
 </main>
 <script id="analysis-data" type="application/json">REPORT_DATA</script>
 <script>/* REPORT_SCRIPT */</script>
+<script>/* QUALITY_SCRIPT */</script>
 </body>
 </html>

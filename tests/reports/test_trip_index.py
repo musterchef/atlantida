@@ -7,7 +7,7 @@ from urllib.parse import unquote
 
 import pytest
 
-from desnivel.cli.analyze_trips import main
+from desnivel.cli.analyze_trips import main, stage_sources
 from desnivel.cli.analyze_trip import analyze_trip
 from desnivel.reports.trip import render_trip_index
 
@@ -47,6 +47,13 @@ def test_collection_has_sorted_working_reports_with_same_analysis_as_single_comm
         result = json.loads((output/Path(filename).with_suffix('.json')).read_text())
         assert 'timeline' in result
         assert [c['flank_kind'] for c in result['section_context']] == ['ascent', 'descent']
+    review = json.loads((output/'segmenti-da-verificare.json').read_text())
+    assert len(review['stages']) == 2
+    page = (output/'segmenti-da-verificare.html').read_text()
+    assert 'Europe/Rome' in page
+    for stage in review['stages']:
+        for segment in stage['segments']:
+            assert f'{stage["stage"]}:{segment["id"]}' in page
     expected = analyze_trip(sources/'tappa01_uno.gpx', Path('presets/analisi-percorso.json'),
                             grouping=Path('presets/macrosezioni-percorso.json'),
                             pause_context=[['ascent', 'level'], ['descent', 'level']],
@@ -62,6 +69,16 @@ def test_collection_rejects_empty_directory_without_writing_output(tmp_path, cap
               '--output-dir', str(tmp_path/'report')])
     assert 'nessun file GPX' in capsys.readouterr().err
     assert not (tmp_path/'report').exists()
+
+
+def test_stage_collection_prefers_fit_and_orders_original_strava_names_by_stage(tmp_path):
+    names = ['tappa02_trip.gpx', 'tappa01_trip.gpx', 'Da_tappa_2_trip.fit', 'Da_tappa_10_trip.fit']
+    for name in names:
+        (tmp_path/name).touch()
+    assert [p.name for p in stage_sources(tmp_path)] == ['tappa01_trip.gpx', 'Da_tappa_2_trip.fit', 'Da_tappa_10_trip.fit']
+    (tmp_path/'other_tappa_2_trip.fit').touch()
+    with pytest.raises(ValueError, match='più sorgenti'):
+        stage_sources(tmp_path)
 
 
 def test_index_escapes_labels_and_encodes_local_filenames():

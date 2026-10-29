@@ -7,6 +7,7 @@ from pathlib import Path
 
 from desnivel.trip.config import DEFAULT_CONFIG
 from desnivel.trip.loader import load_track
+from desnivel.cli.track_source import add_track_arguments
 from desnivel.sinks.osc import UdpOscClient
 from desnivel.sinks.trip_metrics_osc import (
     TripMetricsOscSink,
@@ -19,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
         prog="desnivel-stream-metrics",
         description="Invia metriche neutrali di una tappa via OSC.",
     )
-    parser.add_argument("--gpx", required=True, type=Path, help="File GPX della tappa.")
+    add_track_arguments(parser)
     parser.add_argument("--stage", default=None, help="ID tappa; default dal nome GPX.")
     parser.add_argument("--speed", type=float, default=1.0, help="Velocita' di replay.")
     parser.add_argument("--osc-host", default=DEFAULT_CONFIG.osc.host)
@@ -35,7 +36,7 @@ def main(argv: list[str] | None = None) -> int:
         DEFAULT_CONFIG,
         osc=replace(DEFAULT_CONFIG.osc, host=args.osc_host, port=args.osc_port),
     )
-    track = load_track(args.gpx, config=config, stage_id=args.stage)
+    track = load_track(args.gpx, config=config, stage_id=args.stage, timing_reference=args.timing_reference)
     schedule = build_trip_metric_schedule(track, config)
     source = track.metadata.get("source_path", str(args.gpx))
     print(

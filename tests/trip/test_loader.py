@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from dataclasses import replace
 
 import numpy as np
 import pytest
@@ -108,7 +109,9 @@ def test_resample_uniform_grid_preserves_endpoints() -> None:
 
 def test_load_track_end_to_end(tmp_path: Path) -> None:
     gpx = _make_minimal_gpx(tmp_path)
-    track = load_track(gpx)
+    # La fixture rappresenta un dispositivo che registra ogni 60 secondi.
+    config = replace(DEFAULT_CONFIG, gpx=replace(DEFAULT_CONFIG.gpx, recording_gap_s=120))
+    track = load_track(gpx, config)
     rate = DEFAULT_CONFIG.timing.internal_rate_hz
     # 120 s totali, griglia a 10 Hz → 1201 campioni.
     assert track.n_samples == int(120 * rate) + 1
@@ -123,7 +126,8 @@ def test_load_track_end_to_end(tmp_path: Path) -> None:
 def test_track_without_elevation_omits_elevation_dependent_channels(
     tmp_path: Path,
 ) -> None:
-    track = load_track(_make_gpx_without_elevation(tmp_path))
+    config = replace(DEFAULT_CONFIG, gpx=replace(DEFAULT_CONFIG.gpx, recording_gap_s=120))
+    track = load_track(_make_gpx_without_elevation(tmp_path), config)
     assert "ele" not in track.samples
     assert "slope" not in track.samples
     assert "effort" not in track.samples

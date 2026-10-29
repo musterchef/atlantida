@@ -71,6 +71,49 @@ def _zone_starts(observed: np.ndarray, edges: np.ndarray, minimum_m: float) -> n
 
 
 def analyze_track(track: Track, config: dict) -> dict:
+    """Analizza separatamente i tratti osservati, senza attraversare le interruzioni."""
+    if not track.segments:
+        return _analyze_continuous(track, config)
+    total = float(track.samples['cum_dist_m'][-1]-track.samples['cum_dist_m'][0])
+    zones, windows, profile, segments = [], [], [], []
+    for index, segment in enumerate(track.segments):
+        block = slice(segment.start, segment.stop)
+        samples = {name: values[block] for name, values in track.samples.items()}
+        result = _analyze_continuous(Track(track.stage_id, track.t[block], samples, track.metadata), config)
+        offset = float(samples['cum_dist_m'][0]-track.samples['cum_dist_m'][0])
+        zone_offset = len(zones)
+        for zone in result['zones']:
+            zone['index'] += zone_offset
+            zone['start_distance_m'] += offset
+            zone['end_distance_m'] += offset
+            zone['from_progress'] = zone['start_distance_m']/total
+            zone['until_progress'] = zone['end_distance_m']/total
+            zone['travel_segment_index'] = index
+        for window in result['windows']:
+            window['start_distance_m'] += offset
+            window['end_distance_m'] += offset
+            window['zone_index'] += zone_offset
+            window['travel_segment_index'] = index
+        for point in result['profile']:
+            point['distance_m'] += offset
+            point['travel_segment_index'] = index
+        zones.extend(result['zones']); windows.extend(result['windows']); profile.extend(result['profile'])
+        segments.append({'index': index, 'start_distance_m': offset,
+                         'end_distance_m': offset+result['total_distance_m'],
+                         'active_start_s': float(track.t[segment.start]),
+                         'active_end_s': float(track.t[segment.stop-1]),
+                         'source_start_unix': segment.source_start_unix, 'source_end_unix': segment.source_end_unix,
+                         'source_start_index': segment.source_start_index, 'source_end_index': segment.source_end_index})
+    return {'version': 1, 'stage': track.stage_id, 'source_path': track.metadata.get('source_path'),
+            'source_format': track.metadata.get('source_format'),
+            'source_recording': deepcopy(track.metadata.get('source_recording', {})),
+            'timing_reference_path': track.metadata.get('timing_reference_path'),
+            'config': deepcopy(config), 'total_distance_m': total, 'zones': zones, 'windows': windows,
+            'profile': profile, 'travel_segments': segments,
+            'travel_selection': deepcopy(track.metadata.get('travel_selection', {}))}
+
+
+def _analyze_continuous(track: Track, config: dict) -> dict:
     """Campiona per distanza, classifica la pendenza e conferma i cambi persistenti.
 
     La pendenza è la differenza di quota fra gli estremi di una finestra

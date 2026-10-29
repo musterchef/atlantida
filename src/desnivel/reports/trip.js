@@ -23,6 +23,39 @@
     const node = svgNode(tag, attributes, text); parent.appendChild(node); return node;
   };
   byId('source').textContent = `${data.stage} · ${data.source_path || 'Track fornito all’analisi'}`;
+  if (data.travel_selection) {
+    const travel = data.travel_selection;
+    byId('travel-summary').hidden = false;
+    byId('travel-summary').textContent = `${travel.segment_count} tratti osservati · `
+      + `${number(travel.observed_duration_s/60, 1)} minuti elaborati`
+      + (travel.source_duration_s !== null ? ` su ${number(travel.source_duration_s/60, 1)} minuti fra i campioni GPS estremi` : '')
+      + `. ${travel.interruptions.length} interruzioni escluse prima del ricampionamento. Nessuna distanza ricostruita fra i tratti. `
+      + (travel.selection_source === 'timer_events'
+        ? `Selezione tramite eventi timer FIT: ${number(travel.timer_duration_s/60, 2)} minuti; `
+          + `${number(travel.unobserved_timer_duration_s, 1)} secondi attivi senza un tratto GPS utilizzabile. `
+          + (travel.declared_timer_duration_s !== undefined
+            ? `Riepilogo timer dichiarato: ${number(travel.declared_timer_duration_s/60, 2)} minuti. ` : '')
+        : 'Soste stimate dalle coordinate GPS. '
+          + (travel.pause_inference?.typical_sample_interval_s !== undefined && travel.pause_inference.typical_sample_interval_s !== null
+            ? `Cadenza stimata ${number(travel.pause_inference.typical_sample_interval_s, 1)} s; `
+              + `intervalli radi da ${number(travel.pause_inference.pause_gap_threshold_s, 1)} s `
+              + `con velocità media fino a ${number(travel.pause_inference.pause_max_speed_kmh, 1)} km/h. ` : ''))
+      + (data.timing_reference_path ? `Riferimento timer: ${data.timing_reference_path}. ` : '');
+  }
+  const recording = data.source_recording;
+  if (recording?.format === 'fit') {
+    const sessions = recording.sessions || [];
+    const one = sessions.length === 1 ? sessions[0] : {};
+    byId('recording-summary').hidden = false;
+    byId('recording-summary').textContent = `Sorgente ${data.source_format?.toUpperCase() || ''}; timer FIT. `
+      + (one.total_elapsed_time !== undefined ? `Durata totale dichiarata: ${number(one.total_elapsed_time/60, 2)} minuti. ` : '')
+      + (one.total_distance !== undefined ? `Distanza dichiarata nel FIT: ${number(one.total_distance/1000, 3)} km. ` : '')
+      + 'La distanza osservata è calcolata dalle coordinate conservate; velocità e pendenza usano la stessa derivazione per FIT e GPX. '
+      + (recording.timer_duration_difference_s !== undefined
+        ? `Differenza eventi timer meno riepilogo: ${signed(recording.timer_duration_difference_s, 1)} s. ` : '')
+      + `${(recording.out_of_order_records || []).length} inversioni nell'ordine dei messaggi: i campioni sono ordinati per timestamp originale. `
+      + 'I messaggi dello stesso secondo sono consolidati conservando l’ultimo valore presente di ogni campo.';
+  }
   byId('distance').textContent = number(total / 1000) + ' km';
   byId('zone-count').textContent = data.zones.length;
   byId('observation').textContent = number(data.config.slope_window_m, 0) + ' m';
@@ -86,14 +119,22 @@
     add(clip, 'rect', {x: L, y: T, width: W - L - R, height: elevation.bottom - T});
     const pattern = add(defs, 'pattern', {id: 'mismatch', width: 6, height: 6, patternUnits: 'userSpaceOnUse'});
     add(pattern, 'path', {d: 'M-1 1L1 -1M0 6L6 0M5 7L7 5', stroke: '#193039', 'stroke-width': 1.3});
-    add(elevation.svg, 'polyline', {points: points.map(p => `${elevation.x(p.distance_m)},${elevation.y(p.elevation_m)}`).join(' '), fill: 'none', stroke: '#193039', 'stroke-width': 2, 'clip-path': 'url(#profile-clip)'});
+    const pieces = new Map();
+    for (const point of points) {
+      const segment = point.travel_segment_index ?? 0;
+      if (!pieces.has(segment)) pieces.set(segment, []);
+      pieces.get(segment).push(point);
+    }
+    for (const piece of pieces.values()) add(elevation.svg, 'polyline', {points: piece.map(p => `${elevation.x(p.distance_m)},${elevation.y(p.elevation_m)}`).join(' '), fill: 'none', stroke: '#193039', 'stroke-width': 2, 'clip-path': 'url(#profile-clip)'});
     for (const band of bands.slice(1)) {
       add(slope.svg, 'line', {x1: L, x2: W - R, y1: slope.y(band.from_slope_ratio), y2: slope.y(band.from_slope_ratio), stroke: colors.get(band.name), 'stroke-dasharray': '5 5'});
     }
-    let path = '';
+    let path = '', previousSegment;
     for (const window of windows) {
       const start = Math.max(view[0], window.start_distance_m), end = Math.min(view[1], window.end_distance_m);
-      path += `${path ? 'L' : 'M'}${slope.x(start)},${slope.y(window.slope_ratio)}L${slope.x(end)},${slope.y(window.slope_ratio)}`;
+      const segment = window.travel_segment_index ?? 0;
+      path += `${path && previousSegment === segment ? 'L' : 'M'}${slope.x(start)},${slope.y(window.slope_ratio)}L${slope.x(end)},${slope.y(window.slope_ratio)}`;
+      previousSegment = segment;
       add(elevation.svg, 'rect', {x: elevation.x(start), y: elevation.bottom + 5, width: elevation.x(end) - elevation.x(start), height: 8, fill: colors.get(window.observed_kind)});
       if (window.observed_kind !== data.zones[window.zone_index].kind) {
         add(elevation.svg, 'rect', {x: elevation.x(start), y: elevation.bottom + 5, width: elevation.x(end) - elevation.x(start), height: 8, fill: 'url(#mismatch)'});
@@ -225,7 +266,7 @@
     byId('timeline-adjustments').textContent = timeline.adjustments.map(a => `${reasons[a.code] || a.code}: ${number(a.from_beats)} → ${number(a.to_beats)} beat`).join(' · ');
     const svg = byId('timeline-chart'), width = W-L-R;
     add(svg, 'text', {x: L, y: 18}, 'Percorso · quote di distanza');
-    add(svg, 'text', {x: L, y: 83}, 'Tempo lineare GPX · stesso totale di beat');
+    add(svg, 'text', {x: L, y: 83}, 'Tempo lineare del viaggio · stesso totale di beat');
     add(svg, 'text', {x: L, y: 148}, 'Timeline allocata · quote di beat');
     const timelineRows = [];
     for (const span of timeline.spans) {
@@ -236,7 +277,7 @@
       const linear = timeline.linear_reference[span.source_index];
       const linearBar = add(svg, 'rect', {x: L+linear.start_beat/timeline.total_beats*width, y: 93,
         width: linear.duration_beats/timeline.total_beats*width, height: 28, fill: color, stroke: 'white'});
-      add(linearBar, 'title', {}, `${span.source_index+1}. ${section.kind} · lineare GPX ${number(linear.duration_beats)} beat`);
+      add(linearBar, 'title', {}, `${span.source_index+1}. ${section.kind} · lineare ${number(linear.duration_beats)} beat`);
       const musicBar = add(svg, 'rect', {x: L+span.start_beat/timeline.total_beats*width, y: 158,
         width: span.duration_beats/timeline.total_beats*width, height: 28, fill: color, stroke: 'white'});
       add(musicBar, 'title', {}, `${span.source_index+1}. ${section.kind} · beat ${number(span.start_beat)}–${number(span.end_beat)} · ${span.window_count} finestre`);

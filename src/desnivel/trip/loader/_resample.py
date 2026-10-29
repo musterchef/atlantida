@@ -8,6 +8,7 @@ def resample_to_uniform_grid(
     elapsed_s: np.ndarray,
     channels: dict[str, np.ndarray],
     rate_hz: float,
+    interval_channels: tuple[str, ...] = (),
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Ricampiona linearmente i canali sulla griglia ``[0, T]`` a ``rate_hz``.
 
@@ -16,6 +17,8 @@ def resample_to_uniform_grid(
         channels: dizionario nome → array. Tutti devono avere la stessa
             lunghezza di ``elapsed_s``.
         rate_hz: frequenza della griglia di destinazione.
+        interval_channels: canali il cui valore al punto i descrive
+            l'intervallo (t[i-1], t[i]], campionati senza interpolazione.
 
     Returns:
         ``(t_uniform, channels_uniform)``. Se ``elapsed_s`` è vuoto o ha
@@ -32,6 +35,8 @@ def resample_to_uniform_grid(
 
     n = int(np.floor(duration * rate_hz)) + 1
     t = np.arange(n, dtype=float) / rate_hz
+    if duration-t[-1] > np.finfo(float).eps*max(1., duration)*4:
+        t = np.r_[t, duration]
     src_t = elapsed_s - elapsed_s[0]
 
     out: dict[str, np.ndarray] = {}
@@ -40,5 +45,11 @@ def resample_to_uniform_grid(
             raise ValueError(
                 f"Canale '{name}' ha forma {values.shape}, attesa {elapsed_s.shape}",
             )
-        out[name] = np.interp(t, src_t, values.astype(float))
+        if name in interval_channels:
+            # Il valore al punto i descrive (t[i-1], t[i]]: conserva i
+            # buchi e non mescola un intervallo scartato con gli adiacenti.
+            indices = np.minimum(np.searchsorted(src_t, t, side='left'), len(src_t)-1)
+            out[name] = values[indices].astype(float)
+        else:
+            out[name] = np.interp(t, src_t, values.astype(float))
     return t, out

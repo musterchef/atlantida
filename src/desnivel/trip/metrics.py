@@ -86,6 +86,15 @@ def build_metric_samples(
         elevation = np.asarray(elevation, dtype=float)
 
     samples: list[MetricSample] = []
+    unavailable_motion = np.zeros(max(0, ticks.size-1), dtype=bool)
+    for start, end in track.metadata.get('unavailable_motion_intervals', ()):
+        first = np.searchsorted(ticks, start, side='right' if end > start else 'left')-1
+        last = np.searchsorted(ticks, end, side='left' if end > start else 'right')
+        unavailable_motion[max(0, first):min(last, unavailable_motion.size)] = True
+    for segment in track.segments[1:]:
+        boundary = track.t[segment.start]-track.t[0]
+        # Finestre a cavallo della giunzione non descrivono un tratto osservato.
+        unavailable_motion |= (ticks[:-1] < boundary) & (ticks[1:] > boundary)
 
     for tick in ticks:
         if cumulative is not None:
@@ -99,6 +108,8 @@ def build_metric_samples(
         interval_end = float(ticks[interval_index])
         interval_start = float(ticks[interval_index - 1])
         interval_duration = interval_end - interval_start
+        if unavailable_motion[interval_index-1]:
+            continue
         distance_delta = _interval_delta(elapsed, cumulative, interval_start, interval_end)
         _append_if_finite(
             samples, interval_end, MetricName.DISTANCE_DELTA_M, distance_delta,
@@ -152,7 +163,10 @@ def _interval_delta(
     interior = (times > start_s) & (times < end_s)
     if not np.isfinite(values[interior]).all():
         return float("nan")
-    start = _sample_at(times, values, start_s)
+    # Alla giunzione due estremi osservati hanno lo stesso tempo attivo:
+    # l'inizio legge il tratto entrante, la fine quello uscente.
+    first = int(np.searchsorted(times, start_s, side='right'))-1
+    start = float(values[first]) if first >= 0 and times[first] == start_s else _sample_at(times, values, start_s)
     end = _sample_at(times, values, end_s)
     if not (np.isfinite(start) and np.isfinite(end)):
         return float("nan")

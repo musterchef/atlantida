@@ -11,12 +11,12 @@ Desnivel adotta un'architettura a pipeline modulare con separazione rigorosa tra
 ## Flusso generale
 
 ```text
-Traccia GPX ──► [trip] Metriche neutre ──► [music] Generazione musicale ──► [adapters] ──► [sinks] ──► Destinazioni (DAW / Synth / MIDI / OSC)
+Traccia FIT/GPX ──► [trip] Metriche neutre ──► [music] Generazione musicale ──► [adapters] ──► [sinks] ──► Destinazioni (DAW / Synth / MIDI / OSC)
 ```
 
 | Modulo | Responsabilità | Package |
 |---|---|---|
-| **Analisi del viaggio** | Carica le tracce GPX, ricampiona a tempo costante e calcola le metriche fisiche (distanza, quota, pendenza, velocità, sforzo). | `src/desnivel/trip/` |
+| **Analisi del viaggio** | Legge FIT e GPX, seleziona i tratti osservati, ricampiona ciascun tratto e calcola distanza, quota, pendenza, velocità e stima di sforzo. | `src/desnivel/trip/` |
 | **Generazione musicale** | Applica le scelte compositive: traduce metriche in pattern, governa l'armonia, genera frasi musicali e relazioni polifoniche tra le voci. | `src/desnivel/music/` |
 | **Adattatori** | Converte strutture musicali astratte (`Pattern`, `Phrase`) nei parametri specifici dei dispositivi o protocolli di destinazione. | `src/desnivel/adapters/` |
 | **Trasporto** | Gestisce la trasmissione dei messaggi via rete (es. OSC) e il salvataggio dei log di acquisizione. | `src/desnivel/sinks/` |
@@ -64,6 +64,7 @@ Il Director legge anche le assegnazioni manuali delle voci per sezione. Il Coord
 - `m4l/`: sorgenti e patch Max for Live (`.amxd`, `.js`, `.maxpat`).
 - `tools/`: script per la costruzione e l'ispezione dei device Max for Live.
 - `presets/`: configurazioni musicali delle tappe e delle regole.
+- `fit/`, `gpx/`: registrazioni delle tappe nei due formati; il FIT conserva gli eventi timer.
 - `comandi/`: launcher macOS per l'avvio rapido delle sessioni di ascolto.
 - `doc/`: documentazione del sistema. I documenti storici o superati sono conservati in `doc/archivio/`.
 

@@ -6,7 +6,9 @@ from pathlib import Path
 import numpy as np
 
 from desnivel.trip.analysis import analyze_track
-from desnivel.trip.loader import load_track
+from desnivel.trip.loader import load_track, read_source
+from desnivel.cli.track_source import add_track_arguments
+from desnivel.trip.quality import inspect_source
 from desnivel.trip.sections import group_zones, measure_section_bridges
 from desnivel.reports.trip import render_trip_report
 from desnivel.music.timeline import allocate_timeline, TimelineManager
@@ -27,12 +29,15 @@ def _linear_spans(track, sections, total_beats):
              'duration_beats': end-start} for index, (start, end) in enumerate(zip(beats, beats[1:]))]
 
 
-def analyze_trip(gpx, config, *, grouping=None, pause_context=None, timeline_session=None):
+def analyze_trip(gpx, config, *, grouping=None, pause_context=None, timeline_session=None, timing_reference=None):
     """Prepara gli stessi dati per report singoli e raccolte di tappe."""
     if (pause_context or timeline_session) and not grouping:
         raise ValueError('contesto locale e timeline richiedono il raggruppamento')
-    track = load_track(gpx)
+    track = load_track(gpx, timing_reference=timing_reference)
     result = analyze_track(track, json.loads(config.read_text()))
+    result['source_quality'] = inspect_source(read_source(gpx)[0],
+                                            max_speed_kmh=track.metadata['source_filter']['max_speed_kmh'])
+    result['source_filter'] = track.metadata['source_filter']
     if grouping:
         result['grouping'] = group_zones(result, json.loads(grouping.read_text()))
     if pause_context:
@@ -58,7 +63,7 @@ def analyze_trip(gpx, config, *, grouping=None, pause_context=None, timeline_ses
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--gpx', type=Path, required=True)
+    add_track_arguments(parser)
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--grouping', type=Path, help='Famiglie JSON per raggruppare le zone in macrosezioni.')
     parser.add_argument('--pause-context', nargs=2, action='append', metavar=('FLANK', 'MIDDLE'),
@@ -76,7 +81,8 @@ def main(argv=None):
         parser.error('JSON e HTML richiedono percorsi distinti')
     try:
         result = analyze_trip(args.gpx, args.config, grouping=args.grouping,
-                              pause_context=args.pause_context, timeline_session=args.timeline_session)
+                              pause_context=args.pause_context, timeline_session=args.timeline_session,
+                              timing_reference=args.timing_reference)
         if args.output:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(result, ensure_ascii=False, allow_nan=False, indent=2)+'\n', encoding='utf-8')

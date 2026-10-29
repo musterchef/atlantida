@@ -1,6 +1,13 @@
 # Sessione multivoce Python
 
-Il comando `desnivel.cli.ensemble` esegue nello stesso processo il replay GPX, il Music Director, il Music Coordinator, i generatori e il server dei dispositivi di voce. La configurazione seleziona esplicitamente generatori, ruoli, parametri e organico delle sezioni.
+Il comando `desnivel.cli.ensemble` esegue nello stesso processo il replay FIT/GPX, il Music Director, il Music Coordinator, i generatori e il server dei dispositivi di voce. La configurazione seleziona esplicitamente generatori, ruoli, parametri e organico delle sezioni.
+
+Il loader usa gli eventi timer del FIT, oppure stima le soste dal GPX,
+ed esclude le interruzioni prima di ricampionare
+il viaggio. Il replay lineare usa il tempo dei tratti osservati; la
+timeline allocata usa la loro distanza. I periodi esclusi non ricevono
+durata musicale. I criteri e i riferimenti ai dati originali sono descritti
+in [ANALISI-PERCORSO.md](ANALISI-PERCORSO.md#selezione-del-viaggio-osservato).
 
 ## Avvio
 
@@ -17,6 +24,21 @@ Dalla radice del repository:
 
 Per verificare configurazione e generazione delle sezioni senza aprire porte o inviare note, aggiungere `--dry-run`.
 
+`--track` accetta FIT e GPX; `--gpx` resta un alias. Per una prova con FIT:
+
+```sh
+.venv/bin/python -m desnivel.cli.ensemble \
+  --track fit/Da_Piazza_Castello_al_Castel_lo_tappa_6_Orvieto_Bagnoregio_Lago_di_Bolsena.fit \
+  --config presets/organico.json \
+  --direction presets/direzione-viaggio.json \
+  --timing allocated
+```
+
+Se la sorgente è GPX, `--timing-reference percorso.fit` permette di usare
+gli eventi timer del FIT corrispondente mantenendo coordinate e quota del GPX.
+Dettagli e provenienza dei canali in
+[ANALISI-PERCORSO.md](ANALISI-PERCORSO.md#sorgenti-fit-e-gpx).
+
 Per usare le macrosezioni del percorso e i relativi assetti musicali:
 
 ```sh
@@ -27,7 +49,7 @@ Per usare le macrosezioni del percorso e i relativi assetti musicali:
   --speed 50
 ```
 
-Con `--direction`, il comando analizza il GPX e prepara le sezioni musicali
+Con `--direction`, il comando analizza il viaggio e prepara le sezioni musicali
 all'avvio. I confini derivano dalle macrosezioni; ciascuna famiglia riceve
 l'assetto definito nel JSON di direzione. Senza questa opzione vengono usate
 le sezioni manuali di `organico.json`.

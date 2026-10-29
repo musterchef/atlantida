@@ -1,4 +1,5 @@
-"""Caricamento dei file GPX nel modello `Track`."""
-from .gpx_loader import load_track
+"""Caricamento FIT e GPX nel modello neutro `Track`."""
+from .track_loader import load_track
+from ._source import read_source
 
-__all__ = ["load_track"]
+__all__ = ["load_track", "read_source"]

@@ -110,7 +110,7 @@ def test_timeline_report_and_json_use_same_beat_allocation_without_changing_anal
     expected = allocate_timeline(distances, window_beats=session['window_beats'], **session['timeline']).to_dict()
     assert {k: result['timeline'][k] for k in expected} == expected
     assert result['timeline']['position']['source_index'] == 0
-    assert len(result['timeline']['spans']) == 33
+    assert len(result['timeline']['spans']) == 44
     assert f"{expected['total_beats']:g} effettivi; {expected['total_windows']} finestre" in capsys.readouterr().out
 
 
@@ -136,7 +136,7 @@ def test_timeline_requires_grouping_and_reports_extension(tmp_path, capsys):
     session.write_text(json.dumps({'window_beats': 4,
                                   'timeline': {'target_beats': 4, 'min_windows': 2, 'distance_exponent': .5}}))
     assert main(args+['--grouping', 'presets/macrosezioni-percorso.json', '--timeline-session', str(session)]) == 0
-    assert 'minimi garantiti: 4 → 264 beat' in capsys.readouterr().out
+    assert 'minimi garantiti: 4 → 352 beat' in capsys.readouterr().out
 
 
 def test_pause_context_is_optional_and_preserves_original_grouping(tmp_path):
