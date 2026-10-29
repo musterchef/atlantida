@@ -31,6 +31,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "desnivel.reports" = ["*.html", "*.css", "*.js"]
+"desnivel.viewer" = ["*.html", "*.css", "*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

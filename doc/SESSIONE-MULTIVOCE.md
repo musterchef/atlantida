@@ -240,7 +240,55 @@ valgono `null`.
 
 Una parte può essere collegata al server ma esclusa dall'organico della sezione. In `presets/organico.json`, `voice_02` entra al 30% della distanza: prima di quel punto la vista indica il motivo dell'attesa e la soglia d'ingresso. La selezione manuale del ruolo non modifica questa attivazione.
 
-Lo stato dei piani descrive ciò che Python ha inviato, non una conferma audio dello strumento. La scrittura JSON è separata dal motore; in questa versione non esiste un'interfaccia grafica globale.
+Lo stato dei piani descrive ciò che Python ha inviato, non una conferma audio dello strumento. La scrittura JSON è separata dal motore.
+
+## Mappa del viaggio
+
+Aggiungere `--view-port 8765` al comando della sessione e aprire
+<http://127.0.0.1:8765/> nel browser. Per esempio:
+
+```sh
+.venv/bin/python -m desnivel.cli.ensemble \
+  --track gpx/tappa05_Firenze_San_Gimignano.gpx \
+  --config presets/organico.json \
+  --direction presets/direzione-viaggio.json \
+  --timing allocated \
+  --view-port 8765
+```
+
+La pagina mostra percorso completo, tratto attraversato, posizione geografica,
+distanza raggiunta e restante, percentuale, tempo del viaggio e sezione attuale.
+**Intero percorso** adatta la mappa alla traccia; **Segui posizione** mantiene
+il punto corrente al centro. Trascinare la mappa disattiva l'inseguimento.
+Il collegamento sulle coordinate apre la posizione su OpenStreetMap.
+
+La posizione segue i secondi attivi dello snapshot, anche in modalità
+`allocated`, dove il runtime li ricava dalla distanza raggiunta nella timeline.
+La vista interpola le coordinate solo all'interno dei tratti osservati e
+mantiene separate le interruzioni. Stop e attese conservano la posizione;
+un mancato aggiornamento per oltre tre secondi viene segnalato nella pagina.
+
+`viewer/route.py` prepara una volta la geometria dalla stessa traccia caricata
+dalla sessione. `viewer/server.py` serve le risorse e legge lo snapshot in un
+thread HTTP separato; non accede al runtime e non invia comandi musicali.
+`position.js` calcola posizione e tratto attraversato; `view.js` aggiorna la
+pagina ogni 250 ms, dopo la conclusione della richiesta precedente.
+Le interfacce HTTP in sola lettura sono `/api/route` (versione, tappa e segmenti
+di punti `[secondi attivi, latitudine, longitudine]`) e `/api/state`
+(`session`, snapshot completo, e `age_s`, età del file in secondi).
+
+Il server ascolta solo su `127.0.0.1` e si chiude con la sessione. La porta HTTP
+deve essere libera e distinta da quella OSC. Per sessioni contemporanee usare
+porte e percorsi `--status-file` distinti. Senza `--view-port` il server HTTP
+non viene avviato; `--dry-run` non lo avvia.
+
+La cartografia usa i tasselli standard di OpenStreetMap e la libreria
+[Leaflet 1.9.4](https://leafletjs.com/examples/quick-start/) caricata da unpkg:
+richiedono una connessione Internet. Il browser richiede soltanto i tasselli
+dell'area visibile, con attribuzione e cache ordinarie, secondo la
+[politica del servizio](https://operations.osmfoundation.org/policies/tiles/).
+Se i tasselli non sono disponibili, geometria e posizione restano visibili
+quando Leaflet è già caricato. La pagina segnala anche l'assenza della libreria.
 
 ## Verifiche
 

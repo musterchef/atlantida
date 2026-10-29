@@ -174,10 +174,15 @@ def main(argv=None):
                         help='Tempo lineare del viaggio oppure timeline musicale in beat.')
     parser.add_argument('--port', type=int, default=9006)
     parser.add_argument('--status-file', type=Path, default=Path('/tmp/desnivel-session/state.json'))
+    parser.add_argument('--view-port', type=int,
+                        help='Attiva la mappa del viaggio su http://127.0.0.1:PORTA (es. 8765).')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args(argv)
     server = None
+    viewer = None
     try:
+        if args.view_port is not None and not 1024 <= args.view_port <= 65535:
+            raise ValueError('la porta della vista deve essere tra 1024 e 65535')
         if args.timing == 'allocated' and (not args.direction or args.speed is not None):
             raise ValueError('--timing allocated richiede --direction e non usa --speed')
         speed = args.speed if args.speed is not None else 1.
@@ -208,7 +213,15 @@ def main(argv=None):
                         if origin else '')
             print(f"{section['name']}{location}: " + ', '.join(f'{name} ({len(p.notes)} note)' for name, p in phrases.items()), flush=True)
         runtime.reset()
+        if not args.dry_run:
+            store = SessionStatusStore(args.status_file)
+            store.write(runtime.snapshot())
+            if args.view_port is not None:
+                from desnivel.viewer.server import JourneyViewServer
+                viewer = JourneyViewServer(track, args.status_file, args.view_port)
     except (ValueError, KeyError, TypeError, OSError) as error:
+        if viewer:
+            viewer.close()
         if server:
             server.close()
         parser.error(str(error))
@@ -216,13 +229,15 @@ def main(argv=None):
         print('Configurazione e generazione delle sezioni verificate; nessun messaggio inviato.')
         return 0
     server.on_message = runtime.on_message
-    store = SessionStatusStore(args.status_file)
     server.server.timeout = .1
     last_write = 0.
     view = TerminalSessionView()
     print(f'Python pronto su 127.0.0.1:{args.port}. Chiudi il ricevitore diagnostico prima di avviare questa sessione.', flush=True)
     print(f'Stato globale: {args.status_file}', flush=True)
     try:
+        if viewer:
+            viewer.start()
+            print(f'Mappa del viaggio: {viewer.url}', flush=True)
         while True:
             server.server.handle_request()
             try:
@@ -240,6 +255,8 @@ def main(argv=None):
         runtime.state = 'closed'
         store.write(runtime.snapshot())
     finally:
+        if viewer:
+            viewer.close()
         server.close()
     return 0
 

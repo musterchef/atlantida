@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Desnivel · Il viaggio</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="/view.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script defer src="/position.js"></script>
+  <script defer src="/view.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="/">DESNIVEL<span>IL VIAGGIO</span></a><span id="status" role="status">Connessione…</span></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">GEOGRAFIA IN ASCOLTO</p><h1 id="stage">Il percorso prende forma.</h1></div><p class="caption">La posizione nel viaggio<br>segue la sessione musicale.</p></section>
+    <section class="journey" aria-label="Posizione nel viaggio">
+      <div class="map-wrap">
+        <div id="map" aria-label="Mappa interattiva del percorso"></div>
+        <div class="map-tools"><button id="fit" type="button">Intero percorso</button><button id="follow" type="button" aria-pressed="false">Segui posizione</button></div>
+        <div class="legend"><span class="line done"></span>Attraversato <span class="line"></span>Percorso</div>
+      </div>
+      <aside>
+        <p class="eyebrow">DISTANZA ATTRAVERSATA</p><p class="distance"><strong id="distance">—</strong> <span>km</span></p>
+        <p class="muted">su <span id="total">—</span> km di viaggio</p>
+        <div class="progress-label"><span>Avanzamento</span><strong id="percent">—</strong></div>
+        <progress id="progress" value="0" max="1" aria-label="Avanzamento del viaggio"></progress>
+        <dl><div><dt>Da attraversare</dt><dd id="remaining">—</dd></div><div><dt>Tempo del viaggio</dt><dd id="elapsed">—</dd></div><div><dt>Sezione attuale</dt><dd id="section">—</dd></div><div><dt id="timing-label">Replay</dt><dd id="timing">—</dd></div></dl>
+        <div class="location"><p class="eyebrow">SEI QUI</p><a id="coordinates" target="_blank" rel="noopener">—</a><p class="muted">Coordinate della posizione sul percorso</p></div>
+      </aside>
+    </section>
+    <p id="notice" role="status">In attesa dello stato della sessione.</p>
+    <footer><span><i></i> Viaggio osservato · Desnivel</span><span>Mappa interattiva · trascina per esplorare</span></footer>
+  </main>
+</body>
+</html>
