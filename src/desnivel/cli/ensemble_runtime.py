@@ -57,6 +57,8 @@ class EnsembleRuntime:
         self.instance = None
         self.transport_serial = -1
         self.error = None
+        self.paused = False
+        self.restart_count = 0
         self.last_update = clock()
         self.planned_start = None
         self.last_section = None
@@ -139,6 +141,33 @@ class EnsembleRuntime:
         self.instance, self.transport_serial = message['instance'], message['serial']
         self.beat, self.playing, self.epoch = beat, bool(playing), epoch
 
+    def control(self, action):
+        """Controlli della sessione, eseguiti nello stesso thread della pianificazione."""
+        if action not in ('pause', 'resume', 'restart'):
+            raise ValueError('comando della sessione non supportato')
+        self.advance()
+        if action == 'restart':
+            self.reset()
+            self.elapsed = 0.
+            if self.timeline:
+                self.timeline.reset()
+            self.next_window = 0
+            self.error = None
+            self.paused = False
+            self.restart_count += 1
+            self.state = 'waiting_for_transport'
+        elif action == 'pause':
+            self._consume_windows(self.beat)
+            self.reset()
+            self.paused = True
+            if self.state != 'finished':
+                self.state = 'paused'
+        else:
+            self.paused = False
+            if self.state == 'paused':
+                self.state = 'waiting_for_transport'
+        self.last_update = self.clock()
+
     def advance(self):
         now = self.clock()
         delta, self.last_update = max(0., now-self.last_update), now
@@ -162,6 +191,9 @@ class EnsembleRuntime:
         if (self.timeline.finished if self.timeline else self.elapsed >= self.track.duration_s):
             self.state = 'finished'
             self.reset()
+            return
+        if self.paused:
+            self.state = 'paused'
             return
         plan_progress = self.progress
         if self.timeline and self.next_window < self.timeline.timeline.total_windows:
@@ -220,6 +252,7 @@ class EnsembleRuntime:
                               'adjustments': self.timeline.timeline.to_dict()['adjustments']}
                              if self.timeline else None),
                 'version': 1, 'state': self.state, 'error': self.error,
+                'controls': {'paused': self.paused, 'restart_count': self.restart_count},
                 'decisions': {'director': self.session.director.decision_at(self.progress),
                               'coordinator': self.last_decisions},
                 'trip': {'stage': self.track.stage_id, 'elapsed_s': elapsed,

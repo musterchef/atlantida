@@ -38,8 +38,9 @@ def build_generator(spec):
         values = asdict(compose.settings)
     elif kind == 'percussion_phrase':
         compose = PercussionPhraseGenerator(spec['lanes'], spec['material'], spec['anchor_beats'],
-                                           spec['development'], spec['interaction'], spec.get('settings'))
-        controls = {'variation': Control(0, 1), 'displacement_beats': Control(0, 1),
+                                           spec['development'], spec['interaction'], spec.get('settings'),
+                                           standard_material=spec.get('standard_material'))
+        controls = {'conceptuality': Control(0, 1), 'variation': Control(0, 1), 'displacement_beats': Control(0, 1),
                     'velocity_ratio': Control(.05, 1), 'gate_beats': Control(.01, 1),
                     'seed': Control(0, 2147483647, True), 'support_tolerance_beats': Control(0, 1),
                     'answer_clearance_beats': Control(0, 1)}

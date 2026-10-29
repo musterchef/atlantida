@@ -9,16 +9,18 @@ from desnivel.music.phrases import Note, Phrase
 from .generator import PercussionGenerator, ROLES
 
 
-DEFAULTS = {'variation': .7, 'displacement_beats': .25, 'velocity_ratio': .85,
+DEFAULTS = {'conceptuality': 1., 'variation': .7, 'displacement_beats': .25, 'velocity_ratio': .85,
             'gate_beats': .1, 'seed': 7, 'support_tolerance_beats': .5, 'answer_clearance_beats': .25}
 OPERATIONS = {'statement', 'subtract', 'displace', 'accent', 'silence'}
 
 
 class PercussionPhraseGenerator:
-    def __init__(self, lanes, material, anchor_beats, development, interaction, settings=None):
+    def __init__(self, lanes, material, anchor_beats, development, interaction, settings=None, *, standard_material=None):
         # Riutilizza la validazione dei materiali espliciti e della mappa MIDI.
         parsed = PercussionGenerator(lanes, [material])
         self.name, self.cycle, self.hits = parsed.patterns[0]
+        self.standard = (PercussionGenerator(lanes, [standard_material]).patterns[0]
+                         if standard_material is not None else None)
         if (not isinstance(anchor_beats, list) or not anchor_beats
                 or any(type(b) not in (int, float) or not math.isfinite(b) for b in anchor_beats)
                 or len(set(anchor_beats)) != len(anchor_beats)
@@ -62,12 +64,14 @@ class PercussionPhraseGenerator:
         values = {**self.settings, **parameters}
         if set(values) != set(DEFAULTS):
             raise ValueError('parametri percussivi sconosciuti')
-        for key in ('variation', 'displacement_beats', 'velocity_ratio', 'gate_beats',
+        for key in ('conceptuality', 'variation', 'displacement_beats', 'velocity_ratio', 'gate_beats',
                     'support_tolerance_beats', 'answer_clearance_beats'):
             value = values[key]
             if (type(value) not in (int, float) or not math.isfinite(value)
                     or not 0 <= value <= 1 or (key in ('velocity_ratio', 'gate_beats') and value == 0)):
                 raise ValueError(f'{key} fuori intervallo')
+        if values['conceptuality'] < 1 and self.standard is None:
+            raise ValueError('standard_material richiesto per conceptuality inferiore a 1')
         if type(values['seed']) is not int or not 0 <= values['seed'] <= 2147483647:
             raise ValueError('seed deve essere un intero tra 0 e 2147483647')
         return values
@@ -126,6 +130,35 @@ class PercussionPhraseGenerator:
                  'omitted_answer_hits': omitted, 'support_available': support is not None}
         return [(beat, pitch, velocity) for (beat, pitch), velocity in sorted(result.items())], trace
 
+    def _standard_events(self, start, end):
+        _, cycle, hits = self.standard
+        events = []
+        for offset, pitch, velocity in hits:
+            repetition = max(0, math.ceil((start-offset)/cycle))
+            while offset+repetition*cycle < end:
+                if len(events) >= 128:
+                    raise ValueError('il groove standard supera 128 attacchi nella finestra')
+                events.append((offset+repetition*cycle-start, pitch, velocity))
+                repetition += 1
+        return events
+
+    def _blend(self, standard, conceptual, start, values):
+        """Scelta stabile per attacco: stessa fase e stesso seed, anche fra finestre."""
+        amount = values['conceptuality']
+        regular = {(beat, pitch): velocity for beat, pitch, velocity in standard}
+        developed = {(beat, pitch): velocity for beat, pitch, velocity in conceptual}
+        result = []
+        for beat, pitch in sorted(regular.keys() | developed.keys()):
+            if (beat, pitch) in regular and (beat, pitch) in developed:
+                velocity = round(regular[beat, pitch]*(1-amount)+developed[beat, pitch]*amount)
+            else:
+                rng = random.Random(f'{values["seed"]}:{start+beat:.9f}:{pitch}')
+                source = developed if rng.random() < amount else regular
+                velocity = source.get((beat, pitch))
+            if velocity is not None:
+                result.append((beat, pitch, velocity))
+        return result
+
     def __call__(self, request):
         values = self.validate(request.role, request.parameters)
         if (not math.isfinite(request.start) or request.start < 0
@@ -149,7 +182,17 @@ class PercussionPhraseGenerator:
                     events.append((absolute-start, pitch, velocity))
         if len(events) > 128:
             raise ValueError('lo sviluppo supera 128 attacchi nella finestra')
-        events, interaction = self._interact(events, request.dependencies, values)
+        interaction = {'support_source': self.interaction['support_source'],
+                       'answer_source': self.interaction['answer_source'],
+                       'available_sources': list(request.dependencies), 'supported_hits': 0,
+                       'omitted_answer_hits': 0, 'support_available': self.interaction['support_source'] in request.dependencies}
+        if values['conceptuality']:
+            events, interaction = self._interact(events, request.dependencies, values)
+        if values['conceptuality'] < 1:
+            standard = self._standard_events(start, end)
+            events = (self._blend(standard, events, start, values) if values['conceptuality'] else sorted(standard))
+        if len(events) > 128:
+            raise ValueError('la combinazione supera 128 attacchi nella finestra')
         notes, next_attack = [], {}
         for beat, pitch, velocity in reversed(events):
             duration = min(values['gate_beats'], request.length_beats-beat,
@@ -159,9 +202,11 @@ class PercussionPhraseGenerator:
         phrase = Phrase(request.length_beats, tuple(reversed(notes)))
         self.last_start, self.last_position, self.position = request.start, start, end
         self.last_decision = {'method': 'percussion_phrase', 'material': self.name,
+                              'conceptuality': values['conceptuality'],
+                              'standard_material': self.standard[0] if self.standard else None,
                               'logical_start': start, 'cycles': operations,
                               'interaction': interaction,
-                              'summary': f'{self.name} · ' + ', '.join(o['operation'] for o in operations)
+                              'summary': f'carattere {values["conceptuality"]:.2f} · {self.name} · ' + ', '.join(o['operation'] for o in operations)
                                          + f' · {interaction["supported_hits"]} sostegni, '
                                          + f'{interaction["omitted_answer_hits"]} risposte omesse · {len(notes)} attacchi'}
         return phrase

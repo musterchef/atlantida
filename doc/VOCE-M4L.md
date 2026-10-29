@@ -39,16 +39,67 @@ La cartella generata contiene il device e i due script JavaScript. Conservare i 
 
 ## Interfaccia
 
-- **Part**: identificativo della parte registrata in Python, per esempio `voice_01`.
+- **Voce**: identificativo della parte registrata in Python, per esempio `voice_01`.
 - **Receive**: porta UDP di questa istanza, inizialmente `9101`. Ogni istanza richiede una porta distinta.
 - **Python**: porta del server locale, inizialmente `9006`.
-- **Connect**: legge identificativo e porte e apre il collegamento. Se già collegato, rinnova la richiesta mantenendo identità e piani della stessa istanza.
+- **Collega**: legge identificativo e porte e apre il collegamento. Se già collegato, rinnova la richiesta mantenendo identità e piani della stessa istanza.
 - **Role**: menu dei ruoli supportati dal generatore collegato. `Follow section` segue il ruolo assegnato alla sezione; scegliendo un ruolo si passa alla modalità manuale. Il ruolo effettivo è mostrato in alto; per una parte esclusa dall’organico sono mostrati il prossimo ingresso configurato (`enters at ...%`) oppure `not in this section` se non sono previsti altri ingressi. Senza un collegamento ai ruoli della sessione, il menu mostra `No roles available`.
 - **Preset**: preset compositivi dichiarati dal componente Python.
-- **Parameter** e valore: modifica di uno dei controlli esposti da Python. L'intervallo ammesso è mostrato accanto al valore.
+- **Parametro**, valore e cursore: modifica di uno dei controlli esposti da Python. Il cursore rispetta intervallo e vincolo intero; il campo numerico permette l’immissione precisa. I limiti sono mostrati accanto al cursore.
+- **Salva nuovo**: salva i valori effettivi della voce con il nome scritto nel campo accanto. **Aggiorna** sostituisce un preset utente già presente con quel nome. I preset base della configurazione sono protetti.
 - **panic**: cancella i piani e spegne le note generate.
 
 I menu sono riempiti dalla risposta Python. Il dispositivo non contiene nomi di strumenti, ruoli prestabiliti o parametri di un generatore specifico.
+
+### Collegamento di tutte le voci dal terminale
+
+Nel terminale interattivo di `ensemble`, premere **C** per inviare **Collega
+tutte** mentre la sessione è accesa. La porta di ingresso predefinita è 9101;
+si può scegliere un'altra porta Receive con `--connect-port 9102` all'avvio
+di `ensemble`.
+
+Con la sessione Python avviata e i device caricati in Live, dalla cartella
+del progetto si può anche eseguire in un altro terminale:
+
+```bash
+.venv/bin/python -m desnivel.cli.connect_voices
+```
+
+Il comando invia `/desnivel/v1/voice/connect-all` a `127.0.0.1:9101`.
+La Voice su quella porta lo distribuisce alle altre istanze tramite il
+canale Max condiviso `desnivel_voice_connect_all`. Ogni istanza esegue lo
+stesso percorso del tasto **Collega**, usando il proprio identificativo,
+la propria porta Receive e la propria porta Python. Il comando ripetuto
+mantiene identità e piani delle istanze già collegate.
+
+Se nessuna Voice usa Receive 9101, indicare la porta di una delle istanze
+caricate con `--port 9102`. Tutte le istanze devono usare il device aggiornato,
+avere identificativi validi e porte Receive distinte. Il messaggio sul terminale
+conferma l'invio UDP; lo stato dei collegamenti è visibile nella sessione Python
+e nei device. La richiesta non modifica il trasporto di Live.
+
+### Identità e preset utente
+
+Il campo **Voce** è collegato a `pattr voice_identity`, un parametro Blob
+`Stored Only` salvato da Live insieme alle porte. Per aggiornare istanze
+create con il precedente parametro numerico, sostituire il device nel Set,
+impostare identificativo e porte su ogni istanza e salvare il Live Set.
+
+La sessione usa una libreria JSON accanto alla configurazione: con
+`--config presets/organico.json`, il percorso predefinito è
+`presets/organico.voice-presets.json`. `--voice-presets percorso.json`
+permette di sceglierne un altro. Il file viene creato al primo salvataggio.
+Contiene versione 1 e una mappa `voices`, indicizzata per identificativo
+della voce e poi per nome del preset. Ogni preset conserva tutti i controlli
+esposti dalla voce, con i valori effettivi al momento del salvataggio.
+
+La libreria viene caricata all'avvio e condivisa dalle istanze collegate
+alla stessa sessione. I preset sono disponibili anche in altri Live Set
+avviati con la stessa configurazione e libreria. Il salvataggio è atomico,
+non cambia le sezioni e non seleziona automaticamente il preset appena
+creato: selezionarlo dal menu per applicarlo. Nomi duplicati richiedono
+**Aggiorna**; controlli incompatibili con la configurazione vengono
+segnalati all'avvio.
 
 ## Sessione continua
 
@@ -65,7 +116,7 @@ Avviare il ricevitore con una frase già presente nel progetto:
 ```
 
 1. Caricare il device prima dello strumento su una traccia MIDI.
-2. Impostare `Part` a `voice_01`, `Receive` a `9101` e `Python` a `9006`, quindi premere **Connect**.
+2. Impostare `Voce` a `voice_01`, `Receive` a `9101` e `Python` a `9006`, quindi premere **Collega**.
 3. Avviare il trasporto di Live.
 
 La prova invia la frase una volta per avvio o discontinuità rilevata del trasporto, a un multiplo di quattro beat con almeno due beat di anticipo rispetto alla posizione ricevuta. Usa il file senza modificarne il contenuto musicale. Non pianifica una tappa GPX. In questa modalità il ruolo è non assegnato e i menu sono vuoti.
@@ -101,7 +152,12 @@ numerici. I payload JSON variabili non diventano simboli Max a ogni
 aggiornamento del trasporto. Il server limita il JSON in uscita a 12.000
 byte per mantenere il pacchetto OSC sotto il limite UDP.
 
-Le richieste contengono voce, identificativo dell'istanza, seriale, porta di risposta e azione (`hello`, `transport`, `role`, `preset`, `parameter`, `panic`). L’azione `role` contiene l’identificativo del ruolo manuale oppure `null` per seguire la sezione. Lo stato restituisce ruoli supportati, ruolo effettivo, ruolo della sezione, modalità (`section` o `manual`) e stato di attivazione della parte. La lettura del trasporto aggiunge beat, stato di riproduzione e contatore locale delle discontinuità. Le risposte distinguono stato, errore e piano.
+Le richieste contengono voce, identificativo dell'istanza, seriale, porta di risposta e azione (`hello`, `transport`, `role`, `preset`, `parameter`, `save_preset`, `panic`). L’azione `role` contiene l’identificativo del ruolo manuale oppure `null` per seguire la sezione. Lo stato restituisce ruoli supportati, ruolo effettivo, ruolo della sezione, modalità (`section` o `manual`) e stato di attivazione della parte. La lettura del trasporto aggiunge beat, stato di riproduzione e contatore locale delle discontinuità. Le risposte distinguono stato, errore, piano e comando di trasporto.
+`save_preset` contiene nome e flag `overwrite`; il salvataggio acquisisce
+sul server i valori effettivi. Il device dichiara `transport_control` nelle
+richieste; solo l'istanza scelta come sorgente del clock riceve le azioni
+`pause`, `resume` e `restart`, applicate con `live.object` al `live_set`.
+I comandi sono identificati da sessione Python e seriale, per scartare i duplicati.
 
 Il dispositivo invia `hello` ogni secondo. Dopo oltre tre secondi senza conferma cancella i piani e spegne le note. Python rifiuta due istanze attive con la stessa voce o la stessa porta di ricezione; un collegamento scaduto può essere sostituito. I piani sono indirizzati anche all'identificativo dell'istanza.
 
@@ -131,4 +187,6 @@ La prova manuale in Live ha confermato l'invio della frase da file e la produzio
 - [Cycling '74 — timepoint](https://docs.cycling74.com/reference/timepoint/): esecuzione su trasporto e aggiornamento del timestamp.
 - [Cycling '74 — udpsend](https://docs.cycling74.com/reference/udpsend/): trasmissione dei messaggi Max come pacchetti OSC compatibili.
 - [Cycling '74 — textedit](https://docs.cycling74.com/reference/textedit/): ingresso dell'identificativo della parte.
+- [Cycling '74 — pattr in Max for Live](https://docs.cycling74.com/userguide/pattr/): salvataggio dei campi Max nel Live Set tramite parametri espliciti.
+- [Cycling '74 — Song](https://docs.cycling74.com/apiref/lom/song/): posizione e funzioni del trasporto del Live Set.
 - [Cycling '74 — MIDI](https://docs.cycling74.com/userguide/midi/): formattazione e uscita dei messaggi MIDI.

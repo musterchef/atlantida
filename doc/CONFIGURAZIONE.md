@@ -191,6 +191,7 @@ frasi ricevute; il contesto armonico non determina le note percussive.
 |---|---|
 | `lanes` | Nomi locali associati a note MIDI distinte, come per `percussion_pattern` |
 | `material` | Un materiale con `name`, `length_beats` e `hits`, con gli stessi vincoli dei pattern espliciti |
+| `standard_material` | Groove regolare nello stesso formato di `material`; richiesto per usare `conceptuality` inferiore a 1 |
 | `anchor_beats` | Lista non vuota di posizioni distinte presenti nel materiale; tutti gli attacchi a queste posizioni sono protetti dalle trasformazioni locali |
 | `development` | Lista non vuota di operazioni; deve iniziare con `statement` |
 | `interaction` | `support_source`, `support_lanes`, `answer_source`, `answer_lanes`: sorgenti e canali per sostegno e risposta. Ogni canale va assegnato una volta a una delle due funzioni |
@@ -247,6 +248,7 @@ o ometterlo per rispettare le frasi di riferimento.
 
 | Controllo | Predefinito | Intervallo nella sessione | Effetto |
 |---|---:|---|---|
+| `conceptuality` | 1 | 0…1 | A 0 ripete il groove standard; a 1 usa sviluppo e interazione; i valori intermedi combinano i due insiemi di attacchi |
 | `variation` | 0,7 | 0…1 | Quota degli attacchi non protetti trasformati, arrotondata verso l'alto; intensità della modifica degli accenti. A zero tutte le operazioni diventano `statement`, inclusa `silence` |
 | `displacement_beats` | 0,25 | 0…1 beat | Ampiezza dello spostamento temporale |
 | `velocity_ratio` | 0,85 | 0,05…1 | Moltiplicatore della velocity finale di tutti gli attacchi |
@@ -266,7 +268,7 @@ I canali elencati in `answer_lanes` omettono gli attacchi troppo vicini a quelli
 `voice_01`, lasciandogli spazio. Usano le posizioni del materiale rimaste
 dopo lo sviluppo, senza aggiungere colpi per ogni nota melodica. Se la
 frase melodica è silenziosa, le risposte vengono omesse. Se entrambe le
-frasi sono silenziose, anche la percussione è silenziosa.
+frasi sono silenziose, anche la componente concettuale è silenziosa.
 
 La sorgente di risposta è obbligatoria; la sua assenza produce un errore.
 La sorgente di sostegno può essere inattiva: in quel caso i colpi di
@@ -290,6 +292,21 @@ sullo stesso materiale. Una richiesta può coprire al massimo 128 cicli e
 produrre al massimo 128 attacchi. Il generatore di pattern espliciti resta
 disponibile come tipo distinto.
 
+`conceptuality` governa il passaggio fra due materiali musicali espliciti,
+non una misura estetica del risultato. Il groove `regular_pulse` della
+configurazione fornita dura quattro beat: cassa su 0 e 2, rullante su 1 e 3,
+hi-hat ogni mezzo beat. Non segue gli attacchi delle altre voci. La componente
+concettuale usa invece `material`, `development` e `interaction`.
+
+Fra 0 e 1, gli attacchi comuni mantengono la posizione e interpolano la
+velocity. Per gli altri, una scelta riproducibile dipendente da seed,
+posizione logica e nota conserva una quota crescente della componente
+concettuale. Il valore non garantisce una percentuale esatta di colpi nella
+singola finestra. Restano separate le regolazioni di `variation`, ampiezza
+degli spostamenti e distanze di interazione. I preset `regular`, `hybrid` e
+`conceptual` impostano rispettivamente 0, 0,5 e 1. Il limite resta di 128
+attacchi per finestra; configurazioni che lo superano vengono rifiutate.
+
 ## Precedenza e applicazione delle modifiche
 
 Per una voce attiva i parametri vengono risolti in questo ordine:
@@ -310,7 +327,7 @@ anche questi valori restano manuali nelle sezioni successive.
 non esiste ancora un comando equivalente nell'interfaccia del dispositivo.
 Riavviare il processo Python ripristina i valori dei file.
 
-Le modifiche manuali non riscrivono i JSON. Le nuove assegnazioni entrano
+Le modifiche manuali non riscrivono i JSON di configurazione. Il salvataggio esplicito dal device aggiorna soltanto la libreria dei preset utente. Le nuove assegnazioni entrano
 nelle finestre ancora da pianificare; i piani già inviati rimangono validi.
 Le macrosezioni non interpolano gradualmente i parametri e le loro fasce
 interne non applicano variazioni musicali aggiuntive.

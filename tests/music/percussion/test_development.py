@@ -19,7 +19,8 @@ def definition():
 def generator(spec=None):
     spec = spec or definition()
     return PercussionPhraseGenerator(spec['lanes'], spec['material'], spec['anchor_beats'],
-                                    spec['development'], spec['interaction'], spec.get('settings'))
+                                    spec['development'], spec['interaction'], spec.get('settings'),
+                                    standard_material=spec.get('standard_material'))
 
 
 def request(start=0, length=4, **parameters):
@@ -88,7 +89,7 @@ def test_notes_are_bounded_and_registered_with_existing_device_controls():
     registered = build_generator(definition())
     assert registered.reset is not None
     assert 'pattern' not in registered.controls
-    assert set(registered.controls) == {'variation', 'displacement_beats', 'velocity_ratio', 'gate_beats', 'seed',
+    assert set(registered.controls) == {'conceptuality', 'variation', 'displacement_beats', 'velocity_ratio', 'gate_beats', 'seed',
                                          'support_tolerance_beats', 'answer_clearance_beats'}
     for start in range(0, 100, 4):
         phrase = registered.generator.generate(request(start, gate_beats=1))
@@ -191,3 +192,29 @@ def test_full_palette_remains_available_and_both_support_lanes_follow_reference(
     for pitch in support:
         attacks = [n.beat for n in phrase.notes if n.pitch == pitch]
         assert attacks and all(b % 4 == .5 for b in attacks)
+
+
+def test_standard_mode_repeats_the_configured_groove_even_when_other_voices_rest():
+    compose = generator()
+    silent = Phrase(4, ())
+    req = PlanningRequest(0, 4, None, {'voice_01': silent}, 'percussion', {'conceptuality': 0})
+    first = compose(req)
+    assert len(first.notes) == len(definition()['standard_material']['hits'])
+    assert [n.beat for n in first.notes if n.pitch == 36] == [0, 2]
+    assert [n.beat for n in first.notes if n.pitch == 38] == [1, 3]
+    assert compose(PlanningRequest(4, 4, None, {}, 'percussion', {'conceptuality': 0})) == first
+    assert not generator()(PlanningRequest(0, 4, None, {'voice_01': silent}, 'percussion', {'conceptuality': 1})).notes
+
+
+def test_hybrid_changes_attacks_and_remains_reproducible_across_window_sizes():
+    compose = generator()
+    whole = compose(request(100, 32, conceptuality=.5))
+    split = generator()
+    # Le sorgenti hanno qui la stessa fase logica in ogni finestra.
+    pieces = [split(request(100+i, 4, conceptuality=.5)) for i in range(0, 32, 4)]
+    assert signature(whole) == [event for i, p in enumerate(pieces) for event in signature(p, i*4)]
+    assert whole != generator()(request(100, 32, conceptuality=0))
+    assert whole != generator()(request(100, 32, conceptuality=1))
+    assert generator()(request(100, 32, conceptuality=.5)) == whole
+    with pytest.raises(ValueError):
+        generator()(request(conceptuality=1.1))

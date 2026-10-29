@@ -63,7 +63,7 @@ Nella configurazione fornita:
 | `voice_03` | `Desnivel_Voice` prima dello strumento atmosferico, Receive `9103`, Python `9006` |
 | `voice_04` | `Desnivel_Voice` prima del Drum Rack, Receive `9104`, Python `9006` |
 
-Impostare l'identificativo in **Part** e premere **Connect** sulle istanze,
+Impostare l'identificativo in **Voce** e premere **Collega** sulle istanze,
 quindi avviare il trasporto di Live. La prova usa il 909 Core Kit con i
 16 pad sulle note MIDI 36…51. La mappa completa è configurata in
 `generators.percussion.lanes` e descritta nel riferimento di configurazione. Lo strumento atmosferico riceve una nota
@@ -93,7 +93,38 @@ Live fornisce beat e stato Play/Stop. Stop spegne le note, cancella i piani e me
 
 Il cambio di sezione modifica le assegnazioni alla successiva pianificazione. Alle parti uscenti viene inviata una frase vuota per la nuova finestra, lasciando terminare quella precedente. Se manca una parte attiva o la sorgente del trasporto perde il collegamento, la sessione cancella i piani dei dispositivi raggiungibili e attende, sospendendo il replay. I dispositivi non raggiungibili eseguono il proprio Panic per mancata conferma.
 
-Al termine del GPX la sessione spegne le note e mostra `finished`. Ctrl+C chiude il server e scrive lo stato `closed`. Un errore di generazione porta allo stato `error` e richiede il riavvio della sessione.
+Al termine del viaggio la sessione spegne le note e mostra `finished`. Ctrl+C chiude il server e scrive lo stato `closed`. Un errore di generazione porta allo stato `error`; il restart permette un nuovo tentativo dall'inizio.
+
+### Pausa e restart
+
+Il tasto **C** nel terminale interattivo invia **Collega tutte** ai device
+Voice. Usa la porta Receive 9101, configurabile con `--connect-port`,
+senza modificare il trasporto o lo stato del viaggio.
+
+Nel terminale interattivo, **Spazio** mette in pausa o riprende viaggio e
+trasporto di Live; **R** ricomincia la tappa e riporta Live al beat zero.
+Non occorre premere Invio. Alla chiusura si ripristina la modalità di ingresso
+del terminale. Con ingresso rediretto, i tasti non sono attivi.
+Gli stessi comandi sono disponibili nel viewer.
+
+Il controllo di Live richiede il device aggiornato, dotato di
+`transport_control`, e il collegamento della voce configurata in
+`transport_voice`. Python invia il comando solo a quell'istanza del device,
+che controlla il trasporto globale del Live Set. Gli altri device ricevono
+la cancellazione dei propri piani. Le notifiche di trasporto ricevute da
+Live non generano altri comandi di trasporto. Le richieste ripetute di pausa
+sono ignorate quando la sessione è già in pausa; i device scartano comandi
+duplicati per sessione e seriale.
+
+La ripresa usa `continue_playing`; il restart usa `stop_playing`, imposta
+`current_song_time` a zero e riprende. La pausa cancella i piani e spegne
+le note di tutte le voci raggiungibili. Nel replay lineare conserva i secondi
+raggiunti; nella timeline allocata conserva la prima finestra non conclusa,
+che viene ripetuta alla ripresa. Il restart azzera posizione, timeline e
+memoria dei generatori, mantenendo i valori manuali e la libreria dei preset.
+A fine tappa, terminale e viewer propongono di ricominciare; non avviene una
+ripartenza automatica. Un comando non disponibile viene segnalato senza
+interrompere la sessione.
 
 ## Configurazione
 
@@ -262,6 +293,13 @@ distanza raggiunta e restante, percentuale, tempo del viaggio e sezione attuale.
 il punto corrente al centro. Trascinare la mappa disattiva l'inseguimento.
 Il collegamento sulle coordinate apre la posizione su OpenStreetMap.
 
+Il selettore **Skin** nell'intestazione cambia l'aspetto della pagina:
+**Atlante** usa la cartografia chiara, **Notturna** applica colori scuri ai
+tasselli e mette in risalto percorso attraversato e posizione. Il trattamento
+è applicato nel browser agli stessi tasselli OpenStreetMap; non richiede
+un altro servizio cartografico. La scelta vale per la pagina aperta e torna
+ad Atlante al caricamento. Il cambio conserva posizione, zoom e inseguimento.
+
 La posizione segue i secondi attivi dello snapshot, anche in modalità
 `allocated`, dove il runtime li ricava dalla distanza raggiunta nella timeline.
 La vista interpola le coordinate solo all'interno dei tratti osservati e
@@ -269,13 +307,20 @@ mantiene separate le interruzioni. Stop e attese conservano la posizione;
 un mancato aggiornamento per oltre tre secondi viene segnalato nella pagina.
 
 `viewer/route.py` prepara una volta la geometria dalla stessa traccia caricata
-dalla sessione. `viewer/server.py` serve le risorse e legge lo snapshot in un
-thread HTTP separato; non accede al runtime e non invia comandi musicali.
+dalla sessione. `viewer/server.py` serve le risorse, legge lo snapshot e
+accoda i comandi in un thread HTTP separato. Il ciclo CLI consuma la coda
+e applica i comandi nello stesso thread della pianificazione musicale.
 `position.js` calcola posizione e tratto attraversato; `view.js` aggiorna la
 pagina ogni 250 ms, dopo la conclusione della richiesta precedente.
 Le interfacce HTTP in sola lettura sono `/api/route` (versione, tappa e segmenti
 di punti `[secondi attivi, latitudine, longitudine]`) e `/api/state`
 (`session`, snapshot completo, e `age_s`, età del file in secondi).
+
+`POST /api/control` accetta `{"action":"pause"}`, `resume` o `restart`
+solo dalla stessa origine della pagina. La risposta `202` conferma
+l'accodamento; l'esito è mostrato nello snapshot successivo.
+**Pausa/Riprendi** e **Ricomincia tappa** sono disponibili durante il
+viaggio. A fine tappa compare la domanda con il pulsante **Sì, ricomincia**.
 
 Il server ascolta solo su `127.0.0.1` e si chiude con la sessione. La porta HTTP
 deve essere libera e distinta da quella OSC. Per sessioni contemporanee usare

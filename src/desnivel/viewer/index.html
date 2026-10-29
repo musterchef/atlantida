@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" data-skin="atlas">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,9 +13,26 @@
   <script defer src="/view.js"></script>
 </head>
 <body>
-  <header><a class="brand" href="/">DESNIVEL<span>IL VIAGGIO</span></a><span id="status" role="status">Connessione…</span></header>
+  <header>
+    <a class="brand" href="/">DESNIVEL<span>IL VIAGGIO</span></a>
+    <div class="view-settings">
+      <label class="skin-picker" for="skin">Skin
+        <select id="skin"><option value="atlas">Atlante</option><option value="night">Notturna</option></select>
+      </label>
+      <span id="status" role="status">Connessione…</span>
+    </div>
+  </header>
   <main>
     <section class="intro"><div><p class="eyebrow">GEOGRAFIA IN ASCOLTO</p><h1 id="stage">Il percorso prende forma.</h1></div><p class="caption">La posizione nel viaggio<br>segue la sessione musicale.</p></section>
+    <div class="session-controls" aria-label="Controlli della sessione">
+      <button id="pause" type="button" disabled>Pausa</button>
+      <button id="restart" type="button" disabled>Ricomincia tappa</button>
+      <span id="command-status" role="status"></span>
+    </div>
+    <section id="finished" class="finished" aria-label="Tappa conclusa" hidden>
+      <strong>Tappa conclusa.</strong> Vuoi ricominciare il viaggio?
+      <button id="restart-finished" type="button">Sì, ricomincia</button>
+    </section>
     <section class="journey" aria-label="Posizione nel viaggio">
       <div class="map-wrap">
         <div id="map" aria-label="Mappa interattiva del percorso"></div>

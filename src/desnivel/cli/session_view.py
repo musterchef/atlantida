@@ -58,7 +58,11 @@ def render_session(state):
         rows.append('  Piano inviato; non è una conferma audio dello strumento.')
     if state['error']:
         rows.append('ERRORE: ' + state['error'])
-    rows.append('Ctrl+C per chiudere la sessione.')
+    if state.get('control_error'):
+        rows.append('COMANDO: ' + state['control_error'])
+    if state['state'] == 'finished':
+        rows.append('Tappa conclusa. Vuoi ricominciare? Premi R.')
+    rows.append('C: collega tutte le Voice | Spazio: pausa/riprendi | R: ricomincia | Ctrl+C: chiudi.')
     return '\n'.join(rows)
 
 

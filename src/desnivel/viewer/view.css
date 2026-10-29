@@ -4,7 +4,31 @@
   --ink:#203c35;
   --muted:#66756c;
   --accent:#c45c37;
-  --rule:#d9ddd3
+  --rule:#d9ddd3;
+  --panel:#fffdf7;
+  --glass:#fffdf7ed;
+  --status:#ffffff99;
+  --map:#e6e9df;
+  --route:#647e73;
+  --control-border:#cbd1c6;
+  --progress:#e4e8de;
+  --selected:white
+}
+:root[data-skin="night"] {
+  color-scheme:dark;
+  --paper:#0c171e;
+  --ink:#e3f0ed;
+  --muted:#99b2b9;
+  --accent:#72edcc;
+  --rule:#29404b;
+  --panel:#11232c;
+  --glass:#11232cf0;
+  --status:#18333b;
+  --map:#17252b;
+  --route:#91b2c2;
+  --control-border:#3b5661;
+  --progress:#29414b;
+  --selected:#0c171e
 }
 * {
   box-sizing:border-box
@@ -36,12 +60,60 @@ header {
   margin-left:22px;
   color:var(--muted)
 }
+.view-settings {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:12px
+}
+.session-controls {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px
+}
+.session-controls span {
+  color:var(--muted);
+  font-size:12px
+}
+button:disabled {
+  opacity:.5;
+  cursor:default
+}
+.finished {
+  background:var(--panel);
+  border:1px solid var(--accent);
+  border-radius:8px;
+  padding:15px;
+  margin-bottom:16px
+}
+.finished button {
+  margin-left:12px
+}
+.skin-picker {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  color:var(--muted)
+}
+.skin-picker select {
+  font:inherit;
+  color:var(--ink);
+  background:var(--panel);
+  border:1px solid var(--control-border);
+  border-radius:6px;
+  padding:6px 9px;
+  cursor:pointer
+}
 #status {
   font-size:12px;
   border:1px solid var(--rule);
   border-radius:20px;
   padding:5px 13px;
-  background:#fff9
+  background:var(--status)
 }
 main {
   max-width:1600px;
@@ -80,7 +152,7 @@ main {
   border:1px solid var(--rule);
   border-radius:14px;
   overflow:hidden;
-  background:#fffdf7
+  background:var(--panel)
 }
 .map-wrap {
   position:relative;
@@ -89,7 +161,7 @@ main {
 #map {
   position:absolute;
   inset:0;
-  background:#e6e9df
+  background:var(--map)
 }
 .map-tools {
   position:absolute;
@@ -104,17 +176,17 @@ button {
   font-size:12px;
   cursor:pointer;
   color:var(--ink);
-  background:#fffdf7;
-  border:1px solid #cbd1c6;
+  background:var(--panel);
+  border:1px solid var(--control-border);
   border-radius:6px;
   padding:9px 12px;
   box-shadow:0 2px 8px #203c3510
 }
 button:hover,button[aria-pressed=true] {
   background:var(--ink);
-  color:white
+  color:var(--selected)
 }
-button:focus-visible,a:focus-visible {
+button:focus-visible,a:focus-visible,select:focus-visible {
   outline:3px solid var(--accent);
   outline-offset:3px
 }
@@ -123,7 +195,7 @@ button:focus-visible,a:focus-visible {
   bottom:29px;
   left:15px;
   z-index:500;
-  background:#fffdf7ed;
+  background:var(--glass);
   border-radius:6px;
   padding:8px 12px;
   font-size:10px;
@@ -135,7 +207,7 @@ button:focus-visible,a:focus-visible {
   display:inline-block;
   width:19px;
   height:3px;
-  background:#647e73;
+  background:var(--route);
   margin-left:6px
 }
 .line.done {
@@ -179,10 +251,10 @@ progress {
   border:0;
   border-radius:5px;
   overflow:hidden;
-  background:#e4e8de
+  background:var(--progress)
 }
 progress::-webkit-progress-bar {
-  background:#e4e8de
+  background:var(--progress)
 }
 progress::-webkit-progress-value {
   background:var(--accent)
@@ -242,12 +314,56 @@ footer i {
   background:var(--accent);
   margin-right:6px
 }
+.route-outline {
+  stroke:var(--route)
+}
+.route-passed {
+  stroke:var(--accent)
+}
+.route-position {
+  stroke:var(--panel);
+  fill:var(--accent)
+}
+/* Il filtro riguarda solo i tasselli: percorso, controlli e attribuzione
+   mantengono i propri colori e il contrasto del tema. */
+:root[data-skin="night"] .leaflet-tile-pane {
+  filter:grayscale(1) invert(1) sepia(.2) hue-rotate(145deg) saturate(.8) brightness(.85)
+}
+:root[data-skin="night"] .route-passed,
+:root[data-skin="night"] .route-position {
+  filter:drop-shadow(0 0 5px #72edcc80)
+}
+:root[data-skin="night"] .journey {
+  box-shadow:0 20px 65px #00000030
+}
+:root[data-skin="night"] .distance strong {
+  color:var(--accent)
+}
+:root[data-skin="night"] .leaflet-bar a {
+  color:var(--ink);
+  background:var(--panel);
+  border-color:var(--rule)
+}
+:root[data-skin="night"] .leaflet-bar a:hover {
+  color:var(--selected);
+  background:var(--accent)
+}
+:root[data-skin="night"] .leaflet-control-attribution {
+  color:var(--muted);
+  background:var(--glass)
+}
+:root[data-skin="night"] .leaflet-control-attribution a {
+  color:var(--ink)
+}
 @media(min-width:1500px) {
   .map-wrap {
     min-height:620px
   }
 }
 @media(max-width:800px) {
+  header {
+    align-items:flex-start
+  }
   .journey {
     grid-template-columns:1fr
   }

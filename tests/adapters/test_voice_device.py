@@ -50,6 +50,21 @@ def test_failed_application_does_not_confirm_or_mutate_state():
     assert len(sent) == 1
 
 
+def test_transport_commands_target_only_the_connected_clock_voice_with_supported_device():
+    bridge, sent, _, _ = setup()
+    with pytest.raises(ValueError, match='collegare'):
+        bridge.control_transport('part_a', 'pause')
+    bridge.handle(message())
+    with pytest.raises(ValueError, match='aggiornare'):
+        bridge.control_transport('part_a', 'pause')
+    bridge.handle(message(2, capabilities=['transport_control']))
+    bridge.control_transport('part_a', 'pause')
+    assert sent[-1][0] == 9101
+    assert sent[-1][2]['kind'] == 'transport'
+    assert sent[-1][2]['voice'] == 'part_a'
+    assert sent[-1][2]['action'] == 'pause'
+
+
 def test_multiple_instances_have_separate_destinations_and_expired_instances_are_replaced():
     bridge, sent, _, now = setup()
     bridge.handle(message())

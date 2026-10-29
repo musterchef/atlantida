@@ -16,7 +16,7 @@
       1020
     ],
     "openinpresentation": 1,
-    "devicewidth": 650,
+    "devicewidth": 800,
     "default_fontsize": 12,
     "boxes": [
       {
@@ -50,7 +50,7 @@
             190,
             22
           ],
-          "text": "Part",
+          "text": "Voce",
           "presentation": 1,
           "presentation_rect": [
             10,
@@ -80,7 +80,8 @@
             34,
             145,
             23
-          ]
+          ],
+          "annotation": "Identificativo della voce Python. Salvato nel Live Set e nei preset del dispositivo."
         }
       },
       {
@@ -93,7 +94,24 @@
             190,
             22
           ],
-          "text": "autopattr @autoname 0"
+          "text": "pattr voice_identity",
+          "varname": "voice_identity",
+          "saved_attribute_attributes": {
+            "valueof": {
+              "parameter_longname": "Voice_ID",
+              "parameter_shortname": "Part",
+              "parameter_type": 3,
+              "parameter_invisible": 1,
+              "parameter_initial_enable": 0
+            }
+          },
+          "saved_object_attributes": {
+            "parameter_enable": 1,
+            "parameter_mappable": 0
+          },
+          "restore": [
+            "voice_01"
+          ]
         }
       },
       {
@@ -216,7 +234,7 @@
             190,
             22
           ],
-          "text": "Connect",
+          "text": "Collega",
           "presentation": 1,
           "presentation_rect": [
             470,
@@ -256,7 +274,7 @@
             190,
             22
           ],
-          "text": "Role",
+          "text": "Ruolo",
           "presentation": 1,
           "presentation_rect": [
             10,
@@ -282,7 +300,7 @@
           "presentation_rect": [
             200,
             4,
-            438,
+            588,
             22
           ]
         }
@@ -323,9 +341,10 @@
           "presentation_rect": [
             317,
             68,
-            321,
+            156,
             23
-          ]
+          ],
+          "annotation": "Preset base e preset utente della libreria Python. Seleziona per applicare."
         }
       },
       {
@@ -338,7 +357,7 @@
             190,
             22
           ],
-          "text": "Parameter",
+          "text": "Parametro",
           "presentation": 1,
           "presentation_rect": [
             10,
@@ -366,7 +385,8 @@
             101,
             190,
             23
-          ]
+          ],
+          "annotation": "Seleziona un parametro per modificarne il valore numerico o con il cursore."
         }
       },
       {
@@ -387,7 +407,8 @@
             102,
             82,
             22
-          ]
+          ],
+          "annotation": "Valore del parametro selezionato. Invio per confermare; usa il cursore per modificarlo."
         }
       },
       {
@@ -404,11 +425,12 @@
           "text": "No controls",
           "presentation": 1,
           "presentation_rect": [
-            385,
-            103,
-            253,
-            20
-          ]
+            650,
+            101,
+            138,
+            34
+          ],
+          "fontsize": 10
         }
       },
       {
@@ -426,7 +448,7 @@
           "presentation_rect": [
             10,
             140,
-            628,
+            778,
             20
           ]
         }
@@ -454,7 +476,7 @@
             300,
             22
           ],
-          "text": "route /desnivel/v1/voice/message"
+          "text": "route /desnivel/v1/voice/message /desnivel/v1/voice/connect-all"
         }
       },
       {
@@ -983,6 +1005,223 @@
             1050,
             950,
             190,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "parameter_slider",
+          "maxclass": "slider",
+          "varname": "parameter_slider",
+          "patching_rect": [
+            820,
+            300,
+            180,
+            20
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            385,
+            103,
+            253,
+            18
+          ],
+          "size": 1001.0,
+          "floatoutput": 0,
+          "annotation": "Modifica il parametro selezionato rispettandone limiti e vincolo intero."
+        }
+      },
+      {
+        "box": {
+          "id": "slider_prefix",
+          "maxclass": "newobj",
+          "patching_rect": [
+            820,
+            340,
+            160,
+            22
+          ],
+          "text": "prepend slidervalue"
+        }
+      },
+      {
+        "box": {
+          "id": "live_transport_control",
+          "maxclass": "newobj",
+          "text": "live.object",
+          "patching_rect": [
+            820,
+            400,
+            100,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "preset_name",
+          "maxclass": "textedit",
+          "varname": "preset_name",
+          "patching_rect": [
+            820,
+            450,
+            150,
+            23
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            482,
+            68,
+            146,
+            23
+          ],
+          "outputmode": 1,
+          "keymode": 1,
+          "text": "",
+          "annotation": "Scrivi il nome del preset. Salva nuovo crea una copia; Aggiorna sostituisce solo un preset utente esistente."
+        }
+      },
+      {
+        "box": {
+          "id": "preset_save",
+          "maxclass": "message",
+          "text": "Salva nuovo",
+          "patching_rect": [
+            820,
+            490,
+            80,
+            23
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            637,
+            68,
+            79,
+            23
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "preset_update",
+          "maxclass": "message",
+          "text": "Aggiorna",
+          "patching_rect": [
+            920,
+            490,
+            80,
+            23
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            724,
+            68,
+            64,
+            23
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "preset_name_route",
+          "maxclass": "newobj",
+          "text": "route text",
+          "patching_rect": [
+            820,
+            530,
+            85,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "preset_name_prefix",
+          "maxclass": "newobj",
+          "text": "prepend preset_name",
+          "patching_rect": [
+            820,
+            560,
+            160,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "preset_save_trigger",
+          "maxclass": "newobj",
+          "text": "t b b",
+          "patching_rect": [
+            820,
+            590,
+            55,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "preset_update_trigger",
+          "maxclass": "newobj",
+          "text": "t b b",
+          "patching_rect": [
+            920,
+            590,
+            55,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "preset_save_message",
+          "maxclass": "message",
+          "text": "save_preset 0",
+          "patching_rect": [
+            820,
+            620,
+            105,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "preset_update_message",
+          "maxclass": "message",
+          "text": "save_preset 1",
+          "patching_rect": [
+            940,
+            620,
+            105,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "connect_all_send",
+          "maxclass": "newobj",
+          "text": "s desnivel_voice_connect_all",
+          "patching_rect": [
+            1030,
+            1380,
+            220,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "connect_all_receive",
+          "maxclass": "newobj",
+          "text": "r desnivel_voice_connect_all",
+          "patching_rect": [
+            1030,
+            1420,
+            220,
             22
           ]
         }
@@ -1744,6 +1983,222 @@
             0
           ]
         }
+      },
+      {
+        "patchline": {
+          "source": [
+            "parameter_slider",
+            0
+          ],
+          "destination": [
+            "slider_prefix",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "slider_prefix",
+            0
+          ],
+          "destination": [
+            "interface",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "resolve",
+            0
+          ],
+          "destination": [
+            "live_transport_control",
+            1
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "interface",
+            3
+          ],
+          "destination": [
+            "live_transport_control",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_name",
+            0
+          ],
+          "destination": [
+            "preset_name_route",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_name_route",
+            0
+          ],
+          "destination": [
+            "preset_name_prefix",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_name_prefix",
+            0
+          ],
+          "destination": [
+            "interface",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_save",
+            0
+          ],
+          "destination": [
+            "preset_save_trigger",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_update",
+            0
+          ],
+          "destination": [
+            "preset_update_trigger",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_save_trigger",
+            1
+          ],
+          "destination": [
+            "preset_name",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_update_trigger",
+            1
+          ],
+          "destination": [
+            "preset_name",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_save_trigger",
+            0
+          ],
+          "destination": [
+            "preset_save_message",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_update_trigger",
+            0
+          ],
+          "destination": [
+            "preset_update_message",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_save_message",
+            0
+          ],
+          "destination": [
+            "interface",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "preset_update_message",
+            0
+          ],
+          "destination": [
+            "interface",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "persist",
+            1
+          ],
+          "destination": [
+            "voice_id",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "route",
+            1
+          ],
+          "destination": [
+            "connect_all_send",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "connect_all_receive",
+            0
+          ],
+          "destination": [
+            "connect_trigger",
+            0
+          ]
+        }
       }
     ],
     "parameters": {
@@ -1755,6 +2210,11 @@
       "server_port": [
         "Python_Port",
         "Python_Port",
+        0
+      ],
+      "persist": [
+        "Voice_ID",
+        "Part",
         0
       ]
     },

@@ -348,7 +348,8 @@
         "gate_beats": 0.1,
         "seed": 7,
         "support_tolerance_beats": 0.5,
-        "answer_clearance_beats": 0.25
+        "answer_clearance_beats": 0.25,
+        "conceptuality": 1.0
       },
       "presets": {
         "statement": {
@@ -361,6 +362,15 @@
         "reduced": {
           "variation": 1,
           "displacement_beats": 0
+        },
+        "regular": {
+          "conceptuality": 0
+        },
+        "hybrid": {
+          "conceptuality": 0.5
+        },
+        "conceptual": {
+          "conceptuality": 1
         }
       },
       "interaction": {
@@ -385,6 +395,72 @@
         "support_lanes": [
           "low",
           "kick_alt"
+        ]
+      },
+      "standard_material": {
+        "name": "regular_pulse",
+        "length_beats": 4,
+        "hits": [
+          {
+            "beat": 0,
+            "lane": "low",
+            "velocity": 96
+          },
+          {
+            "beat": 2,
+            "lane": "low",
+            "velocity": 96
+          },
+          {
+            "beat": 1,
+            "lane": "mid",
+            "velocity": 82
+          },
+          {
+            "beat": 3,
+            "lane": "mid",
+            "velocity": 82
+          },
+          {
+            "beat": 0,
+            "lane": "high",
+            "velocity": 48
+          },
+          {
+            "beat": 0.5,
+            "lane": "high",
+            "velocity": 48
+          },
+          {
+            "beat": 1,
+            "lane": "high",
+            "velocity": 48
+          },
+          {
+            "beat": 1.5,
+            "lane": "high",
+            "velocity": 48
+          },
+          {
+            "beat": 2,
+            "lane": "high",
+            "velocity": 48
+          },
+          {
+            "beat": 2.5,
+            "lane": "high",
+            "velocity": 48
+          },
+          {
+            "beat": 3,
+            "lane": "high",
+            "velocity": 48
+          },
+          {
+            "beat": 3.5,
+            "lane": "high",
+            "velocity": 48
+          }
         ]
       }
     }

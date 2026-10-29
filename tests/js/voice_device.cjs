@@ -15,7 +15,7 @@ c.receive=text=>receiveBytes.apply(c,packet(JSON.parse(text)));
 c.voice('part_a');c.receiveport(9101);c.connect();
 let hello=control(output.find(a=>a[0]===0));
 assert.equal(hello.voice,'part_a');assert.equal(hello.reply_port,9101);
-const state={version:1,kind:'state',voice:'part_a',instance:c.instance,serial:1,
+const state={version:1,kind:'state',voice:'part_a',instance:c.instance,serial:1,session:'python-1',
  role:'melody',preset:null,presets:['soft'],controls:{velocity:{minimum:1,maximum:127,integer:true,value:80}}};
 c.receive(JSON.stringify({...state,instance:'other'}));assert.equal(c.state,null);
 c.receive(JSON.stringify(state));assert.equal(c.state.role,'melody');
@@ -38,11 +38,33 @@ c.receive(JSON.stringify({version:1,kind:'error',voice:'part_a',instance:c.insta
 assert.deepStrictEqual(uiMessages.role_menu.at(-1),['set',2]); // Ripristina la scelta confermata.
 c.preset(0);assert.equal(control(output.at(-1)).preset,'soft');
 c.value(50);assert.equal(control(output.at(-1)).value,50);
+c.receive(JSON.stringify({...state,serial:4,can_save_presets:true,editable_presets:[]}));
+c.preset_name('my','groove');c.save_preset(0);
+assert.equal(control(output.at(-1)).preset,'my groove');
+assert.equal(control(output.at(-1)).overwrite,false);
+c.save_preset(1);assert.equal(control(output.at(-1)).overwrite,true);
+c.slidervalue(500);assert.equal(control(output.at(-1)).value,64);
+c.slidervalue(0);assert.equal(control(output.at(-1)).value,1);
+c.slidervalue(1000);assert.equal(control(output.at(-1)).value,127);
 let count=output.filter(a=>a[0]===0).length;c.value(999);
 assert.equal(output.filter(a=>a[0]===0).length,count);
 let plan={version:1,kind:'plan',voice:'part_a',instance:c.instance,plan:{version:1,reset:true}};
 c.receive(JSON.stringify({...plan,voice:'part_b'}));assert.notEqual(output.at(-1)[1][0],'planbytes');
 c.receive(JSON.stringify(plan));assert.equal(output.at(-1)[1][0],'planbytes');
+const liveCommand={version:1,kind:'transport',voice:'part_a',instance:c.instance,session:'python-1',serial:100,action:'restart'};
+c.receive(JSON.stringify(liveCommand));
+assert.deepStrictEqual(output.filter(a=>a[0]===3).slice(-3),[
+ [3,'call','stop_playing'],[3,'set','current_song_time',0],[3,'call','continue_playing']]);
+const liveCount=output.filter(a=>a[0]===3).length;
+c.receive(JSON.stringify(liveCommand));assert.equal(output.filter(a=>a[0]===3).length,liveCount);
+c.receive(JSON.stringify({...liveCommand,serial:101,action:'pause'}));
+assert.deepStrictEqual(output.at(-1),[3,'call','stop_playing']);
+c.receive(JSON.stringify({...state,serial:5,session:'python-2'}));
+c.receive(JSON.stringify({...liveCommand,session:'python-2',serial:1,action:'resume'}));
+assert.deepStrictEqual(output.at(-1),[3,'call','continue_playing']);
+const afterNewSession=output.filter(a=>a[0]===3).length;
+c.receive(JSON.stringify({...liveCommand,serial:102,action:'pause'}));
+assert.equal(output.filter(a=>a[0]===3).length,afterNewSession);
 c.lastReply=0;c.heartbeat();assert(output.some(a=>a[0]===1&&a[1]==='panic'));
 c.disconnect();assert(!c.connected);c.receive(JSON.stringify(plan));assert.notEqual(output.at(-1)[1][0],'planbytes');
 console.log('OK: identity, menus, validated values, plan routing, timeout and disconnect');

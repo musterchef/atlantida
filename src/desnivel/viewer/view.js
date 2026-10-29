@@ -2,13 +2,34 @@
 const el = id => document.getElementById(id);
 const number = (n, digits = 1) => n.toLocaleString('it-IT', {minimumFractionDigits: digits, maximumFractionDigits: digits});
 const duration = s => [Math.floor(s / 3600), Math.floor(s / 60) % 60, Math.floor(s) % 60].map(n => String(n).padStart(2, '0')).join(':');
-const states = {playing: 'In viaggio', stopped: 'In pausa', waiting_for_transport: 'In attesa del trasporto', waiting_for_devices: 'In attesa delle voci', finished: 'Viaggio concluso', closed: 'Sessione chiusa', error: 'Errore nella sessione'};
+const states = {playing: 'In viaggio', paused: 'Viaggio in pausa', stopped: 'In pausa', waiting_for_transport: 'In attesa del trasporto', waiting_for_devices: 'In attesa delle voci', finished: 'Viaggio concluso', closed: 'Sessione chiusa', error: 'Errore nella sessione'};
 async function getJSON(path) {
   const response = await fetch(path, {signal: AbortSignal.timeout(4000)});
   if (!response.ok) throw new Error(`Dati non disponibili (${response.status})`);
   return response.json();
 }
 async function start() {
+  let paused = false, pendingCommand = false;
+  async function command(action) {
+    if (pendingCommand) return;
+    pendingCommand = true;
+    try {
+      const response = await fetch('/api/control', {method: 'POST',
+        headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action}),
+        signal: AbortSignal.timeout(4000)});
+      if (!response.ok) throw new Error(`Comando rifiutato (${response.status})`);
+      el('command-status').textContent = 'Comando inviato alla sessione.';
+    } catch (error) {
+      el('command-status').textContent = error.message;
+    } finally {
+      pendingCommand = false;
+    }
+  }
+  el('pause').onclick = () => command(paused ? 'resume' : 'pause');
+  el('restart').onclick = el('restart-finished').onclick = () => command('restart');
+  el('skin').addEventListener('change', event => {
+    document.documentElement.dataset.skin = event.target.value;
+  });
   const route = await getJSON('/api/route');
   el('stage').textContent = route.stage.replaceAll('_', ' ');
   let map, marker, passed, outline, following = false, position, tileError = false;
@@ -18,10 +39,10 @@ async function start() {
       maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
     tiles.on('tileerror', () => { tileError = true; });
-    outline = L.polyline(route.segments.map(points => points.map(p => p.slice(1))), {color: '#647e73', weight: 4, opacity: .65}).addTo(map);
-    passed = L.polyline([], {color: '#c45c37', weight: 5}).addTo(map);
+    outline = L.polyline(route.segments.map(points => points.map(p => p.slice(1))), {className: 'route-outline', color: '#647e73', weight: 4, opacity: .65}).addTo(map);
+    passed = L.polyline([], {className: 'route-passed', color: '#c45c37', weight: 5}).addTo(map);
     const first = route.segments[0][0].slice(1);
-    marker = L.circleMarker(first, {radius: 8, color: '#fffdf7', weight: 3, fillColor: '#c45c37', fillOpacity: 1}).addTo(map);
+    marker = L.circleMarker(first, {className: 'route-position', radius: 8, color: '#fffdf7', weight: 3, fillColor: '#c45c37', fillOpacity: 1}).addTo(map);
     const fit = () => map.fitBounds(outline.getBounds(), {padding: [35, 50], maxZoom: 15});
     const follow = value => { following = value; el('follow').setAttribute('aria-pressed', String(value)); };
     el('fit').onclick = () => {follow(false); fit();};
@@ -40,8 +61,13 @@ async function start() {
       const trip = state.trip;
       if (trip.stage !== route.stage) throw new Error('La sorgente dello stato è cambiata: riavvia la vista con la sessione.');
       const stale = age > 3;
+      paused = state.controls?.paused || false;
+      el('pause').textContent = paused ? 'Riprendi' : 'Pausa';
+      el('pause').disabled = stale || ['finished', 'closed', 'error'].includes(state.state);
+      el('restart').disabled = el('restart-finished').disabled = stale || state.state === 'closed';
+      el('finished').hidden = state.state !== 'finished';
       el('status').textContent = stale ? 'Stato non aggiornato' : (states[state.state] || state.state);
-      el('notice').textContent = state.error || (stale ? 'La sessione non aggiorna più i dati. È mostrata l’ultima posizione ricevuta.' :
+      el('notice').textContent = state.error || state.control_error || (stale ? 'La sessione non aggiorna più i dati. È mostrata l’ultima posizione ricevuta.' :
         tileError ? 'Cartografia non disponibile. Il percorso e la posizione restano visibili.' : '');
       el('distance').textContent = number(trip.distance_m / 1000);
       el('total').textContent = number(trip.total_distance_m / 1000);
@@ -65,6 +91,7 @@ async function start() {
         }
       }
     } catch (error) {
+      el('pause').disabled = el('restart').disabled = el('restart-finished').disabled = true;
       el('status').textContent = 'Collegamento interrotto';
       el('notice').textContent = `${error.message}. L’ultima posizione ricevuta resta visibile.`;
     } finally {

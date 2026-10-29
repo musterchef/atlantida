@@ -232,3 +232,43 @@ def test_allocated_missing_device_freezes_cursor_and_replans_current_window():
     receive(0, epoch=1); runtime.tick()
     assert runtime.timeline.window_index == index
     assert runtime.next_window == index+1
+
+
+def test_pause_freezes_linear_trip_and_restart_resets_position_and_generator_memory():
+    runtime, _, now, _, receive = setup()
+    receive(); runtime.tick()
+    now[0] = .5
+    runtime.control('pause')
+    elapsed = runtime.elapsed
+    assert runtime.paused and runtime.state == 'paused'
+    assert not runtime.sounding
+    now[0] = 50
+    receive(beat=20)
+    runtime.tick()
+    assert runtime.elapsed == elapsed
+    runtime.control('resume')
+    runtime.tick()
+    assert runtime.state == 'playing'
+    runtime.control('restart')
+    assert runtime.progress == 0 and runtime.elapsed == 0
+    assert runtime.last_decisions is None and not runtime.sounding
+    assert runtime.snapshot()['controls']['restart_count'] == 1
+
+
+def test_allocated_restart_after_end_repeats_the_whole_trip():
+    runtime, _, now, _, receive = allocated_setup()
+    receive(); runtime.tick()
+    runtime.timeline.seek_window(runtime.timeline.timeline.total_windows)
+    runtime.tick()
+    assert runtime.state == 'finished'
+    runtime.control('restart')
+    assert runtime.progress == 0
+    assert runtime.next_window == runtime.timeline.window_index == 0
+    receive(40); runtime.tick()
+    assert runtime.last_decisions['section'] == 'opening'
+    runtime.control('pause')
+    index, progress = runtime.timeline.window_index, runtime.progress
+    now[0] += 100
+    receive(80); runtime.tick()
+    assert runtime.timeline.window_index == index and runtime.progress == progress
+    assert runtime.state == 'paused'

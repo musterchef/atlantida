@@ -4,6 +4,7 @@ from importlib.resources import files
 import json
 import os
 from pathlib import Path
+from queue import Empty, Full, Queue
 from threading import Thread
 import time
 from urllib.parse import urlsplit
@@ -12,11 +13,12 @@ from desnivel.viewer.route import route_payload
 
 
 class JourneyViewServer:
-    """Il thread HTTP legge solo il file di stato, senza accedere al runtime."""
+    """Legge lo stato su file e accoda comandi, senza accedere al runtime."""
 
     def __init__(self, track, status_path, port):
         route = json.dumps(route_payload(track), allow_nan=False).encode('utf-8')
         status_path = Path(status_path)
+        commands = self.commands = Queue(maxsize=16)
         assets = files('desnivel.viewer')
         resources = {'/': ('index.html', 'text/html; charset=utf-8'),
                      '/view.css': ('view.css', 'text/css; charset=utf-8'),
@@ -24,6 +26,28 @@ class JourneyViewServer:
                      '/position.js': ('position.js', 'text/javascript; charset=utf-8')}
 
         class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                if self.path != '/api/control':
+                    self.respond(404, b'Not found', 'text/plain')
+                    return
+                origin = f'http://127.0.0.1:{self.server.server_port}'
+                if self.headers.get('Origin') != origin:
+                    self.respond(403, b'Origin not allowed', 'text/plain')
+                    return
+                try:
+                    size = int(self.headers.get('Content-Length', '0'))
+                    if not 0 < size <= 1024:
+                        raise ValueError('dimensione del comando non valida')
+                    payload = json.loads(self.rfile.read(size))
+                    if (not isinstance(payload, dict) or set(payload) != {'action'}
+                            or payload['action'] not in ('pause', 'resume', 'restart')):
+                        raise ValueError('comando non valido')
+                    commands.put_nowait(payload['action'])
+                except (ValueError, Full) as error:
+                    self.respond(400, json.dumps({'error': str(error) or 'coda piena'}).encode(), 'application/json')
+                    return
+                self.respond(202, b'{"queued":true}', 'application/json')
+
             def do_GET(self):
                 path = urlsplit(self.path).path
                 if path == '/api/route':
@@ -69,6 +93,14 @@ class JourneyViewServer:
 
     def start(self):
         self.thread.start()
+
+    def take_commands(self):
+        """Consuma i comandi nel ciclo proprietario del runtime."""
+        while True:
+            try:
+                yield self.commands.get_nowait()
+            except Empty:
+                return
 
     def close(self):
         if self.thread.is_alive():

@@ -161,6 +161,8 @@ def main(argv=None):
     from desnivel.cli.voice_device import VoiceDeviceServer
     from desnivel.sinks.session_status import SessionStatusStore
     from desnivel.cli.session_view import TerminalSessionView
+    from desnivel.cli.session_controls import TerminalControls, apply_control
+    from desnivel.cli.connect_voices import connect_all
     from desnivel.trip.loader import load_track
 
     parser = argparse.ArgumentParser(description=main.__doc__)
@@ -173,9 +175,13 @@ def main(argv=None):
     parser.add_argument('--timing', choices=('linear', 'allocated'), default='linear',
                         help='Tempo lineare del viaggio oppure timeline musicale in beat.')
     parser.add_argument('--port', type=int, default=9006)
+    parser.add_argument('--connect-port', type=int, default=9101,
+                        help='Porta Receive di una Voice per il comando C: Collega tutte (default: 9101).')
     parser.add_argument('--status-file', type=Path, default=Path('/tmp/desnivel-session/state.json'))
     parser.add_argument('--view-port', type=int,
                         help='Attiva la mappa del viaggio su http://127.0.0.1:PORTA (es. 8765).')
+    parser.add_argument('--voice-presets', type=Path,
+                        help='Libreria dei preset utente (default: <config>.voice-presets.json).')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args(argv)
     server = None
@@ -183,6 +189,8 @@ def main(argv=None):
     try:
         if args.view_port is not None and not 1024 <= args.view_port <= 65535:
             raise ValueError('la porta della vista deve essere tra 1024 e 65535')
+        if not 1024 <= args.connect_port <= 65535:
+            raise ValueError('la porta per Collega tutte deve essere tra 1024 e 65535')
         if args.timing == 'allocated' and (not args.direction or args.speed is not None):
             raise ValueError('--timing allocated richiede --direction e non usa --speed')
         speed = args.speed if args.speed is not None else 1.
@@ -199,6 +207,10 @@ def main(argv=None):
             server = VoiceDeviceServer({}, args.port)
             bridge = server.bridge
         runtime = EnsembleRuntime(track, config, bridge, speed, timing=args.timing)
+        from desnivel.sinks.voice_presets import VoicePresetLibrary
+        from desnivel.cli.voice_presets import connect_preset_library
+        library = VoicePresetLibrary(args.voice_presets or args.config.with_suffix('.voice-presets.json'))
+        connect_preset_library(library, bridge.voices)
         if runtime.timeline:
             plan = runtime.timeline.timeline
             basis = f' ({plan.beats_per_km:g} beat/km)' if plan.beats_per_km is not None else ''
@@ -232,32 +244,47 @@ def main(argv=None):
     server.server.timeout = .1
     last_write = 0.
     view = TerminalSessionView()
+    command_error = None
     print(f'Python pronto su 127.0.0.1:{args.port}. Chiudi il ricevitore diagnostico prima di avviare questa sessione.', flush=True)
     print(f'Stato globale: {args.status_file}', flush=True)
-    try:
-        if viewer:
-            viewer.start()
-            print(f'Mappa del viaggio: {viewer.url}', flush=True)
-        while True:
-            server.server.handle_request()
-            try:
-                runtime.tick()
-            except (ValueError, KeyError, TypeError, OSError) as error:
-                runtime.fail(error)
-            state = runtime.snapshot()
-            view.update(state)
-            if time.monotonic()-last_write >= .25:
-                store.write(state)
-                last_write = time.monotonic()
-    except KeyboardInterrupt:
-        runtime.reset()
-        runtime.playing = False
-        runtime.state = 'closed'
-        store.write(runtime.snapshot())
-    finally:
-        if viewer:
-            viewer.close()
-        server.close()
+    with TerminalControls() as keyboard:
+        try:
+            if viewer:
+                viewer.start()
+                print(f'Mappa del viaggio: {viewer.url}', flush=True)
+            while True:
+                server.server.handle_request()
+                actions = list(keyboard.poll())
+                if viewer:
+                    actions.extend(viewer.take_commands())
+                for action in actions:
+                    try:
+                        if action == 'connect':
+                            connect_all(args.connect_port)
+                        else:
+                            apply_control(runtime, action)
+                        command_error = None
+                    except (ValueError, OSError) as error:
+                        command_error = str(error)
+                try:
+                    runtime.tick()
+                except (ValueError, KeyError, TypeError, OSError) as error:
+                    runtime.fail(error)
+                state = runtime.snapshot()
+                state['control_error'] = command_error
+                view.update(state)
+                if time.monotonic()-last_write >= .25:
+                    store.write(state)
+                    last_write = time.monotonic()
+        except KeyboardInterrupt:
+            runtime.reset()
+            runtime.playing = False
+            runtime.state = 'closed'
+            store.write(runtime.snapshot())
+        finally:
+            if viewer:
+                viewer.close()
+            server.close()
     return 0
 
 

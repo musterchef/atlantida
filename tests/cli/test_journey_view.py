@@ -2,7 +2,7 @@ import json
 import os
 import time
 from urllib.error import HTTPError
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 import numpy as np
 import pytest
@@ -108,3 +108,27 @@ def test_ensemble_starts_view_with_initial_state_and_closes_it_on_interrupt(tmp_
                           '--view-port', '8765', '--status-file', str(status)]) == 0
     assert json.loads(status.read_text())['state'] == 'closed'
     assert not views[0].thread.is_alive()
+
+
+def test_http_controls_are_queued_and_reject_other_origins(tmp_path):
+    view = JourneyViewServer(track(), tmp_path / 'state.json', 0)
+    view.start()
+    def send(action, origin):
+        request = Request(view.url+'api/control', data=json.dumps({'action': action}).encode(),
+                          headers={'Content-Type': 'application/json', 'Origin': origin})
+        return urlopen(request, timeout=2)
+    try:
+        with pytest.raises(HTTPError) as error:
+            send('restart', 'https://other.example')
+        assert error.value.code == 403
+        assert list(view.take_commands()) == []
+        with send('pause', view.url.rstrip('/')) as response:
+            assert response.status == 202
+        with send('restart', view.url.rstrip('/')):
+            pass
+        assert list(view.take_commands()) == ['pause', 'restart']
+        with pytest.raises(HTTPError) as error:
+            send('arbitrary', view.url.rstrip('/'))
+        assert error.value.code == 400
+    finally:
+        view.close()

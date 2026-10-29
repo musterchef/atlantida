@@ -44,7 +44,7 @@ class VoiceDeviceServer:
             self.bridge.handle(message)
             if self.on_message:
                 self.on_message(self.bridge, message)
-        except (ValueError, KeyError, TypeError, OverflowError) as error:
+        except (ValueError, KeyError, TypeError, OverflowError, OSError) as error:
             if isinstance(message, dict):
                 self.bridge.error(message, error)
             print(f'Voice device: {error}', flush=True)

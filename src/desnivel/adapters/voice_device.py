@@ -45,6 +45,8 @@ class DeviceVoice:
     role_state: Callable[[], dict] | None = None
     apply_role: Callable[[str | None], None] | None = None
     read_values: Callable[[], dict] | None = None
+    save_preset: Callable | None = None
+    editable_presets: set[str] = field(default_factory=set)
 
     @classmethod
     def for_session(cls, session, voice: str, progress: Callable[[], float], **controls):
@@ -98,6 +100,8 @@ class VoiceDeviceBridge:
         }
         values = spec.read_values() if spec.read_values else spec.values
         return {**roles, 'preset': spec.preset, 'presets': list(spec.presets),
+                'can_save_presets': spec.save_preset is not None,
+                'editable_presets': sorted(spec.editable_presets),
                 'controls': {name: {**asdict(control), 'value': values[name]}
                              for name, control in spec.controls.items()}}
 
@@ -107,10 +111,12 @@ class VoiceDeviceBridge:
             raise ValueError('versione non supportata')
         voice, instance = message['voice'], message['instance']
         port, serial, action = message['reply_port'], message['serial'], message['action']
+        capabilities = message.get('capabilities', [])
         if (not isinstance(voice, str) or voice not in self.voices
                 or not isinstance(instance, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}', instance)
                 or type(port) is not int or not 1024 <= port <= 65535
-                or type(serial) is not int or serial < 0):
+                or type(serial) is not int or serial < 0
+                or not isinstance(capabilities, list) or any(not isinstance(c, str) for c in capabilities)):
             raise ValueError('identità, porta o seriale non valido')
         now = self.clock()
         previous = self.connections.get(voice)
@@ -141,6 +147,20 @@ class VoiceDeviceBridge:
                 values = dict(spec.presets[name])
                 spec.apply(values)
                 spec.values, spec.preset = values, name
+            elif action == 'save_preset':
+                if spec.save_preset is None:
+                    raise ValueError('salvataggio dei preset non disponibile')
+                name, overwrite = message['preset'], message.get('overwrite', False)
+                if (not isinstance(name, str) or not name.strip() or name != name.strip()
+                        or len(name) > 64 or not name.isprintable() or type(overwrite) is not bool):
+                    raise ValueError('nome del preset non valido: usare da 1 a 64 caratteri')
+                if name in spec.presets and name not in spec.editable_presets:
+                    raise ValueError('preset base protetto: salvare con un nuovo nome')
+                current = spec.read_values() if spec.read_values else spec.values
+                values = {key: control.validate(current[key]) for key, control in spec.controls.items()}
+                spec.save_preset(name, values, overwrite)
+                spec.presets[name] = values
+                spec.editable_presets.add(name)
             elif action == 'parameter':
                 name = message['parameter']
                 value = spec.controls[name].validate(message['value'])
@@ -154,8 +174,11 @@ class VoiceDeviceBridge:
                 raise ValueError('azione non supportata')
             previous['serial'] = serial
         previous['seen'] = now
+        previous['capabilities'] = capabilities
         reply = {'version': 1, 'kind': 'state', 'voice': voice, 'instance': instance,
-                 'serial': serial, **self._snapshot(voice)}
+                 'serial': serial, 'session': self.session, **self._snapshot(voice)}
+        if action == 'save_preset':
+            reply['notice'] = f'Preset salvato: {message["preset"]}'
         self.send(port, ADDRESS, reply)
         return reply
 
@@ -212,3 +235,17 @@ class VoiceDeviceBridge:
 
     def reset(self, voice):
         self._plan(voice, {'reset': True})
+
+    def control_transport(self, voice, action):
+        """Invia un comando Live alla sola voce scelta come sorgente del trasporto."""
+        if action not in ('pause', 'resume', 'restart'):
+            raise ValueError('comando di trasporto non supportato')
+        if not self.connected(voice):
+            raise ValueError('collegare la voce del trasporto prima di controllare Live')
+        connection = self.connections[voice]
+        if 'transport_control' not in connection.get('capabilities', []):
+            raise ValueError('aggiornare il device Desnivel_Voice per controllare Live')
+        self.serial += 1
+        self.send(connection['port'], ADDRESS, {'version': 1, 'kind': 'transport',
+                  'voice': voice, 'instance': connection['instance'],
+                  'session': self.session, 'serial': self.serial, 'action': action})
