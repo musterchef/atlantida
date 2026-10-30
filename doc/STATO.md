@@ -24,11 +24,21 @@
 - Organico e ruoli configurati per sezione; selezione manuale del ruolo e ritorno a `Follow section` dal dispositivo comune `Desnivel_Voice`.
 - Generazione melodica da motivo con sviluppo su più finestre, ritmo variabile, pause, dinamica e conclusioni sulla tonica; preset letterale per il confronto.
 - Collegamento delle parti al trasporto di Live e controlli compositivi esposti dal motore Python.
+- Presenza per frase della sezione e moltiplicatore manuale per voce, separati dalla densità e dalla velocity.
+- Controlli pertinenti al ruolo e alla modalità segnalati dal generatore; etichette e switch visualizzati dal device comune senza regole specifiche degli strumenti.
+- Tessitura sostenuta in `music/texture/`, con registro, velocity e switch `follow_source`: sostegno del grado di sezione oppure scelta da una frase sorgente. La voce Atmosphere legge facoltativamente la melodia; in modalità coordinata ne segue anche i silenzi.
+- Percussione con materiale, trasformazioni e interazione con le frasi di melodia e basso; combinazione fra groove standard e componente sviluppata tramite `conceptuality`.
 - Vista globale nel terminale e snapshot JSON con avanzamento, collegamenti, ruoli e decisioni effettive di Director e Coordinator.
 - Direzione dalle macrosezioni del GPX con assetti musicali configurati per famiglia; modalità con sezioni manuali disponibile.
 - Prova a quattro voci: melodia, accompagnamento, atmosfera sostenuta e pattern percussivi configurati. Esecuzione delle quattro parti confermata all'ascolto in Live da Marco; organico e comportamenti sono un banco di prova da affinare.
 
 [Sessione multivoce](SESSIONE-MULTIVOCE.md) · [Configurazione](CONFIGURAZIONE.md) · [Passaggio di consegne](PASSAGGIO-CONSEGNE.md)
+
+La verifica automatica del 30 ottobre 2026 comprende 431 test Python
+superati e la suite JavaScript superata. La nuova tessitura e la revisione
+dei controlli sono verificate automaticamente; la relativa prova in Live
+resta da eseguire. Comportamento e procedura di ascolto sono descritti in
+[Tessitura sostenuta](TESSITURA.md).
 
 ### 5. Analisi e macrosezioni del percorso
 - Classificazione del profilo altimetrico per distanza con soglie e persistenza configurabili.
@@ -44,6 +54,7 @@
 - **Proposte di sviluppo**: [plancia grafica globale](proposte/PLANCIA.md) e [catalogo delle voci e ruoli musicali](proposte/RUOLI-MUSICALI.md), separati dalle funzionalità operative.
 - **Quantizzazione metrica su Snake**: allineamento dei cambi di pattern a inizio battuta.
 - **Calibrazione all'ascolto**: affinamento dei pesi armonici del generatore del basso durante le sessioni musicali.
+- **Stili percussivi**: [design del selettore e delle influenze](proposte/STILI-PERCUSSIVI.md), da approvare; nessun controllo di genere implementato.
 
 Per il dettaglio delle attività aperte, consultare [TODO.md](../TODO.md).
 

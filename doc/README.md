@@ -30,6 +30,7 @@ Guida alla documentazione di **Desnivel**, organizzata per aree tematiche.
 | [Analisi del percorso](ANALISI-PERCORSO.md) | Zone del profilo altimetrico, macrosezioni configurabili, report visuale e misure di verifica. |
 | [Sequencer Snake](SNAKE.md) | Banco di prova per la linea melodica: integrazione del sequencer Snake, bridge M4L e telemetria. |
 | [Generazione melodica](MELODIA.md) | Motivo, sviluppo delle frasi, controlli e riproducibilità. |
+| [Tessitura sostenuta](TESSITURA.md) | Sostegno monofonico indipendente o coordinato con una frase sorgente, switch e integrazione nella sessione. |
 | [Generatore del basso](BASSO.md) | Banco di prova per l'accompagnamento: logica di contrappunto e dialogo con la melodia, controlli live e player. |
 | [Tappe e percorsi modali](TAPPE-E-PRESET.md) | Caratterizzazione modale delle tappe (Levanto, Firenze, Sabaudia, Peschici) e ascolto. |
 
@@ -44,6 +45,7 @@ Materiale di progettazione separato dalla documentazione del sistema attuale.
 - [Plancia globale](proposte/PLANCIA.md): informazioni da mostrare e decisioni aperte sull’interfaccia.
 - [Sezioni guidate dal viaggio](proposte/SEZIONI-GUIDATE-DAL-VIAGGIO.md): assetti delle macrosezioni operativi e variazioni interne ancora da definire.
 - [Mappatura temporale](proposte/MAPPATURA-TEMPORALE.md): stato dell'integrazione della timeline e proposta di preavvisi per le transizioni musicali.
+- [Stili percussivi](proposte/STILI-PERCUSSIVI.md): proposta del selettore di stile, profili ritmici e futura combinazione di influenze da 0 a 1.
 
 ---
 
