@@ -76,6 +76,15 @@ def test_presets_are_values_and_explicit_controls_override_them():
     assert BassSettings(strategy='slap', min_spacing=2).min_spacing == 2
 
 
+def test_session_bass_rejects_initial_preset_selector_as_runtime_parameter():
+    from desnivel.cli.generators import build_generator
+    registered = build_generator({'type': 'responsive_line', 'settings': {'strategy': 'slap'}})
+    assert registered.values['density'] == 1.8
+    with pytest.raises(ValueError, match='soltanto in settings'):
+        registered.generator.validate('bass_line', {'strategy': 'responsive'})
+    registered.generator.validate('bass_line', {'lowest': 24, 'density': .5})
+
+
 def test_density_and_syncopation_control_different_dimensions():
     melody = Phrase(4, (Note(0, 60, 4, 100),))
     settings = BassSettings(density=.75, min_spacing=.5, rhythm_follow=0,

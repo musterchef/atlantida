@@ -7,6 +7,7 @@ from desnivel.music.melodic.generator import MotifGenerator, ROLES
 from desnivel.music.bass.voice import BassVoice
 from desnivel.music.percussion.generator import PercussionGenerator, ROLES as PERCUSSION_ROLES
 from desnivel.music.percussion.development import PercussionPhraseGenerator
+from desnivel.music.texture.generator import TextureGenerator, ROLES as TEXTURE_ROLES
 
 
 @dataclass
@@ -16,6 +17,7 @@ class RegisteredGenerator:
     values: dict
     presets: dict
     reset: object = None
+    describe_controls: object = None
 
 
 def build_generator(spec):
@@ -36,6 +38,12 @@ def build_generator(spec):
                     'articulation': Control(.05, 1)}
         roles = ('bass_line',)
         values = asdict(compose.settings)
+    elif kind == 'sustained_texture':
+        compose = TextureGenerator(spec.get('degree', 0), spec.get('settings'))
+        controls = {'octave': Control(-5, 5, True), 'velocity': Control(1, 127, True),
+                    'follow_source': Control(0, 1, True, toggle=True)}
+        roles = TEXTURE_ROLES
+        values = compose.settings
     elif kind == 'percussion_phrase':
         compose = PercussionPhraseGenerator(spec['lanes'], spec['material'], spec['anchor_beats'],
                                            spec['development'], spec['interaction'], spec.get('settings'),
@@ -68,6 +76,7 @@ def build_generator(spec):
         for name, control in controls.items():
             if name in parameters:
                 control.validate(parameters[name])
-    describe = (lambda: compose.last_decision) if kind in ('motif', 'percussion_pattern', 'percussion_phrase') else None
+    describe = (lambda: compose.last_decision) if kind in ('motif', 'sustained_texture', 'percussion_pattern', 'percussion_phrase') else None
     return RegisteredGenerator(Generator(compose, roles, validate, describe), controls,
-                               initial, presets, getattr(compose, 'reset', None))
+                               initial, presets, getattr(compose, 'reset', None),
+                               getattr(compose, 'describe_controls', None))

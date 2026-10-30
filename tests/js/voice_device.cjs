@@ -1,6 +1,8 @@
 const vm=require('vm'),fs=require('fs'),assert=require('assert');
-let output=[],uiMessages={};
-const patch={getnamed:name=>({message:(...a)=>(uiMessages[name]??=[]).push(a)})};
+let output=[],uiMessages={},uiObjects={};
+const patch={getnamed:name=>(uiObjects[name]??={
+ message:(...a)=>(uiMessages[name]??=[]).push(a),
+ setboxattr:(nameAttr,value)=>(uiMessages[name]??=[]).push([nameAttr,value])})};
 const c={patcher:patch,outlet:(...a)=>output.push(a),arrayfromargs:a=>Array.from(a)};
 vm.createContext(c);vm.runInContext(fs.readFileSync('m4l/desnivel_voice.js','utf8'),c);
 function packet(message){return [...Buffer.from(JSON.stringify(message),'utf8')];}
@@ -19,6 +21,17 @@ const state={version:1,kind:'state',voice:'part_a',instance:c.instance,serial:1,
  role:'melody',preset:null,presets:['soft'],controls:{velocity:{minimum:1,maximum:127,integer:true,value:80}}};
 c.receive(JSON.stringify({...state,instance:'other'}));assert.equal(c.state,null);
 c.receive(JSON.stringify(state));assert.equal(c.state.role,'melody');
+const beforePresence=output.filter(a=>a[0]===0).length;
+c.receive(JSON.stringify({...state,presence:{automatic:.4,multiplier:2,effective:.8}}));
+assert(uiMessages.presence_display.at(-1)[1].includes('40%'));
+assert(uiMessages.presence_display.at(-1)[1].includes('80%'));
+assert.deepStrictEqual(uiMessages.presence_multiplier.at(-1),['set',2]);
+assert.deepStrictEqual(uiMessages.presence_slider.at(-1),['set',200]);
+assert.equal(output.filter(a=>a[0]===0).length,beforePresence); // La visualizzazione non rimanda comandi.
+c.presence_slider(50);assert.equal(control(output.at(-1)).action,'presence');
+assert.equal(control(output.at(-1)).value,.5);
+const afterPresence=output.length;
+c.presence(11);assert.equal(output.length,afterPresence);
 // Connect ripetuto conserva identità, seriali e note già pianificate.
 const identity=c.instance, beforeSerial=c.serial;
 const panics=output.filter(a=>a[0]===1&&a[1]==='panic').length;
@@ -46,6 +59,28 @@ c.save_preset(1);assert.equal(control(output.at(-1)).overwrite,true);
 c.slidervalue(500);assert.equal(control(output.at(-1)).value,64);
 c.slidervalue(0);assert.equal(control(output.at(-1)).value,1);
 c.slidervalue(1000);assert.equal(control(output.at(-1)).value,127);
+// Le etichette descrittive e lo stato inattivo non cambiano le chiavi inviate.
+c.receive(JSON.stringify({...state,serial:4,controls:{velocity:{...state.controls.velocity,
+ label:'Intensità MIDI',inactive_reason:'Modalità di prova'}}}));
+assert.deepStrictEqual(uiMessages.parameter_menu.at(-3),['append','[inattivo] Intensità MIDI']);
+assert(uiMessages.range_display.at(-1)[1].includes('inattivo'));
+assert.deepStrictEqual(uiMessages.parameter_slider.at(-1),['annotation','velocity — Intensità MIDI: Modalità di prova']);
+c.value(55);assert.equal(control(output.at(-1)).parameter,'velocity');
+assert.equal(control(output.at(-1)).value,55);
+c.receive(JSON.stringify({...state,serial:4}));
+assert(!uiMessages.range_display.at(-1)[1].includes('inattivo'));
+assert.deepStrictEqual(uiMessages.parameter_toggle.slice(-2,-1)[0],['set',80]);
+c.receive(JSON.stringify({...state,serial:4,controls:{follow_source:{minimum:0,maximum:1,integer:true,
+ value:0,toggle:true,label:'Segui sorgente'}}}));
+assert.equal(uiObjects.parameter_slider.hidden,true);
+assert.equal(uiObjects.parameter_toggle.hidden,false);
+c.value(1);assert.equal(control(output.at(-1)).parameter,'follow_source');
+assert.equal(control(output.at(-1)).value,1);
+const beforeInvalidToggle=output.filter(a=>a[0]===0).length;c.value(.5);
+assert.equal(output.filter(a=>a[0]===0).length,beforeInvalidToggle);
+c.receive(JSON.stringify({...state,serial:4}));
+assert.equal(uiObjects.parameter_slider.hidden,false);
+assert.equal(uiObjects.parameter_toggle.hidden,true);
 let count=output.filter(a=>a[0]===0).length;c.value(999);
 assert.equal(output.filter(a=>a[0]===0).length,count);
 let plan={version:1,kind:'plan',voice:'part_a',instance:c.instance,plan:{version:1,reset:true}};

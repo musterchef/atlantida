@@ -448,7 +448,7 @@
           "presentation_rect": [
             10,
             140,
-            778,
+            210,
             20
           ]
         }
@@ -1224,6 +1224,154 @@
             220,
             22
           ]
+        }
+      },
+      {
+        "box": {
+          "id": "presence_label",
+          "maxclass": "comment",
+          "text": "Presenza \u00d7",
+          "presentation_rect": [
+            228,
+            140,
+            72,
+            20
+          ],
+          "patching_rect": [
+            600,
+            1500,
+            250,
+            22
+          ],
+          "presentation": 1
+        }
+      },
+      {
+        "box": {
+          "id": "presence_multiplier",
+          "varname": "presence_multiplier",
+          "maxclass": "flonum",
+          "presentation_rect": [
+            302,
+            139,
+            58,
+            22
+          ],
+          "minimum": 0.0,
+          "maximum": 10.0,
+          "annotation": "Moltiplicatore 0\u201310. 1 segue la sezione; 0 esclude la voce. Applicato alle prossime frasi.",
+          "patching_rect": [
+            600,
+            1535,
+            250,
+            22
+          ],
+          "presentation": 1
+        }
+      },
+      {
+        "box": {
+          "id": "presence_slider",
+          "varname": "presence_slider",
+          "maxclass": "slider",
+          "presentation_rect": [
+            370,
+            142,
+            140,
+            18
+          ],
+          "size": 1001.0,
+          "floatoutput": 0,
+          "annotation": "Moltiplicatore della presenza automatica: da 0\u00d7 a 10\u00d7.",
+          "patching_rect": [
+            600,
+            1570,
+            250,
+            22
+          ],
+          "presentation": 1
+        }
+      },
+      {
+        "box": {
+          "id": "presence_display",
+          "varname": "presence_display",
+          "maxclass": "comment",
+          "text": "Presenza: collega alla sessione",
+          "presentation_rect": [
+            522,
+            140,
+            266,
+            22
+          ],
+          "patching_rect": [
+            600,
+            1605,
+            250,
+            22
+          ],
+          "presentation": 1
+        }
+      },
+      {
+        "box": {
+          "id": "presence_prefix",
+          "maxclass": "newobj",
+          "text": "prepend presence",
+          "patching_rect": [
+            600,
+            1640,
+            250,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "presence_slider_prefix",
+          "maxclass": "newobj",
+          "text": "prepend presence_slider",
+          "patching_rect": [
+            600,
+            1675,
+            250,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "parameter_toggle",
+          "maxclass": "toggle",
+          "varname": "parameter_toggle",
+          "patching_rect": [
+            820,
+            385,
+            20,
+            20
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            385,
+            102,
+            20,
+            20
+          ],
+          "hidden": 1,
+          "annotation": "Attiva o disattiva il parametro selezionato (0 oppure 1)."
+        }
+      },
+      {
+        "box": {
+          "id": "toggle_prefix",
+          "maxclass": "newobj",
+          "patching_rect": [
+            820,
+            425,
+            160,
+            22
+          ],
+          "text": "prepend value"
         }
       }
     ],
@@ -2196,6 +2344,78 @@
           ],
           "destination": [
             "connect_trigger",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "presence_multiplier",
+            0
+          ],
+          "destination": [
+            "presence_prefix",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "presence_prefix",
+            0
+          ],
+          "destination": [
+            "interface",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "presence_slider",
+            0
+          ],
+          "destination": [
+            "presence_slider_prefix",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "presence_slider_prefix",
+            0
+          ],
+          "destination": [
+            "interface",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "parameter_toggle",
+            0
+          ],
+          "destination": [
+            "toggle_prefix",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "toggle_prefix",
+            0
+          ],
+          "destination": [
+            "interface",
             0
           ]
         }

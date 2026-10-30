@@ -67,6 +67,61 @@ def test_sections_change_active_voices_context_and_parameters_and_route_results(
     assert set(session.plan(.1, 8, 4)) == {'a'}
 
 
+def test_presence_controls_whole_phrases_and_dependencies_hear_the_actual_silence():
+    session, calls, _ = setup()
+    session.set_presence_multiplier('a', 0)
+    result = session.plan(.5, 0, 4)
+    assert not result['a'].notes
+    assert calls[-1][1].dependencies['a'] is result['a']
+    assert not result['b'].notes
+    decision = session.coordinator.last_plan['voices']['a']
+    assert decision['presence'] == 0 and not decision['participating']
+    # Il generatore continua a ricevere le richieste anche se la voce è silenziosa.
+    assert [name for name, _ in calls] == ['a', 'b']
+    session.set_presence_multiplier('a', 1)
+    assert session.plan(.5, 4, 4)['a'].notes
+
+
+def test_automatic_presence_and_multiplier_are_separate_and_follow_section_changes():
+    data = config()
+    data['sections'][0]['assignments']['a']['presence'] = .4
+    data['sections'][1]['assignments']['a']['presence'] = .7
+    session, _, _ = setup(data)
+    session.set_presence_multiplier('a', 2)
+    assert session.presence_state('a', 0) == dict(automatic=.4, multiplier=2, effective=.8)
+    assert session.presence_state('a', .5) == dict(automatic=.7, multiplier=2, effective=1)
+    assert session.presence_state('b', 0) == dict(automatic=0, multiplier=1, effective=0)
+    session.set_presence_multiplier('b', 10)
+    assert session.presence_state('b', 0)['effective'] == 0
+    assert 'b' not in session.plan(0, 0, 4)
+
+
+@pytest.mark.parametrize('value', [-1, 1.1, float('nan'), True, '0.5'])
+def test_invalid_automatic_presence_is_rejected(value):
+    data = config()
+    data['sections'][0]['assignments']['a']['presence'] = value
+    with pytest.raises(ValueError, match='presence'):
+        setup(data)
+
+
+@pytest.mark.parametrize('value', [-1, 10.1, float('inf'), True, '1'])
+def test_invalid_presence_multiplier_does_not_change_the_value(value):
+    session, _, _ = setup()
+    with pytest.raises(ValueError, match='moltiplicatore'):
+        session.set_presence_multiplier('a', value)
+    assert session.presence_state('a', 0)['multiplier'] == 1
+
+
+def test_partial_presence_is_repeatable_and_does_not_thin_the_notes_inside_a_phrase():
+    data = config()
+    data['sections'][0]['assignments']['a']['presence'] = .4
+    session, _, _ = setup(data)
+    results = [session.plan(0, i*4, 4)['a'] for i in range(1000)]
+    assert 330 < sum(bool(p.notes) for p in results) < 470
+    assert results == [session.plan(0, i*4, 4)['a'] for i in range(1000)]
+    assert all(p.length_beats == 4 and len(p.notes) in (0, 1) for p in results)
+
+
 @pytest.mark.parametrize('failure', ['unsupported_role', 'inactive_dependency', 'cycle'])
 def test_invalid_sections_rejected_during_loading(failure):
     data = config()

@@ -15,7 +15,7 @@ In `presets/organico.json`:
 | `window_beats` | Lunghezza delle frasi pianificate, positiva e finita |
 | `lead_beats` | Anticipo minimo della prossima frase rispetto al beat ricevuto, positivo e finito |
 | `generators` | Definizioni dei generatori, identificate da un nome locale |
-| `voices` | Voci della composizione, identificate dal valore da impostare in **Part** sul dispositivo |
+| `voices` | Voci della composizione, identificate dal valore da impostare in **Voce** sul dispositivo |
 | `sections` | Assetti musicali con confini manuali; sostituiti dalle macrosezioni quando si usa `--direction` |
 | `timeline` | Parametri dell'allocazione in beat, letti da `analyze_trip --timeline-session` e da `ensemble --timing allocated` |
 
@@ -71,8 +71,9 @@ richiede `root`, `scale` e `assignments`.
 |---|---|
 | `root` | Altezza MIDI intera di riferimento, non soltanto una classe di altezza; i generatori verificano il registro delle note prodotte |
 | `scale` | Nome della scala in `music.patterns.SCALES` |
-| `assignments` | Voci attive, ciascuna con `role` e una mappa opzionale `parameters` |
+| `assignments` | Voci attive, ciascuna con `role`, `presence` opzionale e una mappa opzionale `parameters` |
 | `role` | Ruolo fra quelli supportati dal generatore della voce |
+| `presence` | Probabilità di partecipazione per frase intera, da 0 a 1; predefinita 1 |
 | `parameters` | Valori dei controlli di quel generatore applicati nella sezione |
 
 Le scale disponibili sono `chromatic`, `major`, `minor`, `pentatonic_minor`,
@@ -83,6 +84,39 @@ completi per sezione: non ereditano le assegnazioni della precedente.
 
 I criteri di analisi, la persistenza delle fasce e il raggruppamento sono
 descritti in [Analisi del percorso](ANALISI-PERCORSO.md).
+
+### Presenza delle voci
+
+La presenza automatica è `assignments.<voce>.presence` della sezione
+corrente. Vale 1 se omessa e 0 per una voce fuori organico. Si applica alle
+sezioni manuali e agli assetti di famiglia usati con `--direction`.
+Per esempio, `{"role": "melody", "presence": 0.4}` prevede una
+partecipazione indicativa del 40% delle frasi.
+
+Le configurazioni fornite non impostano quote di presenza aggiuntive:
+le voci assegnate mantengono il valore predefinito 1. L'attività e le pause
+interne alle frasi dipendono dai generatori e dai loro parametri.
+
+Il moltiplicatore manuale, da 0 a 10 e inizialmente 1, si modifica dal device.
+La presenza effettiva è `min(1, presenza automatica × moltiplicatore)`.
+Un valore automatico di 0,4 con moltiplicatore 2 produce 0,8; una voce
+fuori organico rimane esclusa anche con un moltiplicatore maggiore di 1.
+Il moltiplicatore si conserva fra sezioni e restart della sessione, fino
+alla modifica manuale o alla chiusura del processo Python. È separato dai
+preset dei generatori e dalla loro densità di note.
+
+Ogni finestra di `window_beats` viene conservata o sostituita integralmente
+con una frase vuota. La scelta è riproducibile in base a voce e beat di
+inizio, con la stessa soglia per tutti i valori di presenza. Non garantisce
+una percentuale esatta nella singola tappa. I generatori continuano a
+elaborare le richieste; le voci dipendenti ricevono le frasi effettive,
+compresi i silenzi decisi dalla presenza. Una voce ammessa con probabilità
+1 può comunque produrre pause secondo il proprio generatore.
+
+Le modifiche agiscono sulle frasi ancora da pianificare. Quelle già inviate
+terminano normalmente. Il device e il terminale mostrano presenza automatica,
+moltiplicatore e presenza effettiva della sezione corrente: sono valori di
+partecipazione, non una misura del volume o una conferma audio.
 
 ## Parametri del generatore `motif`
 
@@ -117,6 +151,34 @@ I valori predefiniti del codice possono essere sovrascritti dal file.
 Per esempio, `organico.json` imposta `development: 0.7` e `seed: 7`.
 L'algoritmo è descritto in [Generazione melodica](MELODIA.md).
 
+Nel motivo letterale `activity`, `phrase_windows` e `seed` non intervengono.
+Il device segnala i controlli inattivi senza eliminarne i valori.
+
+## Parametri del generatore `sustained_texture`
+
+Supporta il ruolo `sustained_texture`. `degree` è il grado di riferimento,
+intero non negativo e predefinito 0, con la stessa numerazione di `degrees`
+del motivo. I controlli usabili in `settings`, preset e assegnazioni sono:
+
+| Parametro | Predefinito | Intervallo | Effetto |
+|---|---:|---|---|
+| `octave` | 0 | Intero −5…5 | Trasposizione del grado di riferimento e del registro rispetto alla tonica della sezione |
+| `velocity` | 85 | Intero 1…127 | Velocity della nota sostenuta |
+| `follow_source` | 0 | Intero 0 oppure 1 | Switch **Segui sorgente**: 0 usa il grado di sezione; 1 sceglie una nota dalla frase ricevuta |
+
+La modalità coordinata legge al massimo una dipendenza musicale, richiesta
+o facoltativa secondo la configurazione della voce. In assenza della
+sorgente o con una frase vuota produce silenzio. La modalità indipendente
+usa soltanto il contesto armonico. Entrambe producono al massimo una nota,
+dall'inizio alla fine della finestra, e rispettano presenza e organico.
+
+`organico.json` assegna questo generatore ad `atmosphere`, con `degree: 0`,
+`octave: 1`, velocity 52 e modalità indipendente iniziale. `voice_03` legge
+`voice_01` come dipendenza facoltativa. Lo switch viene conservato nei
+preset della tessitura. Selezionare un preset base, completato con le
+impostazioni iniziali, ripristina anche `follow_source: 0`.
+Algoritmo, registro e prova d'ascolto sono in [Tessitura sostenuta](TESSITURA.md).
+
 ## Parametri del generatore `responsive_line`
 
 Richiede una dipendenza musicale e supporta il ruolo `bass_line`.
@@ -132,7 +194,8 @@ I sette controlli della sessione sono:
 | `variation` | 0…1 | Peso delle variazioni riproducibili di attacchi e altezze |
 | `articulation` | 0,05…1 | Frazione di durata disponibile occupata dalle note |
 
-Ulteriori impostazioni accettate in `settings`, ma non esposte nel menu:
+Ulteriori impostazioni non esposte nel menu, accettate in `settings` e
+nei `parameters` delle assegnazioni; `strategy` è ammesso solo in `settings`:
 
 | Parametro | Predefinito | Significato e vincoli |
 |---|---:|---|
@@ -148,6 +211,8 @@ Ulteriori impostazioni accettate in `settings`, ma non esposte nel menu:
 I valori iniziali dei sette controlli dipendono da `strategy` e dagli
 eventuali valori espliciti di `settings`. La tabella dei tre preset e
 l'algoritmo sono in [Generatore del basso](BASSO.md).
+I preset del device contengono soltanto i sette controlli esposti.
+`strategy` seleziona i valori iniziali, non cambia l'algoritmo a esecuzione avviata.
 
 ## Parametri del generatore `percussion_pattern`
 
@@ -306,6 +371,14 @@ singola finestra. Restano separate le regolazioni di `variation`, ampiezza
 degli spostamenti e distanze di interazione. I preset `regular`, `hybrid` e
 `conceptual` impostano rispettivamente 0, 0,5 e 1. Il limite resta di 128
 attacchi per finestra; configurazioni che lo superano vengono rifiutate.
+
+Nel device `conceptuality` è etichettato **Standard ↔ sviluppato**; la
+chiave JSON resta invariata. A zero, `variation`, `displacement_beats`,
+`support_tolerance_beats`, `answer_clearance_beats` e `seed` sono segnalati
+come inattivi. Il fattore di velocity e la durata MIDI restano applicati.
+Lo spostamento è inoltre inattivo con `variation: 0` o senza operazioni
+`displace` nella sequenza configurata. I valori rimangono modificabili e
+vengono usati quando si riattiva la modalità pertinente.
 
 ## Precedenza e applicazione delle modifiche
 

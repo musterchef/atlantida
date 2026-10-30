@@ -36,7 +36,15 @@ La prima richiesta dopo `reset()` stabilisce l'inizio del periodo, indipendentem
 
 `presets/organico.json` usa `development = 0.7`, `activity = 0.75`, quattro finestre e seed `7`. Il menu espone `literal` per la ripetizione regolare, `developed` per lo sviluppo, `spacious` per una configurazione più diradata, oltre ai preset ritmici e di registro presenti nella configurazione.
 
-Nel ruolo `bass_line` questo generatore usa il motivo letterale. Nel ruolo `sustained_texture` produce una nota sostenuta per finestra. I nuovi controlli di sviluppo riguardano il ruolo `melody`.
+Nel ruolo `bass_line` questo generatore usa il motivo letterale. Nel ruolo
+`sustained_texture` delega al modulo `music/texture/` la nota sostenuta dal
+primo grado, usando soltanto `octave` e `velocity`. La voce Atmosphere usa
+direttamente il [generatore di tessitura](TESSITURA.md), con uno switch
+per seguire la frase melodica.
+
+`activity`, `phrase_windows` e `seed` intervengono soltanto con sviluppo
+melodico attivo. Il dispositivo segnala i controlli inattivi per ruolo e
+modalità, mantenendone i valori.
 
 ## Lettura nella vista globale
 

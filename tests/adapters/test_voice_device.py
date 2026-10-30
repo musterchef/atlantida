@@ -179,3 +179,20 @@ def test_unbound_device_cannot_assign_roles():
     bridge.handle(message())
     with pytest.raises(ValueError, match='non disponibile'):
         bridge.handle(message(2, 'role', role='melody'))
+
+
+def test_control_descriptions_follow_values_without_changing_keys_or_presets():
+    bridge, _, changes, _ = setup()
+    spec = bridge.voices['part_a']
+    spec.describe_controls = lambda role, values: {
+        'density': {'label': 'Attacchi per beat',
+                    'inactive_reason': 'Soglia zero' if values['density'] == 0 else None}}
+    state = bridge.handle(message())
+    assert state['controls']['density']['label'] == 'Attacchi per beat'
+    assert state['controls']['density']['inactive_reason'] is None
+    state = bridge.handle(message(2, 'parameter', parameter='density', value=0))
+    assert state['controls']['density']['inactive_reason'] == 'Soglia zero'
+    assert changes == [{'density': 0}]
+    state = bridge.handle(message(3, 'preset', preset='dense'))
+    assert state['controls']['density']['inactive_reason'] is None
+    assert spec.presets['dense'] == {'density': 2}

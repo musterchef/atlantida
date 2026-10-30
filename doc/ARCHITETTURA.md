@@ -77,5 +77,6 @@ Il Director legge anche le assegnazioni manuali delle voci per sezione. Il Coord
 - [Dati del viaggio e metriche GPX](DATI-VIAGGIO.md)
 - [Sequencer Snake e ponte M4L](SNAKE.md)
 - [Generatore del basso e controlli](BASSO.md)
+- [Tessitura sostenuta e relazione con la sorgente](TESSITURA.md)
 - [Setup e comandi operativi](COMANDI.md)
 

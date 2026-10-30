@@ -83,7 +83,7 @@ prova non richiede un JSON separato per lo strumento.
 |---|---:|---|---|
 | `voice_01` | 9101 | `motif` | `melody` |
 | `voice_02` | 9102 | `responsive_line` | `bass_line`, dipendente dalla frase di `voice_01` |
-| `voice_03` | 9103 | `motif`, istanza `atmosphere` | `sustained_texture` |
+| `voice_03` | 9103 | `sustained_texture`, istanza `atmosphere` | `sustained_texture`, con sorgente facoltativa `voice_01` |
 | `voice_04` | 9104 | `percussion_pattern` | `percussion` |
 
 Le porte sono impostate nelle istanze del dispositivo. Il server Python
@@ -92,8 +92,10 @@ devono essere collegate, altrimenti la sessione attende.
 
 La direzione GPX mantiene attive le quattro voci. Le parti intonate usano
 root MIDI 57 e scala `minor`. L'atmosfera è una nota monofonica sostenuta
-per finestra, riarticolata nella successiva; con `octave: 1` e `degrees: [0]`
-produce MIDI 69. Il timbro viene scelto nello strumento Live.
+per finestra, riarticolata nella successiva; con `octave: 1` e `degree: 0`
+produce MIDI 69 in modalità indipendente. Lo switch **Segui sorgente**
+attiva il sostegno dalla frase melodica: vedi [Tessitura sostenuta](TESSITURA.md).
+Il timbro viene scelto nello strumento Live.
 
 Il generatore percussivo legge pattern espliciti dal JSON; non genera ancora
 un arrangiamento ritmico autonomo. La mappa concordata per il Drum Rack è

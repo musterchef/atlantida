@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 from desnivel.music.patterns import SCALES
 from desnivel.music.phrases import Note, Phrase
 from desnivel.music.melodic.development import develop
+from desnivel.music.texture.generator import TextureGenerator
 
 ROLES = ('melody', 'sustained_texture', 'bass_line')
 DEFAULTS = dict(octave=0, step_beats=1.0, articulation=.8, velocity=85,
@@ -21,6 +23,7 @@ class MotifGenerator:
         self.validate('melody', {})
         self.last_decision = None
         self._origin = None
+        self._texture = TextureGenerator(self.degrees[0])
 
     def validate(self, role, parameters):
         if role not in ROLES:
@@ -50,9 +53,14 @@ class MotifGenerator:
         if request.context is None:
             raise ValueError('il motivo richiede tonica e scala')
         values = {**self.settings, **request.parameters}
+        if request.role == 'sustained_texture':
+            phrase = self._texture(replace(request, parameters={
+                'octave': values['octave'], 'velocity': values['velocity']}))
+            self.last_decision = self._texture.last_decision
+            return phrase
         intervals = SCALES[request.context.scale]
         root = request.context.root + 12 * values['octave']
-        degrees = self.degrees[:1] if request.role == 'sustained_texture' else self.degrees
+        degrees = self.degrees
         if any(not 0 <= root+intervals[d % len(intervals)]+12*(d//len(intervals)) <= 127 for d in degrees):
             raise ValueError('motivo fuori dal registro MIDI')
         if request.role == 'melody' and values['development'] > 0:
@@ -64,20 +72,15 @@ class MotifGenerator:
                 raise ValueError('lo sviluppo richiede reset prima di una ripartenza precedente')
             phrase, self.last_decision = develop(self.degrees, intervals, root, request, values, self._origin)
             return phrase
-        self.last_decision = {'method': 'sustained_note' if request.role == 'sustained_texture' else 'literal_motif',
-                              'summary': 'nota sostenuta' if request.role == 'sustained_texture' else 'motivo letterale'}
+        self.last_decision = {'method': 'literal_motif', 'summary': 'motivo letterale'}
         notes = []
-        if request.role == 'sustained_texture':
-            # Una nota per finestra: tessitura monofonica, senza accordi impliciti.
-            positions = [(0., self.degrees[0], request.length_beats)]
-        else:
-            count = math.ceil(request.length_beats / values['step_beats'])
-            if count > 128:
-                raise ValueError('il motivo supera 128 note nella finestra')
-            offset = math.floor(request.start / values['step_beats'])
-            positions = [(i * values['step_beats'], self.degrees[(offset+i) % len(self.degrees)],
-                          min(values['step_beats'], request.length_beats-i*values['step_beats']) * values['articulation'])
-                         for i in range(count)]
+        count = math.ceil(request.length_beats / values['step_beats'])
+        if count > 128:
+            raise ValueError('il motivo supera 128 note nella finestra')
+        offset = math.floor(request.start / values['step_beats'])
+        positions = [(i * values['step_beats'], self.degrees[(offset+i) % len(self.degrees)],
+                      min(values['step_beats'], request.length_beats-i*values['step_beats']) * values['articulation'])
+                     for i in range(count)]
         for beat, degree, duration in positions:
             pitch = root + intervals[degree % len(intervals)] + 12 * (degree // len(intervals))
             notes.append(Note(beat, pitch, duration, values['velocity']))
@@ -87,3 +90,18 @@ class MotifGenerator:
         """La prima finestra successiva apre un nuovo periodo melodico."""
         self._origin = None
         self.last_decision = None
+        self._texture.reset()
+
+    def describe_controls(self, role, parameters):
+        """Segnala i controlli senza effetto nel ruolo e nella modalità correnti."""
+        values = {**self.settings, **parameters}
+        inactive = {}
+        if role == 'sustained_texture':
+            inactive = {name: 'Nota sostenuta: usa registro e velocity'
+                        for name in DEFAULTS if name not in ('octave', 'velocity')}
+        elif role != 'melody' or values['development'] == 0:
+            inactive = {name: 'Richiede sviluppo melodico attivo'
+                        for name in ('activity', 'phrase_windows', 'seed')}
+            if role != 'melody':
+                inactive['development'] = 'Richiede il ruolo melody'
+        return {name: {'inactive_reason': reason} for name, reason in inactive.items()}

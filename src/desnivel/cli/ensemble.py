@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
+import math
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Callable, Mapping
@@ -70,6 +71,7 @@ class EnsembleSession:
                 available |= ready
         self.coordinator = MusicCoordinator(voices)
         self._manual_parameters = {}
+        self._presence_multipliers = {}
         self._supported_roles = {name: spec.supported_roles for name, spec in voices.items()}
 
     @classmethod
@@ -80,7 +82,8 @@ class EnsembleSession:
     def plan(self, progress: float, start: float, length_beats: float):
         """Produce le frasi della sezione senza inviarle alle destinazioni."""
         assignments = {
-            name: Assignment(spec.role, {**spec.parameters, **self._manual_parameters.get(name, {})})
+            name: Assignment(spec.role, {**spec.parameters, **self._manual_parameters.get(name, {})},
+                             self.presence_state(name, progress)['effective'])
             for name, spec in self.director.assignments_at(progress).items()
         }
         return self.coordinator.plan(
@@ -108,6 +111,7 @@ class EnsembleSession:
         section = self.director.section_assignments_at(progress).get(voice)
         manual = self.director.manual_role(voice)
         return {
+            'presence': self.presence_state(voice, progress),
             'supported_roles': list(self._supported_roles[voice]),
             'role_mode': 'manual' if manual is not None else 'section',
             'section_role': section.role if section else None,
@@ -118,6 +122,23 @@ class EnsembleSession:
                                          if start > progress and voice in self.director.section_assignments_at(start)), None)
                                    if section is None else None,
         }
+
+    def presence_state(self, voice: str, progress: float):
+        """Quota automatica della sezione e moltiplicatore manuale della voce."""
+        if voice not in self._generators:
+            raise ValueError('voce non registrata')
+        assignment = self.director.section_assignments_at(progress).get(voice)
+        automatic = assignment.presence if assignment else 0.
+        multiplier = self._presence_multipliers.get(voice, 1.)
+        return {'automatic': automatic, 'multiplier': multiplier,
+                'effective': min(1., automatic * multiplier)}
+
+    def set_presence_multiplier(self, voice: str, value: float):
+        if voice not in self._generators:
+            raise ValueError('voce non registrata')
+        if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 10:
+            raise ValueError('moltiplicatore della presenza richiesto tra 0 e 10')
+        self._presence_multipliers[voice] = value
 
     def parameters_at(self, voice: str, progress: float):
         if voice not in self._generators:

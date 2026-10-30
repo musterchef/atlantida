@@ -16,6 +16,9 @@ from desnivel.trip.track import Track
 def direction(tmp_path):
     definitions = Path('presets')
     definition = json.loads((definitions/'direzione-viaggio.json').read_text())
+    for family in definition['families'].values():
+        for assignment in family['assignments'].values():
+            assignment['presence'] = 1  # Le prove musicali isolano sviluppo e interazione.
     analysis = json.loads((definitions/'analisi-percorso.json').read_text())
     analysis.update(slope_window_m=100, min_zone_distance_m=100)
     (tmp_path/'analisi-percorso.json').write_text(json.dumps(analysis))
@@ -52,6 +55,22 @@ def test_boundaries_follow_macrosections_and_preserve_internal_zones(direction):
     assert sections[-1]['assignments']['voice_01']['parameters']['velocity'] == 88
 
 
+def test_configured_presence_changes_with_gpx_family_and_keeps_manual_multiplier(direction):
+    definition = json.loads(Path('presets/direzione-viaggio.json').read_text())
+    for family, presence in [('ascent', .75), ('level', 1.), ('descent', .45)]:
+        definition['families'][family]['assignments']['voice_03']['presence'] = presence
+    direction.write_text(json.dumps(definition))
+    runtime, bridge, _ = make_runtime(direction)
+    session = runtime.session
+    session.set_presence_multiplier('voice_03', 2)
+    assert session.presence_state('voice_03', 0) == dict(automatic=.75, multiplier=2, effective=1)
+    assert session.presence_state('voice_03', 600/1800) == dict(automatic=1, multiplier=2, effective=1)
+    assert session.presence_state('voice_03', 900/1800) == dict(automatic=.45, multiplier=2, effective=.9)
+    assert session.presence_state('voice_03', 1200/1800) == dict(automatic=.75, multiplier=2, effective=1)
+    runtime.elapsed = 9.5
+    assert bridge.status()['voice_03']['presence']['automatic'] == .45
+
+
 def test_musical_assets_restore_on_return_and_manual_parameters_take_precedence(direction):
     runtime, _, _ = make_runtime(direction)
     session = runtime.session
@@ -64,6 +83,28 @@ def test_musical_assets_restore_on_return_and_manual_parameters_take_precedence(
     assert session.parameters_at('voice_01', 900/1800)['activity'] == .85
     session.clear_parameters('voice_01')
     assert session.parameters_at('voice_01', 900/1800)['velocity'] == 82
+
+
+def test_texture_switch_uses_coordinator_source_presence_and_existing_destination(direction):
+    runtime, bridge, sent = make_runtime(direction)
+    identity = dict(version=1, voice='voice_03', instance='texture', reply_port=9103)
+    state = bridge.handle(dict(identity, serial=1, action='hello'))
+    assert set(state['controls']) == {'octave', 'velocity', 'follow_source'}
+    assert state['controls']['follow_source']['toggle']
+    assert state['controls']['follow_source']['value'] == 0
+    assert runtime.session.plan(0, 0, 4)['voice_03'].notes[0].pitch == 69
+    bridge.handle(dict(identity, serial=2, action='parameter', parameter='follow_source', value=1))
+    phrases = runtime.session.plan(0, 4, 4)
+    texture = phrases['voice_03']
+    assert texture.notes[0].pitch % 12 in {n.pitch % 12 for n in phrases['voice_01'].notes}
+    assert 69 <= texture.notes[0].pitch <= 80
+    assert runtime.session.coordinator.last_plan['voices']['voice_03']['composition']['source'] == 'voice_01'
+    bridge.destination('voice_03')(4, texture)
+    assert sent[-1][0] == 9103 and sent[-1][2]['plan']['phrase']['notes'][0]['duration'] == 4
+    runtime.session.set_presence_multiplier('voice_01', 0)
+    assert not runtime.session.plan(0, 8, 4)['voice_03'].notes
+    bridge.handle(dict(identity, serial=3, action='parameter', parameter='follow_source', value=0))
+    assert runtime.session.plan(0, 12, 4)['voice_03'].notes[0].pitch == 69
 
 
 def test_internal_band_change_keeps_same_context_and_phrase_development(direction):

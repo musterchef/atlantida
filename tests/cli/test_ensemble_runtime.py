@@ -19,6 +19,8 @@ def setup():
     config['voices'] = {name: spec for name, spec in config['voices'].items() if name in ('voice_01', 'voice_02')}
     for section in config['sections']:
         section['assignments'] = {name: spec for name, spec in section['assignments'].items() if name in config['voices']}
+        for spec in section['assignments'].values():
+            spec['presence'] = 1  # Isola le prove di trasporto dalle scelte dell'assetto di ascolto.
     runtime = EnsembleRuntime(track, config, bridge, speed=2, clock=lambda: now[0])
     serials = {}
     def receive(voice='voice_01', beat=0., playing=1, epoch=0):
@@ -119,6 +121,38 @@ def test_invalid_controls_do_not_mutate_manual_values():
     with pytest.raises(ValueError):
         runtime.session.set_parameters('voice_01', {'velocity': 300})
     assert runtime.session.parameters_at('voice_01', 0) == {}
+
+
+def test_control_applicability_tracks_section_role_and_manual_mode():
+    runtime, bridge, _, _, receive = setup()
+    receive()
+    controls = bridge.status()['voice_01']['controls']
+    assert 'inactive_reason' not in controls['activity']
+    runtime.session.set_role('voice_01', 'sustained_texture')
+    controls = bridge.status()['voice_01']['controls']
+    assert 'inactive_reason' in controls['activity']
+    assert 'inactive_reason' not in controls['velocity']
+    runtime.session.set_role('voice_01', None)
+    runtime.session.set_parameters('voice_01', {'development': 0})
+    controls = bridge.status()['voice_01']['controls']
+    assert 'inactive_reason' in controls['activity']
+    assert 'inactive_reason' not in controls['step_beats']
+    assert controls['activity']['value'] == .75
+
+
+def test_device_presence_command_is_dynamic_and_reflected_in_session_status():
+    runtime, bridge, now, sent, receive = setup()
+    receive(); runtime.tick()
+    assert runtime.snapshot()['voices']['voice_01']['presence']['effective'] == 1
+    reply = bridge.handle(dict(version=1, voice='voice_01', instance='voice_01', reply_port=9101,
+                               serial=2, action='presence', value=0))
+    assert reply['presence'] == dict(automatic=1, multiplier=0, effective=0)
+    # Il piano già inviato rimane valido, le prossime frasi sono silenziose.
+    assert bridge.last_plans['voice_01']['notes'] > 0
+    assert not runtime.session.plan(0, 8, 4)['voice_01'].notes
+    assert runtime.snapshot()['voices']['voice_01']['presence']['effective'] == 0
+    runtime.control('restart')
+    assert runtime.session.presence_state('voice_01', 0)['multiplier'] == 0
 
 
 def test_inactive_reason_and_decisions_match_section_and_executed_plan():

@@ -19,6 +19,7 @@ class Control:
     minimum: float
     maximum: float
     integer: bool = False
+    toggle: bool = False
 
     def validate(self, value):
         if (type(value) not in (int, float) or not math.isfinite(value)
@@ -30,6 +31,8 @@ class Control:
     def __post_init__(self):
         if not all(math.isfinite(v) for v in (self.minimum, self.maximum)) or self.minimum > self.maximum:
             raise ValueError('limiti del controllo non validi')
+        if self.toggle and (not self.integer or self.minimum != 0 or self.maximum != 1):
+            raise ValueError('uno switch richiede valori interi 0 e 1')
 
 
 @dataclass
@@ -47,6 +50,8 @@ class DeviceVoice:
     read_values: Callable[[], dict] | None = None
     save_preset: Callable | None = None
     editable_presets: set[str] = field(default_factory=set)
+    apply_presence: Callable[[float], None] | None = None
+    describe_controls: Callable[[str | None, dict], dict] | None = None
 
     @classmethod
     def for_session(cls, session, voice: str, progress: Callable[[], float], **controls):
@@ -60,6 +65,7 @@ class DeviceVoice:
             read_values=read_values,
             role_state=lambda: session.role_state(voice, progress()),
             apply_role=lambda role: session.set_role(voice, role),
+            apply_presence=lambda value: session.set_presence_multiplier(voice, value),
             apply=lambda values: session.set_parameters(voice, values), **controls)
 
     def __post_init__(self):
@@ -99,10 +105,11 @@ class VoiceDeviceBridge:
             'supported_roles': [], 'active': None,
         }
         values = spec.read_values() if spec.read_values else spec.values
+        details = spec.describe_controls(roles['role'], values) if spec.describe_controls else {}
         return {**roles, 'preset': spec.preset, 'presets': list(spec.presets),
                 'can_save_presets': spec.save_preset is not None,
                 'editable_presets': sorted(spec.editable_presets),
-                'controls': {name: {**asdict(control), 'value': values[name]}
+                'controls': {name: {**asdict(control), 'value': values[name], **details.get(name, {})}
                              for name, control in spec.controls.items()}}
 
     def handle(self, message: dict):
@@ -147,6 +154,10 @@ class VoiceDeviceBridge:
                 values = dict(spec.presets[name])
                 spec.apply(values)
                 spec.values, spec.preset = values, name
+            elif action == 'presence':
+                if spec.apply_presence is None:
+                    raise ValueError('controllo della presenza non disponibile')
+                spec.apply_presence(Control(0, 10).validate(message['value']))
             elif action == 'save_preset':
                 if spec.save_preset is None:
                     raise ValueError('salvataggio dei preset non disponibile')

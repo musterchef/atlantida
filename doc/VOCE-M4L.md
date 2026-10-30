@@ -46,7 +46,9 @@ La cartella generata contiene il device e i due script JavaScript. Conservare i 
 - **Role**: menu dei ruoli supportati dal generatore collegato. `Follow section` segue il ruolo assegnato alla sezione; scegliendo un ruolo si passa alla modalità manuale. Il ruolo effettivo è mostrato in alto; per una parte esclusa dall’organico sono mostrati il prossimo ingresso configurato (`enters at ...%`) oppure `not in this section` se non sono previsti altri ingressi. Senza un collegamento ai ruoli della sessione, il menu mostra `No roles available`.
 - **Preset**: preset compositivi dichiarati dal componente Python.
 - **Parametro**, valore e cursore: modifica di uno dei controlli esposti da Python. Il cursore rispetta intervallo e vincolo intero; il campo numerico permette l’immissione precisa. I limiti sono mostrati accanto al cursore.
+- I controlli binari mostrano uno switch al posto del cursore. Quelli senza effetto nel ruolo o nella modalità corrente riportano **[inattivo]** nel menu; la motivazione è nell'annotazione del controllo. Restano modificabili e conservano il valore.
 - **Salva nuovo**: salva i valori effettivi della voce con il nome scritto nel campo accanto. **Aggiorna** sostituisce un preset utente già presente con quel nome. I preset base della configurazione sono protetti.
+- **Presenza ×**: moltiplicatore manuale da 0 a 10, modificabile con il campo numerico o lo slider. 1 segue la presenza della sezione, 0 rende silenziose le prossime frasi. Accanto sono visibili **Auto** ed **Effettiva** in percentuale, aggiornate dalle risposte Python. Il controllo è separato dai preset del generatore; senza sessione collegata non è disponibile.
 - **panic**: cancella i piani e spegne le note generate.
 
 I menu sono riempiti dalla risposta Python. Il dispositivo non contiene nomi di strumenti, ruoli prestabiliti o parametri di un generatore specifico.
@@ -129,6 +131,13 @@ Senza `--phrase`, il comando verifica soltanto il collegamento. Più parti posso
 
 `Control` definisce minimo, massimo e l'eventuale vincolo intero. Ogni preset definisce tutti i controlli esposti dalla voce. Un controllo fuori intervallo è rifiutato; il nuovo stato viene confermato soltanto dopo il completamento di `apply`.
 
+`Control.toggle` identifica uno switch con valori interi 0 e 1.
+`DeviceVoice.describe_controls(role, values)` può fornire etichette
+(`label`) e motivi di inattività (`inactive_reason`) per le chiavi dei
+controlli. Le regole sono definite dai generatori e ricalcolate a ogni
+risposta di stato; il device mantiene chiavi e valori indipendenti dalle
+etichette visualizzate.
+
 `EnsembleSession.set_parameters(voice, values)` applica valori manuali alle prossime frasi della voce. Questi prevalgono sui parametri di sezione e persistono tra sezioni; `clear_parameters(voice)` ripristina i valori delle sezioni. La validazione dei valori è eseguita dal componente che espone i controlli.
 
 `DeviceVoice.for_session(session, voice, progress, **controls)` collega il dispositivo alla sessione: `progress` è una funzione del chiamante che restituisce la progressione corrente della tappa. Il collegamento espone i ruoli dichiarati dal generatore, legge il ruolo della sezione e applica la scelta manuale tramite `EnsembleSession.set_role`.
@@ -152,12 +161,17 @@ numerici. I payload JSON variabili non diventano simboli Max a ogni
 aggiornamento del trasporto. Il server limita il JSON in uscita a 12.000
 byte per mantenere il pacchetto OSC sotto il limite UDP.
 
-Le richieste contengono voce, identificativo dell'istanza, seriale, porta di risposta e azione (`hello`, `transport`, `role`, `preset`, `parameter`, `save_preset`, `panic`). L’azione `role` contiene l’identificativo del ruolo manuale oppure `null` per seguire la sezione. Lo stato restituisce ruoli supportati, ruolo effettivo, ruolo della sezione, modalità (`section` o `manual`) e stato di attivazione della parte. La lettura del trasporto aggiunge beat, stato di riproduzione e contatore locale delle discontinuità. Le risposte distinguono stato, errore, piano e comando di trasporto.
+Le richieste contengono voce, identificativo dell'istanza, seriale, porta di risposta e azione (`hello`, `transport`, `role`, `preset`, `parameter`, `presence`, `save_preset`, `panic`). L’azione `role` contiene l’identificativo del ruolo manuale oppure `null` per seguire la sezione. Lo stato restituisce ruoli supportati, ruolo effettivo, ruolo della sezione, modalità (`section` o `manual`) e stato di attivazione della parte. La lettura del trasporto aggiunge beat, stato di riproduzione e contatore locale delle discontinuità. Le risposte distinguono stato, errore, piano e comando di trasporto.
 `save_preset` contiene nome e flag `overwrite`; il salvataggio acquisisce
 sul server i valori effettivi. Il device dichiara `transport_control` nelle
 richieste; solo l'istanza scelta come sorgente del clock riceve le azioni
 `pause`, `resume` e `restart`, applicate con `live.object` al `live_set`.
 I comandi sono identificati da sessione Python e seriale, per scartare i duplicati.
+
+L'azione `presence` contiene `value`, il moltiplicatore manuale da 0 a 10.
+Lo stato della sessione include `presence` con `automatic`, `multiplier`
+ed `effective`, anche per le voci fuori organico. Le risposte a `hello`
+e agli aggiornamenti del trasporto mantengono aggiornati i valori del device.
 
 Il dispositivo invia `hello` ogni secondo. Dopo oltre tre secondi senza conferma cancella i piani e spegne le note. Python rifiuta due istanze attive con la stessa voce o la stessa porta di ricezione; un collegamento scaduto può essere sostituito. I piani sono indirizzati anche all'identificativo dell'istanza.
 
@@ -190,3 +204,4 @@ La prova manuale in Live ha confermato l'invio della frase da file e la produzio
 - [Cycling '74 — pattr in Max for Live](https://docs.cycling74.com/userguide/pattr/): salvataggio dei campi Max nel Live Set tramite parametri espliciti.
 - [Cycling '74 — Song](https://docs.cycling74.com/apiref/lom/song/): posizione e funzioni del trasporto del Live Set.
 - [Cycling '74 — MIDI](https://docs.cycling74.com/userguide/midi/): formattazione e uscita dei messaggi MIDI.
+- [Cycling '74 — Maxobj](https://docs.cycling74.com/apiref/js/maxobj/): proprietà `hidden` per cursore e switch e `setboxattr` per le annotazioni.

@@ -68,3 +68,27 @@ def test_connect_all_reuses_the_button_trigger_through_a_shared_max_bus():
     assert (['route', 1], ['connect_all_send', 0]) in paths
     assert (['connect_all_receive', 0], ['connect_trigger', 0]) in paths
     assert (['connect_button', 0], ['connect_trigger', 0]) in paths
+
+
+def test_presence_has_a_dedicated_visible_control_and_readout():
+    patch = json.loads((ROOT / 'm4l/desnivel_voice.maxpat').read_text())['patcher']
+    boxes = {entry['box']['id']: entry['box'] for entry in patch['boxes']}
+    for name in ('presence_multiplier', 'presence_slider', 'presence_display'):
+        assert boxes[name]['varname'] == name
+        assert boxes[name]['presentation'] == 1
+    assert boxes['presence_multiplier']['minimum'] == 0
+    assert boxes['presence_multiplier']['maximum'] == 10
+    paths = [(line['patchline']['source'], line['patchline']['destination']) for line in patch['lines']]
+    assert (['presence_prefix', 0], ['interface', 0]) in paths
+    assert (['presence_slider_prefix', 0], ['interface', 0]) in paths
+
+
+def test_boolean_parameter_uses_the_common_value_input():
+    patch = json.loads((ROOT / 'm4l/desnivel_voice.maxpat').read_text())['patcher']
+    boxes = {entry['box']['id']: entry['box'] for entry in patch['boxes']}
+    assert boxes['parameter_toggle']['maxclass'] == 'toggle'
+    assert boxes['parameter_toggle']['hidden'] == 1
+    paths = [(line['patchline']['source'], line['patchline']['destination']) for line in patch['lines']]
+    assert (['parameter_toggle', 0], ['toggle_prefix', 0]) in paths
+    assert boxes['toggle_prefix']['text'] == 'prepend value'
+    assert (['toggle_prefix', 0], ['interface', 0]) in paths

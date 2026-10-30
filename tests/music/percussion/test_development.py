@@ -102,6 +102,21 @@ def test_notes_are_bounded_and_registered_with_existing_device_controls():
     assert registered.generator.describe()['method'] == 'percussion_phrase'
 
 
+def test_control_applicability_distinguishes_standard_and_developed_material():
+    compose = generator()
+    standard = compose.describe_controls('percussion', {'conceptuality': 0})
+    assert standard['conceptuality']['label'] == 'Standard ↔ sviluppato'
+    assert 'inactive_reason' in standard['seed']
+    assert 'inactive_reason' in standard['support_tolerance_beats']
+    assert 'velocity_ratio' not in standard and 'gate_beats' not in standard
+    developed = compose.describe_controls('percussion', {'conceptuality': 1, 'variation': 0})
+    assert 'inactive_reason' in developed['displacement_beats']
+    assert 'seed' not in developed
+    assert 'displacement_beats' not in compose.describe_controls('percussion', {'variation': 1})
+    compose.development = ('statement', 'accent')
+    assert 'inactive_reason' in compose.describe_controls('percussion', {'variation': 1})['displacement_beats']
+
+
 @pytest.mark.parametrize('problem', ['unknown_operation', 'missing_statement', 'unknown_anchor', 'bad_settings'])
 def test_invalid_material_development_is_rejected(problem):
     spec = deepcopy(definition())

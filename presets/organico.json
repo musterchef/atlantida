@@ -77,10 +77,8 @@
       }
     },
     "atmosphere": {
-      "type": "motif",
-      "degrees": [
-        0
-      ],
+      "type": "sustained_texture",
+      "degree": 0,
       "settings": {
         "octave": 1,
         "velocity": 52
@@ -482,7 +480,10 @@
     "voice_03": {
       "name": "Atmosphere",
       "generator": "atmosphere",
-      "destination": "device_03"
+      "destination": "device_03",
+      "optional_dependencies": [
+        "voice_01"
+      ]
     },
     "voice_04": {
       "name": "Drums",

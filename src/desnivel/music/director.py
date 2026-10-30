@@ -31,7 +31,8 @@ class MusicDirector:
             if section['scale'] not in SCALES or type(section['root']) is not int:
                 raise ValueError('scala o tonica non valida')
         self._assignments = tuple(MappingProxyType({
-            name: Assignment(spec['role'], MappingProxyType(dict(spec.get('parameters', {}))))
+            name: Assignment(spec['role'], MappingProxyType(dict(spec.get('parameters', {}))),
+                             spec.get('presence', 1.))
             for name, spec in section.get('assignments', {}).items()
         }) for section in sections)
         self._manual_roles = {}
@@ -48,7 +49,7 @@ class MusicDirector:
     def assignments_at(self, progress: float):
         """Restituisce l'organico esplicito della sezione, senza ereditarietà."""
         return MappingProxyType({
-            name: Assignment(self._manual_roles.get(name, spec.role), spec.parameters)
+            name: Assignment(self._manual_roles.get(name, spec.role), spec.parameters, spec.presence)
             for name, spec in self.section_assignments_at(progress).items()
         })
 
@@ -77,6 +78,6 @@ class MusicDirector:
         end = self._sections[context.section_index+1][0] if context.section_index+1 < len(self._sections) else 1.
         return {'section': context.name, 'from_progress': start, 'until_progress': end,
                 'root': context.root, 'scale': context.scale,
-                'assignments': {name: {'role': spec.role,
+                'assignments': {name: {'role': spec.role, 'presence': spec.presence,
                                       'source': 'manual' if name in self._manual_roles else 'section'}
                                 for name, spec in self.assignments_at(progress).items()}}

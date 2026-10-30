@@ -182,11 +182,13 @@ esplicite del preset, modificabili nel JSON:
 | `ascent` | `sustained_texture` / 55 | 0,85 |
 | `descent` | `sustained_texture` / 48 | 0,9 |
 
-`voice_03` usa un'istanza indipendente di `motif` con `degrees: [0]` e
-`octave: 1`: con il contesto fornito produce la nota MIDI 69. La durata è
-quella della finestra e la nota viene riarticolata nella finestra seguente.
-Il registro e la dinamica sono configurabili; i preset `soft` e `present`
-impostano rispettivamente velocity 40 e 65.
+`voice_03` usa il generatore `sustained_texture` con `degree: 0` e
+`octave: 1`: in modalità indipendente produce la nota MIDI 69 nel contesto
+fornito. Lo switch **Segui sorgente** (`follow_source`) seleziona invece un
+sostegno dalla frase di `voice_01`, letta come dipendenza facoltativa.
+La durata è quella della finestra e la nota viene riarticolata nella
+finestra seguente. Registro e dinamica sono configurabili; `soft` e
+`present` impostano velocity 40 e 65. Vedi [Tessitura sostenuta](TESSITURA.md).
 
 I parametri non specificati usano le impostazioni del generatore; le
 regolazioni manuali hanno precedenza. Gli assetti vengono copiati per ogni
@@ -213,11 +215,19 @@ Implementato in `music/melodic/generator.py`. Riceve un motivo di gradi non nega
 
 Il generatore controlla il registro MIDI e limita gli eventi per finestra. Le regole e i controlli sono descritti in [MELODIA.md](MELODIA.md).
 
+### `sustained_texture`
+
+Implementato in `music/texture/generator.py`. Supporta il ruolo omonimo
+con una nota per finestra, guidata dal grado di sezione oppure dalla frase
+di una dipendenza. Espone `octave`, `velocity` e lo switch `follow_source`.
+La prova assegna a `voice_03` la sorgente facoltativa `voice_01`.
+Le regole sono descritte in [TESSITURA.md](TESSITURA.md).
+
 ### `responsive_line`
 
 Collega il generatore presente in `music/bass/` attraverso `music/bass/voice.py`. Supporta `bass_line` e richiede una sola dipendenza: la frase da accompagnare. Conserva l'ultima altezza fra finestre contigue e cancella tale continuità quando il runtime riparte dalla pianificazione.
 
-I controlli esposti sono `density`, `syncopation`, `rhythm_follow`, `melody_follow`, `mobility`, `variation` e `articulation`. Le altre impostazioni del generatore, incluso il registro, si configurano in `settings`. Le regole compositive sono descritte in [BASSO.md](BASSO.md).
+I controlli esposti sono `density`, `syncopation`, `rhythm_follow`, `melody_follow`, `mobility`, `variation` e `articulation`. Le altre impostazioni del generatore, incluso il registro, si configurano in `settings` o nei parametri di sezione; `strategy` è solo iniziale. Le regole compositive sono descritte in [BASSO.md](BASSO.md).
 
 ### `percussion_phrase`
 

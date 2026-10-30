@@ -58,6 +58,18 @@ class PercussionPhraseGenerator:
         self.last_position = 0.
         self.last_decision = None
 
+    def describe_controls(self, role, parameters):
+        """Disponibilità dei controlli secondo materiali e trasformazioni configurati."""
+        values = {**self.settings, **parameters}
+        details = {'conceptuality': {'label': 'Standard ↔ sviluppato'}}
+        if values['conceptuality'] == 0:
+            for name in ('variation', 'displacement_beats', 'support_tolerance_beats',
+                         'answer_clearance_beats', 'seed'):
+                details[name] = {'inactive_reason': 'Groove standard: nessuno sviluppo o interazione'}
+        elif values['variation'] == 0 or 'displace' not in self.development:
+            details['displacement_beats'] = {'inactive_reason': 'Richiede trasformazione displace attiva'}
+        return details
+
     def validate(self, role, parameters):
         if role not in ROLES:
             raise ValueError('ruolo non supportato dal generatore percussivo')

@@ -13,6 +13,8 @@ class BassVoice:
     def validate(self, role, parameters):
         if role != 'bass_line':
             raise ValueError('ruolo non supportato dal generatore di accompagnamento')
+        if 'strategy' in parameters:
+            raise ValueError('strategy seleziona i valori iniziali: usarlo soltanto in settings')
         return replace(self.settings, **parameters)
 
     def __call__(self, request):

@@ -9,6 +9,7 @@ from typing import Callable, Mapping
 from desnivel.music.director import MusicalContext
 from desnivel.music.arrangement import Assignment
 from desnivel.music.phrases import Phrase
+from desnivel.music.presence import participates
 
 
 @dataclass(frozen=True)
@@ -88,8 +89,14 @@ class MusicCoordinator:
                 MappingProxyType(dict(assignment.parameters)) if assignment else MappingProxyType({})))
             if phrase.length_beats != length_beats:
                 raise ValueError(f'la voce {name} deve coprire la finestra musicale')
+            presence = assignment.presence if assignment else 1.
+            participating = participates(name, start, presence)
+            if not participating:
+                phrase = Phrase(length_beats, ())
             phrases[name] = phrase
             decisions[name] = {
+                'presence': presence,
+                'participating': participating,
                 'role': assignment.role if assignment else None,
                 'dependencies': list(references),
                 'parameters': dict(assignment.parameters) if assignment else {},

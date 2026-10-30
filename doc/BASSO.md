@@ -14,6 +14,10 @@ La composizione avviene tramite la funzione `generate_bass` (`src/desnivel/music
 - **Legame ritmico (`rhythm_follow`)**: a valori bassi il basso tende a entrare tra gli attacchi della melodia; a valori alti tende a suonare insieme a essa. Il controllo modifica anche durate e accenti.
 - **Spaziatura minima (`min_spacing`)**: garantisce una distanza minima tra note consecutive (es. 0.5 o 1 beat).
 
+La densità è un obiettivo: griglia, attacchi sorgente e spaziatura minima
+limitano il numero realizzabile. Aumentarla oltre quel limite non aggiunge
+note; con `rhythm_follow = 1` i candidati sono soltanto gli attacchi sorgente.
+
 ### 2. Altezze e salienza armonica (`_salience`, `_pitches`)
 - **Salienza**: analizza la frase melodica pesando durata, dinamica e posizione metrica di ogni nota per individuare l'appoggio armonico più solido.
 - **Legame melodico (`melody_follow`)**: bilancia la coerenza con l'appoggio armonico generale (valori bassi) e l'attrazione verso l'altezza melodica più vicina (valori alti).
@@ -29,6 +33,11 @@ La composizione avviene tramite la funzione `generate_bass` (`src/desnivel/music
 ## Preset principali
 
 I controlli sono raggruppati in preset di partenza:
+
+`strategy` seleziona questi valori alla costruzione di `BassSettings`.
+Nella sessione multivoce si usa solo in `settings`: non è un parametro
+musicale applicabile alle sezioni. I preset del device sono insiemi dei
+sette controlli esposti, distinti dai preset iniziali del generatore.
 
 | Preset | Densità | Sincopi | Legame ritmico | Legame melodico | Mobilità | Articolazione | Carattere sonoro |
 |---|---:|---:|---:|---:|---:|---:|---|
