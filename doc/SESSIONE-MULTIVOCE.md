@@ -53,10 +53,11 @@ Per usare le macrosezioni del percorso e i relativi assetti musicali:
   --speed 50
 ```
 
-Con `--direction`, il comando analizza il viaggio e prepara le sezioni musicali
-all'avvio. I confini derivano dalle macrosezioni; ciascuna famiglia riceve
-l'assetto definito nel JSON di direzione. Senza questa opzione vengono usate
-le sezioni manuali di `organico.json`.
+Il campo `direction` delle configurazioni fornite carica la direzione GPX
+all'avvio; `--direction` può sostituirla. Confini e assetti derivano dalle
+macrosezioni, mentre il profilo sceglie tavolozza e motivo. Per usare le
+sezioni manuali aggiungere `--manual-sections`. Criteri e override in
+[Direzione musicale dal percorso](DIREZIONE-MUSICALE.md).
 
 Nella configurazione fornita:
 
@@ -86,7 +87,7 @@ voci usano lo stesso dispositivo; i menu vengono forniti da Python.
 In modalità `--timing linear` (predefinita), il viaggio avanza in secondi, moltiplicati per `--speed`, quando la sessione sta suonando. La distanza cumulativa interpolata del GPX determina la progressione usata per selezionare le sezioni. Il GPX controlla il contesto e l'organico delle sezioni; questo comando non applica la mappatura velocità/sforzo ai gate di `journey.compose`.
 
 Con `--timing allocated` il runtime usa la timeline in beat configurata in
-`organico.json`, richiede `--direction` e non accetta `--speed`. Le macrosezioni
+`organico.json`, richiede una direzione configurata o esplicita e non accetta `--speed`. Le macrosezioni
 ricevono tutte le finestre assegnate; la sessione termina dopo la conclusione
 dell’ultima. Alla ripresa dopo un’interruzione viene ripetuta per intero la
 prima finestra non conclusa. Comandi e dettagli in [TIMELINE.md](TIMELINE.md).
@@ -155,7 +156,8 @@ I preset dei generatori sono insiemi di parametri. Le modifiche manuali persisto
 |---|---|
 | `analysis` | Percorso del JSON dei criteri di analisi |
 | `grouping` | Percorso del JSON delle famiglie di macrosezioni |
-| `families` | Assetto musicale completo per ciascuna famiglia: `root`, `scale`, `assignments` |
+| `families` | Assegnazioni per ciascuna famiglia; root e scala esplicite oppure risolte automaticamente |
+| `automatic_music` | Tavolozze selezionate dal profilo, materiale melodico e override |
 
 I due percorsi sono relativi al file di direzione. Ogni famiglia del
 raggruppamento richiede un assetto musicale; famiglie mancanti o aggiuntive
@@ -170,9 +172,9 @@ indica che le voci sono assegnate esplicitamente, anche quando i confini
 delle sezioni derivano dal viaggio.
 
 La configurazione d'ascolto fornita mantiene le quattro voci in tutte le
-macrosezioni. Le voci intonate condividono root MIDI 57 e scala `minor`;
-la parte percussiva usa le note configurate in `lanes`. Le differenze sono scelte musicali
-esplicite del preset, modificabili nel JSON:
+macrosezioni. Le voci intonate condividono root e scala selezionate dalla
+direzione automatica del percorso; la percussione usa le note di `lanes`.
+Le famiglie conservano i seguenti parametri musicali, modificabili nel JSON:
 
 | Famiglia | `voice_01`: attività / passo in beat / articolazione / velocity | `voice_02`: densità / sincopazione / articolazione |
 |---|---|---|

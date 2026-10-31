@@ -70,6 +70,8 @@ class EnsembleRuntime:
                                          'optional_dependencies': list(spec.get('optional_dependencies', []))}
                                    for name, spec in config['voices'].items()}
         session_config = deepcopy(config)
+        self.trip_music = deepcopy(config.get('trip_music'))
+        self.section_directions = tuple(deepcopy(section.get('direction')) for section in config['sections'])
         self.section_sources = tuple(deepcopy(section.get('trip')) for section in config['sections'])
         destinations = {}
         for name, voice in session_config['voices'].items():
@@ -243,6 +245,8 @@ class EnsembleRuntime:
             self.next_window += 1
         self.planned_start, self.last_section = start, context.name
         self.last_decisions = {**self.session.coordinator.last_plan, 'section': context.name,
+                               'root': context.root, 'scale': context.scale,
+                               'direction': self.section_directions[context.section_index],
                                'trip': self.section_sources[context.section_index]}
 
     def fail(self, error):
@@ -256,6 +260,7 @@ class EnsembleRuntime:
         elapsed = (float(np.interp(distance, self.distances, self.track.t))-self.track.t[0]
                    if self.timeline else self.elapsed)
         return {'timing': self.timing,
+                'trip_music': self.trip_music,
                 'timeline': ({**self.timeline.snapshot(), 'total_beats': self.timeline.timeline.total_beats,
                               'requested_beats': self.timeline.timeline.requested_beats,
                               'beats_per_km': self.timeline.timeline.beats_per_km,
@@ -271,6 +276,7 @@ class EnsembleRuntime:
                          'total_distance_m': float(self.distances[-1])},
                 'section': {'index': context.section_index, 'name': context.name,
                             'root': context.root, 'scale': context.scale,
+                            'direction': self.section_directions[context.section_index],
                             'trip': self.section_sources[context.section_index]},
                 'transport': {'voice': self.transport_voice, 'playing': self.playing,
                               'beat': self.beat, 'epoch': self.epoch},

@@ -39,6 +39,7 @@ Ogni generatore riceve un `PlanningRequest` con questi campi:
 | `rhythm` | Riferimento ritmico immutabile, oppure `None` |
 | `relations` | Influenze storiche risolte per la voce e il ruolo correnti |
 | `prepared_material` | Materiale privato consegnato soltanto alla voce produttrice della guida |
+| `participating` | Ammissione della finestra secondo presenza e politiche di silenzio delle relazioni; non garantisce note o esecuzione audio |
 
 Il Coordinator passa lo stesso intervallo e contesto a tutte le voci. La mappa delle dipendenze consegnata al generatore è di sola lettura. Il risultato di `plan` contiene le frasi delle voci registrate, identificate dalle rispettive chiavi.
 

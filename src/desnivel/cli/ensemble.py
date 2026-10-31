@@ -211,8 +211,11 @@ def main(argv=None):
     from desnivel.cli.track_source import add_track_arguments
     add_track_arguments(parser)
     parser.add_argument('--config', type=Path, required=True)
-    parser.add_argument('--direction', type=Path,
-                        help='Assetti musicali per le macrosezioni del viaggio, al posto delle sezioni manuali.')
+    direction_options = parser.add_mutually_exclusive_group()
+    direction_options.add_argument('--direction', type=Path,
+                                   help='Direzione del viaggio; prevale sul campo direction della configurazione.')
+    direction_options.add_argument('--manual-sections', action='store_true',
+                                   help='Usa le sezioni manuali della configurazione, senza direzione GPX.')
     parser.add_argument('--speed', type=float, default=None, help='Velocità del replay lineare (default: 1).')
     parser.add_argument('--timing', choices=('linear', 'allocated'), default='linear',
                         help='Tempo lineare del viaggio oppure timeline musicale in beat.')
@@ -233,16 +236,21 @@ def main(argv=None):
             raise ValueError('la porta della vista deve essere tra 1024 e 65535')
         if not 1024 <= args.connect_port <= 65535:
             raise ValueError('la porta per Collega tutte deve essere tra 1024 e 65535')
-        if args.timing == 'allocated' and (not args.direction or args.speed is not None):
-            raise ValueError('--timing allocated richiede --direction e non usa --speed')
+        config = json.loads(args.config.read_text())
+        direction = args.direction
+        if not args.manual_sections and direction is None and 'direction' in config:
+            if not isinstance(config['direction'], str) or not config['direction']:
+                raise ValueError('direction deve indicare un file di direzione')
+            direction = args.config.parent/config['direction']
+        if args.timing == 'allocated' and (direction is None or args.speed is not None):
+            raise ValueError('--timing allocated richiede una direzione GPX (direction o --direction) e non usa --speed')
         speed = args.speed if args.speed is not None else 1.
         if not math.isfinite(speed) or speed <= 0 or not 1024 <= args.port <= 65535:
             raise ValueError('velocità positiva e porta tra 1024 e 65535 richieste')
-        config = json.loads(args.config.read_text())
         track = load_track(args.gpx, timing_reference=args.timing_reference)
-        if args.direction:
-            from desnivel.cli.trip_direction import load_trip_sections
-            config['sections'] = load_trip_sections(track, args.direction)
+        if direction is not None:
+            from desnivel.cli.trip_direction import prepare_trip_config
+            config = prepare_trip_config(track, config, direction)
         if args.dry_run:
             bridge = VoiceDeviceBridge({}, lambda *args: None)
         else:
@@ -253,6 +261,10 @@ def main(argv=None):
         from desnivel.cli.voice_presets import connect_preset_library
         library = VoicePresetLibrary(args.voice_presets or args.config.with_suffix('.voice-presets.json'))
         connect_preset_library(library, bridge.voices)
+        if runtime.trip_music:
+            music = runtime.trip_music
+            print(f"Direzione GPX: {music['palette']} · pendenza assoluta media "
+                  f"{music['profile']['mean_absolute_slope_ratio']:.2%} · motivo {music['motif_degrees']}", flush=True)
         if runtime.timeline:
             plan = runtime.timeline.timeline
             basis = f' ({plan.beats_per_km:g} beat/km)' if plan.beats_per_km is not None else ''
@@ -265,7 +277,8 @@ def main(argv=None):
             origin = section.get('trip')
             location = (f" #{i+1} [km {origin['start_distance_m']/1000:.2f}–{origin['end_distance_m']/1000:.2f}]"
                         if origin else '')
-            print(f"{section['name']}{location}: " + ', '.join(f'{name} ({len(p.notes)} note)' for name, p in phrases.items()), flush=True)
+            harmony = f" · root {section['root']} · {section['scale']}"
+            print(f"{section['name']}{location}{harmony}: " + ', '.join(f'{name} ({len(p.notes)} note)' for name, p in phrases.items()), flush=True)
         runtime.reset()
         if not args.dry_run:
             store = SessionStatusStore(args.status_file)

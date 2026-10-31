@@ -21,6 +21,15 @@ def render_session(state):
         if timeline.get('beats_per_km') is not None:
             rows[1] += f" | {timeline['beats_per_km']:g} beat/km"
     section_source = state.get('section', {}).get('trip')
+    if state.get('trip_music'):
+        music = state['trip_music']
+        rows.append(f"  Identità GPX: {music['palette']} ({music['palette_source']}) | "
+                    f"pendenza assoluta media {music['profile']['mean_absolute_slope_ratio']:.2%} | "
+                    f"motivo {music['motif_degrees']} ({music['motif_source']})")
+        direction = state.get('section', {}).get('direction')
+        if direction:
+            rows.append(f"  Armonia: {direction['state']} | root {direction['sources']['root']} | "
+                        f"scala {direction['sources']['scale']}")
     if section_source:
         rows.append(f"  Macrosezione {section_source['index']+1}: {section_source['kind']} | "
                     f"km {section_source['start_distance_m']/1000:.2f}–{section_source['end_distance_m']/1000:.2f} | "

@@ -16,7 +16,8 @@ In `presets/organico.json`:
 | `lead_beats` | Anticipo minimo della prossima frase rispetto al beat ricevuto, positivo e finito |
 | `generators` | Definizioni dei generatori, identificate da un nome locale |
 | `voices` | Voci della composizione, identificate dal valore da impostare in **Voce** sul dispositivo |
-| `sections` | Assetti musicali con confini manuali; sostituiti dalle macrosezioni quando si usa `--direction` |
+| `sections` | Assetti con confini manuali, usati in assenza di direzione GPX oppure con `--manual-sections` |
+| `direction` | File della direzione GPX predefinita, relativo alla configurazione; `--direction` lo sostituisce |
 | `timeline` | Parametri dell'allocazione in beat, letti da `analyze_trip --timeline-session` e da `ensemble --timing allocated` |
 | `rhythm_voice` | Voce produttrice della guida ritmica; opzionale, attualmente richiede `percussion_phrase` |
 | `history_beats` | Conservazione della storia e durata massima dei gesti, positiva e finita; predefinita 64 |
@@ -41,7 +42,7 @@ Algoritmo, limiti e comportamento nei silenzi in [Dialogo ritmico](DIALOGO-MUSIC
 [Stili percussivi](STILI-PERCUSSIVI.md).
 Con `--timing linear` (predefinito) la velocità di replay si sceglie con `--speed`.
 Con `--timing allocated` la durata dipende da `timeline` e dal BPM di Live;
-`--direction` è richiesto e `--speed` non è accettato.
+una direzione GPX configurata o esplicita è richiesta e `--speed` non è accettato.
 La sessione usa `timeline.beats_per_km: 12`: il totale dipende dalla distanza
 GPX ed è quantizzato a finestre intere. `min_windows: 2` garantisce 8 beat
 per macrosezione con la finestra corrente. Se non entrano, il sistema
@@ -75,16 +76,20 @@ Una sezione manuale contiene `name`, `from_progress`, `root`, `scale` e
 da zero, sono strettamente crescenti e inferiori a uno. L'ultima sezione
 copre la fine del viaggio.
 
-Con `--direction`, `presets/direzione-viaggio.json` definisce:
+`presets/direzione-viaggio.json`, caricato dal campo `direction` o da
+`--direction`, definisce:
 
 | Campo | Significato |
 |---|---|
 | `analysis` | File dei criteri di analisi del percorso |
 | `grouping` | File delle famiglie di macrosezioni |
 | `families` | Un assetto musicale per ogni famiglia configurata, senza famiglie aggiuntive |
+| `automatic_music` | Profilo della tappa → tavolozza armonica e motivo, con override facoltativi; [contratto completo](DIREZIONE-MUSICALE.md) |
 
 I due percorsi sono relativi al file di direzione. Ogni assetto di famiglia
-richiede `root`, `scale` e `assignments`.
+richiede `assignments`. Con `automatic_music`, root e scala sono risolte
+dal profilo; eventuali valori nella famiglia sono override espliciti.
+Senza automatismo sono richieste `root` e `scale` per ogni famiglia.
 
 | Campo dell'assetto | Significato |
 |---|---|
@@ -155,7 +160,7 @@ della sessione e dei controlli esposti dal dispositivo.
 | `velocity` | 85 | Intero 1…127 | Intensità MIDI di riferimento, con accenti nello sviluppo; non è un volume in dB |
 | `development` | 0 | 0…1 | Zero ripete il motivo; sopra zero attiva e regola lo sviluppo |
 | `activity` | 0,75 | 0…1 | Pesi di durate brevi, lunghe e pause nello sviluppo |
-| `phrase_windows` | 4 | Intero 2…8 | Finestre che compongono un periodo melodico |
+| `phrase_windows` | 4 | Intero 2…8 | Finestre del periodo e del gesto melodico; la fine non impone una chiusura sulla tonica |
 | `seed` | 0 | Intero 0…2147483647 | Riproducibilità delle variazioni |
 
 Ruoli supportati:

@@ -22,7 +22,7 @@
 ### 4. Sessione multivoce condivisa
 - Avvio unico con `desnivel.cli.ensemble`: replay GPX, selezione del contesto delle sezioni, coordinamento dei generatori e invio delle frasi alle destinazioni.
 - Organico e ruoli configurati per sezione; selezione manuale del ruolo e ritorno a `Follow section` dal dispositivo comune `Desnivel_Voice`.
-- Generazione melodica da motivo con sviluppo su più finestre, ritmo variabile, pause, dinamica e conclusioni sulla tonica; preset letterale per il confronto.
+- Generazione melodica da cellule del motivo, con ripresa, trasformazioni e continuità fra periodi; respirazioni e chiusure sulla tonica distanziate di 2–4 periodi partecipanti. Motivo letterale disponibile per il confronto. [Generazione melodica](MELODIA.md).
 - Collegamento delle parti al trasporto di Live e controlli compositivi esposti dal motore Python.
 - Presenza per frase della sezione e moltiplicatore manuale per voce, separati dalla densità e dalla velocity.
 - Controlli pertinenti al ruolo e alla modalità segnalati dal generatore; etichette e switch visualizzati dal device comune senza regole specifiche degli strumenti.
@@ -33,11 +33,12 @@
 - Selettore **Stile** per le drums: Nessuno, House classica, Boom bap e Breakbeat house. I profili orientano guida e materiale, conservando struttura, sviluppo e interazione; scelta nominale disponibile sul device e salvabile nei preset. [Stili percussivi](STILI-PERCUSSIVI.md).
 - Vista globale nel terminale e snapshot JSON con avanzamento, collegamenti, ruoli e decisioni effettive di Director e Coordinator.
 - Direzione dalle macrosezioni del GPX con assetti musicali configurati per famiglia; modalità con sezioni manuali disponibile.
+- Direzione armonica automatica dal profilo complessivo: scelta della tavolozza, evoluzione di root e scala nelle macrosezioni e motivo ricavato dalla forma della tappa. Override di tavolozza, root, scala e motivo generali o per tappa. Attiva nelle configurazioni fornite; `--manual-sections` conserva la modalità manuale. [Direzione musicale](DIREZIONE-MUSICALE.md).
 - Prova a quattro voci: melodia, accompagnamento, atmosfera sostenuta e pattern percussivi configurati. Esecuzione delle quattro parti confermata all'ascolto in Live da Marco; organico e comportamenti sono un banco di prova da affinare.
 
 [Sessione multivoce](SESSIONE-MULTIVOCE.md) · [Configurazione](CONFIGURAZIONE.md) · [Passaggio di consegne](PASSAGGIO-CONSEGNE.md)
 
-La verifica automatica del 31 ottobre 2026 comprende 474 test Python
+La verifica automatica del 31 ottobre 2026 comprende 511 test Python
 superati e la suite JavaScript superata. Il dialogo ritmico è verificato
 anche su 400 finestre consecutive con validazione delle frasi nel bridge;
 la calibrazione all'ascolto in Live resta da eseguire. Sono verificate
@@ -46,6 +47,12 @@ le configurazioni manuale e guidata dalle macrosezioni GPX tramite
 [Dialogo ritmico](DIALOGO-MUSICALE.md) e [Tessitura sostenuta](TESSITURA.md).
 I tre profili percussivi sono verificati anche su 100 finestre ciascuno,
 con cambi di stile nella stessa sessione e validazione del bridge MIDI.
+Il nuovo sviluppo melodico è verificato anche in 400 finestre multivoce
+con cambi di stile, sezione, ruolo, durata del periodo e presenza.
+La direzione automatica è verificata sui GPX Levanto–La Spezia,
+Firenze–San Gimignano e San Nicola–San Severo, con esecuzione simulata
+dell'intera timeline multivoce e controlli del bridge MIDI. La taratura
+delle tavolozze e dei motivi richiede ancora ascolto in Live.
 
 ### 5. Analisi e macrosezioni del percorso
 - Classificazione del profilo altimetrico per distanza con soglie e persistenza configurabili.

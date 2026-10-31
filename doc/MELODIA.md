@@ -1,61 +1,128 @@
 # Generazione melodica da motivo
 
-`music/melodic/generator.py` produce frasi dalla tonica e dalla scala della sezione e da un motivo configurato in gradi. Il registro è determinato dall'altezza di riferimento e da `octave`.
+`music/melodic/generator.py` produce frasi dalla tonica e dalla scala della
+sezione e da un motivo configurato in gradi. `octave` determina il registro
+di riferimento. Nel ruolo `melody`, `development > 0` attiva lo sviluppo;
+con `development = 0` il motivo viene ripetuto letteralmente su passi regolari.
 
-Nel ruolo `melody`, `development > 0` attiva lo sviluppo del motivo implementato in `music/melodic/development.py`. Con `development = 0` il generatore ripete letteralmente i gradi configurati su passi regolari.
+## Cellule e continuità
 
-## Sviluppo delle frasi
+`music/melodic/development.py` ricava cellule di 2–4 note dai tratti monotoni
+del motivo. Se non ci sono tratti di almeno tre note usa frammenti contigui;
+un motivo di una nota resta una cellula valida. Dal motivo della sessione
+`[0, 2, 4, 1, 3, 2, 1, 0]` ricava `[0, 2, 4]` e `[3, 2, 1, 0]`.
 
-Il generatore organizza il materiale su un periodo di più finestre musicali:
+Ogni finestra inizia con una cellula intera, eventualmente trasposta nei
+gradi della scala. Le relazioni intervallari in gradi restano riconoscibili.
+Il seguito può riprenderla, usarne un frammento o estenderne la direzione.
 
-1. **Presentazione:** conserva le prime tre note del motivo, o l'intero motivo se più corto, quando la finestra consente di eseguirle.
-2. **Sviluppo:** sposta il riferimento melodico verso gradi superiori della scala e favorisce un arco nel registro.
-3. **Contrasto:** usa il motivo con ordine degli indici invertito come riferimento per la selezione delle altezze.
-4. **Conclusione:** orienta il materiale verso il basso e conclude sulla tonica con una nota più lunga. La tonica è scelta nel registro di base quando vicina, altrimenti nell'ottava disponibile più prossima.
-
-Con quattro finestre le fasi compaiono una volta ciascuna. Con due finestre si hanno presentazione e conclusione; con periodi più lunghi vengono estese le fasi intermedie. Non è dichiarato un metro: una finestra di quattro beat non equivale di per sé a una battuta di 4/4.
-
-Le altezze sono selezionate tra i gradi della scala. Il punteggio bilancia vicinanza al motivo, movimento dalla nota precedente, profilo del periodo e ripetizioni. Dopo un salto ampio è penalizzato un ulteriore movimento nella stessa direzione. Le note variate ordinarie sono selezionate entro sette semitoni dalla precedente; le note iniziali conservate del motivo e la chiusura seguono le regole specifiche descritte sopra.
-
-Il ritmo usa durate di riferimento pari a metà, uno, uno e mezzo o due passi. I relativi pesi dipendono da `activity`, `development` e fase. Sono possibili pause interne. Articolazione e velocity variano all'interno della frase: gli inizi sono accentati e gli attacchi fra beat interi sono attenuati. La chiusura lascia un breve spazio prima della finestra successiva.
-
-La prima richiesta dopo `reset()` stabilisce l'inizio del periodo, indipendentemente dal numero di beat assoluto di Live. La generazione ricostruisce il periodo con seed, indice di ciclo e indice di sezione: stesse richieste e impostazioni producono le stesse frasi, senza usare uno stato casuale globale. Il runtime esegue reset a Stop e alle discontinuità della pianificazione.
-
-## Controlli
-
-| Parametro | Significato |
+| Operazione | Comportamento |
 |---|---|
-| `octave` | Trasposizione in ottave rispetto all'altezza di riferimento |
-| `step_beats` | Durata di riferimento per il ritmo |
-| `articulation` | Proporzione di durata occupata dalle note articolate |
-| `velocity` | Intensità di riferimento; con sviluppo attivo le note ricevono accenti e variazioni attorno a questo valore |
-| `development` | Attivazione e intensità delle variazioni: `0` usa il motivo letterale |
-| `activity` | Peso di suddivisioni brevi, durate lunghe e pause |
-| `phrase_windows` | Numero di finestre per periodo, da 2 a 8 |
-| `seed` | Identificativo intero per riprodurre le variazioni |
+| Presentazione | Espone la prima cellula alla prima entrata e dopo una chiusura |
+| Ripresa | Riusa la cellula mantenendo il suo profilo |
+| Variazione ritmica | Cambia le durate della cellula, conservandone le altezze |
+| Trasposizione | Sposta la cellula nei gradi della scala, mantenendo il ritmo di riferimento |
+| Frammentazione | Espone la cellula e usa un suo frammento nel seguito |
+| Estensione e prosecuzione | Espone la cellula e ne continua il movimento per grado |
+| Richiamo | Ripristina la cellula senza trasposizione dopo una trasformazione marcata |
 
-`presets/organico.json` usa `development = 0.7`, `activity = 0.75`, quattro finestre e seed `7`. Il menu espone `literal` per la ripetizione regolare, `developed` per lo sviluppo, `spacious` per una configurazione più diradata, oltre ai preset ritmici e di registro presenti nella configurazione.
+Le operazioni non formano una successione fissa. Una fine ancora in movimento
+favorisce la prosecuzione. Dopo due finestre con la stessa cellula viene
+favorito il passaggio alla successiva; con una sola cellula si usa l'estensione.
+Dopo trasposizione, frammentazione o estensione con `development >= 0.6`,
+la finestra successiva richiama materiale non trasposto.
 
-Nel ruolo `bass_line` questo generatore usa il motivo letterale. Nel ruolo
-`sustained_texture` delega al modulo `music/texture/` la nota sostenuta dal
-primo grado, usando soltanto `octave` e `velocity`. La voce Atmosphere usa
-direttamente il [generatore di tessitura](TESSITURA.md), con uno switch
-per seguire la frase melodica.
+La collocazione confronta l'inizio della cellula con l'ultima altezza
+ammessa a suonare. Può scegliere l'ottava di riferimento oppure una delle
+due adiacenti, rispettando MIDI 0…127. Le trasposizioni non realizzabili
+sono escluse prima della scelta dell'operazione. Il registro disponibile
+è l'estensione del motivo ampliata di un'ottava per lato, entro MIDI 0…127.
+Anche le estensioni del seguito rispettano questi limiti. Gli intervalli
+del motivo originale restano ammessi, inclusi eventuali salti ampi configurati.
 
-`activity`, `phrase_windows` e `seed` intervengono soltanto con sviluppo
-melodico attivo. Il dispositivo segnala i controlli inattivi per ruolo e
-modalità, mantenendone i valori.
+## Ritmo e conclusioni
 
-## Lettura nella vista globale
+`step_beats` è il riferimento per le durate. Il ritmo di base della cellula
+è riproducibile da seed, cellula e attività; la variazione ritmica può
+cambiarlo. Se la cellula non entra nello spazio disponibile, le sue durate
+vengono ridotte proporzionalmente. Il seguito usa durate di mezzo, uno,
+uno e mezzo o due passi, con pause dipendenti da `activity` e `development`.
 
-Dopo ogni chiamata il generatore espone metodo, fase, numero della finestra, indice del ciclo e seed. Il Coordinator conserva queste informazioni insieme alle note effettivamente restituite. Il terminale mostra la fase compositiva accanto al piano; il dettaglio è disponibile in `decisions.coordinator.voices.<id>.composition` nello stato JSON della sessione.
+Articolazione e velocity si applicano alle note composte; l'inizio è
+accentato e gli attacchi fra beat interi sono attenuati nel seguito.
+La modellazione da guida ritmica e relazioni storiche avviene dopo questa
+composizione, conservando ordine e altezze delle note. Vedi
+[Dialogo ritmico](DIALOGO-MUSICALE.md).
 
-## Verifiche
+Un periodo dura `phrase_windows × length_beats`. Il suo termine non impone
+una conclusione. Una chiusura esplicita sulla tonica diventa possibile nel
+secondo periodo partecipante; viene favorita quando la frase non richiede
+prosecuzione. Dopo tre periodi completati senza chiusura, la prima finestra
+successiva ammessa a suonare conclude: la distanza fra chiusure è quindi
+2–4 periodi partecipanti, con durata del periodo invariata.
 
-I test controllano riproducibilità, conservazione del frammento iniziale, fasi del periodo, chiusure, varietà di attacchi e altezze, rispetto della scala e ripartenza del periodo dopo reset. Verificano inoltre che minore e dorico possano produrre il rispettivo colore modale e che il modo letterale resti disponibile.
+Un periodo conta se almeno una sua finestra è ammessa a suonare. I periodi
+interamente silenziati non avanzano il conteggio; una finestra silenziata
+non può realizzare una chiusura. La tonica viene scelta nell'ottava più
+vicina all'ultima nota, con una durata più lunga e uno spazio finale.
+Una respirazione può invece accorciare la frase senza imporre la tonica.
+Queste sono chiusure melodiche; il generatore non riceve progressioni di accordi.
 
-L'efficacia musicale del primo sviluppo richiede confronto all'ascolto tra i preset, a parità di suono e sezione.
+## Parametri e contesto
 
-## Riferimento compositivo
+| Parametro | Responsabilità |
+|---|---|
+| `octave` | Registro di riferimento rispetto alla root della sezione |
+| `step_beats` | Durata di riferimento delle figure |
+| `articulation` | Proporzione di durata occupata dalle note |
+| `velocity` | Intensità di riferimento, con accenti e variazioni locali |
+| `development` | A zero mantiene il motivo letterale; valori positivi pesano le trasformazioni e ne ampliano la trasposizione fino a tre gradi |
+| `activity` | Peso delle suddivisioni, durate lunghe e pause |
+| `phrase_windows` | Durata del periodo e del gesto dichiarato, da 2 a 8 finestre |
+| `seed` | Riproducibilità delle scelte compositive |
+| `groove_follow` | Adesione ritmica alla guida condivisa, da 0 a 1 |
 
-[Ableton — Creating Melodies 1: Contour](https://makingmusic.ableton.com/creating-melodies-1-contour) discute equilibrio del profilo, movimento per grado e salti. I pesi, i limiti e la struttura del periodo qui descritti sono scelte implementate in Desnivel per questo primo sviluppo.
+I cambi di root e scala adattano le cellule al nuovo contesto, cercando
+un raccordo con l'ultima altezza. I nuovi parametri ritmici si applicano
+alla prossima finestra senza riavviare la presentazione. Cambiare durata
+del periodo apre un nuovo gesto alla finestra corrente: il gesto interrotto
+rimane incompleto e non viene promosso nella storia condivisa.
+
+Uscire dal ruolo melodico o passare al motivo letterale interrompe lo
+sviluppo. Al rientro viene presentata una cellula. Anche una lacuna fra
+richieste apre una nuova sequenza; Stop e discontinuità del runtime eseguono
+il reset. Ripetere l'ultima richiesta identica non avanza due volte lo stato.
+
+Lo stato viene preparato in `VoicePlan` e applicato con `accept` dopo
+la validazione del piano multivoce. Il Coordinator comunica nel campo
+`PlanningRequest.participating` se presenza e politiche delle relazioni
+ammettono la finestra. Le finestre silenziate conservano ultima altezza,
+cellula e necessità di nuova apertura del materiale partecipante.
+
+La [direzione GPX](DIREZIONE-MUSICALE.md) può fornire un motivo ricavato dalla
+forma della tappa, insieme ai contesti armonici delle macrosezioni. Il
+generatore riceve i gradi già risolti e continua a svilupparli con le
+stesse regole; non legge metriche geografiche o nomi di tappa.
+
+## Stato, ascolto e verifiche
+
+`composition` espone operazione (`phase`), cellula, gradi sorgente,
+trasposizione, altezze e attacchi del frammento iniziale prima della guida,
+tipo di finale (`ending`), periodo, finestra, seed e conteggio delle chiusure.
+Il terminale ne mostra la descrizione sintetica.
+
+`presets/organico.json` usa sviluppo 0,7, attività 0,75, quattro finestre,
+seed 7 e adesione al groove 0,3. I parametri di sezione e gli override
+manuali conservano le rispettive precedenze. Il preset `literal` mantiene
+il confronto con il motivo regolare. L'efficacia musicale richiede ascolto
+con lo stesso motivo, suono e tempo.
+
+I test verificano cellule, riconoscibilità, riproducibilità, intervalli fra
+chiusure, silenzi, adattamento di scala e periodo, limiti MIDI, cambi di ruolo,
+ritentativi e reset. La suite multivoce verifica il dialogo con le drums e
+l'assenza di aggiornamenti dello stato quando una voce successiva fallisce.
+
+Nel ruolo `bass_line` il generatore mantiene il motivo letterale. Nel ruolo
+`sustained_texture` delega al [generatore di tessitura](TESSITURA.md) usando
+registro e velocity. Il dispositivo segnala i controlli non pertinenti al
+ruolo o alla modalità corrente.

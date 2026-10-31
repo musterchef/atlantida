@@ -12,6 +12,7 @@ Guida alla documentazione di **Desnivel**, organizzata per aree tematiche.
 | [Architettura](ARCHITETTURA.md) | Pipeline modulare, flusso dei dati, modelli musicali e organizzazione del codice. |
 | [Sessione multivoce Python](SESSIONE-MULTIVOCE.md) | Comando unico, replay, generatori, dispositivi e stato globale. |
 | [Configurazione](CONFIGURAZIONE.md) | Campi JSON, unità, limiti dei controlli, ruoli e precedenze. |
+| [Direzione musicale dal percorso](DIREZIONE-MUSICALE.md) | Profilo della tappa, tavolozze armoniche, motivo automatico e override. |
 | [Dialogo ritmico](DIALOGO-MUSICALE.md) | Guida percussiva, adesione delle voci, memoria dei gesti e influenze storiche operative. |
 | [Stili percussivi](STILI-PERCUSSIVI.md) | Selettore, profili disponibili, mappatura delle parti e confronto in Live. |
 | [Timeline musicale](TIMELINE.md) | Allocazione in beat, manager della posizione, report e ascolto nelle modalità lineare e allocata. |
@@ -50,6 +51,7 @@ Materiale di progettazione separato dalla documentazione del sistema attuale.
 - [Evoluzione degli stili percussivi](proposte/STILI-PERCUSSIVI.md): design del catalogo e futura combinazione di influenze da 0 a 1.
 - [Coordinamento ritmico](proposte/COORDINAMENTO-RITMICO.md): direzione architetturale e confini del primo blocco implementato.
 - [Contratti per le relazioni musicali](proposte/RELAZIONI-MUSICALI.md): specifica generale, stato dell'implementazione e relazioni ancora da realizzare.
+- [Evoluzione melodica](proposte/EVOLUZIONE-MELODICA.md): regole adottate per il fraseggio e decisioni ancora aperte sul collegamento al GPX.
 
 ---
 

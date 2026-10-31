@@ -31,21 +31,23 @@ def test_development_retains_identity_builds_period_and_is_reproducible():
     settings = dict(development=.7, activity=.75, phrase_windows=4, seed=7)
     a = MotifGenerator([0, 2, 4, 1, 3, 2, 1, 0], settings)
     b = MotifGenerator([0, 2, 4, 1, 3, 2, 1, 0], settings)
-    phrases, phases = [], []
+    phrases, phases, cells, endings = [], [], [], []
     for i in range(24):
         req = request(start=4+i*4)
         phrase = a(req)
         assert phrase == b(req)
         phrases.append(phrase)
         phases.append(a.last_decision['phase'])
-        if i % 4 == 0:
-            assert [n.pitch for n in phrase.notes[:3]] == [60, 64, 67]
-        if i % 4 == 3:
-            assert phrase.notes[-1].pitch == 60
-            assert phrase.notes[-1].duration >= 1
-    assert phases[:4] == ['statement', 'development', 'contrast', 'resolution']
+        cells.append(a.last_decision['cell'])
+        endings.append(a.last_decision['ending'])
+        assert [n.pitch for n in phrase.notes[:len(a.last_decision['anchor_pitches'])]] == a.last_decision['anchor_pitches']
+    assert phases[0] == 'statement'
+    assert {'recall', 'continuation'} <= set(phases)
+    assert set(cells) == {0, 1}
+    assert not any(a == b == c for a, b, c in zip(cells, cells[1:], cells[2:]))
+    assert any(endings[i] != 'tonic' for i in range(3, len(endings), 4))
     assert len({tuple(n.pitch for n in p.notes) for p in phrases}) > 8
-    assert len({tuple(n.beat for n in p.notes) for p in phrases}) > 8
+    assert len({tuple(n.beat for n in p.notes) for p in phrases}) > 1
     pitches = [n.pitch for p in phrases for n in p.notes]
     assert max(abs(x-y) for x,y in zip(pitches,pitches[1:])) <= 7
     assert all(n.pitch % 12 in (0,2,4,5,7,9,11) for p in phrases for n in p.notes)

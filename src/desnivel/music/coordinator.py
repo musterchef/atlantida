@@ -28,6 +28,7 @@ class PlanningRequest:
     rhythm: RhythmReference | None = None
     relations: tuple = ()
     prepared_material: object = None
+    participating: bool = True
 
 
 @dataclass(frozen=True)
@@ -166,13 +167,17 @@ class MusicCoordinator:
             references = (*voice.dependencies, *(key for key in voice.optional_dependencies if key in phrases))
             dependencies = MappingProxyType({key: phrases[key] for key in references})
             assignment = assignments[name] if assignments is not None else None
+            presence = assignment.presence if assignment else 1.
+            participating = participates(name, start, presence)
+            relation_silence = any(r.gesture is None and r.spec.on_unavailable == 'silence' for r in resolved[name])
             request = PlanningRequest(
                 start, length_beats, context, dependencies,
                 assignment.role if assignment else None,
                 MappingProxyType(dict(assignment.parameters)) if assignment else MappingProxyType({}),
                 logical_start if self._interactive else None, self.epoch,
                 prepared.reference if prepared else None, tuple(resolved[name]),
-                prepared.material if prepared and name == self.rhythm_source else None)
+                prepared.material if prepared and name == self.rhythm_source else None,
+                participating and not relation_silence)
             if voice.stage:
                 result = voice.stage(request)
                 if not isinstance(result, VoicePlan):
@@ -183,11 +188,9 @@ class MusicCoordinator:
                 phrase = voice.generate(request)
             if phrase.length_beats != length_beats:
                 raise ValueError(f'la voce {name} deve coprire la finestra musicale')
-            presence = assignment.presence if assignment else 1.
-            participating = participates(name, start, presence)
             if not participating:
                 phrase = Phrase(length_beats, ())
-            if any(r.gesture is None and r.spec.on_unavailable == 'silence' for r in resolved[name]):
+            if relation_silence:
                 phrase = Phrase(length_beats, ())
             phrases[name] = phrase
             decisions[name] = {

@@ -166,8 +166,9 @@ il primo gesto drums completo è quindi disponibile dopo otto finestre.
 ```
 
 Il ciclo percussivo dura 8 beat: la prima influenza storica è disponibile
-dalla terza finestra. La configurazione usa una sezione dorica; può essere
-associata a `--direction presets/direzione-viaggio.json` per gli assetti GPX.
+dalla terza finestra. La configurazione carica normalmente la
+[direzione musicale GPX](DIREZIONE-MUSICALE.md). Con `--manual-sections`
+usa invece la singola sezione dorica configurata nel file.
 La [selezione dello stile](STILI-PERCUSSIVI.md) cambia la guida e il materiale
 percussivo. Le ulteriori relazioni dei
 [contratti proposti](proposte/RELAZIONI-MUSICALI.md) restano da implementare.

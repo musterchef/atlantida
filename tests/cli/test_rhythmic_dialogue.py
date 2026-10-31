@@ -176,6 +176,8 @@ def test_old_drum_presets_get_explicit_none_migration(tmp_path):
 def test_single_controls_keep_section_changes_and_other_manual_overrides():
     config = json.loads(Path('presets/organico.json').read_text())
     families = json.loads(Path('presets/direzione-viaggio.json').read_text())['families']
+    for family in families.values():
+        family.update(root=57, scale='minor')
     config['sections'] = [dict(families['level'], name='level', from_progress=0),
                           dict(families['descent'], name='descent', from_progress=.5)]
     r = runtime(config)

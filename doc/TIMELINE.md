@@ -178,7 +178,8 @@ Per la timeline allocata:
   --timing allocated
 ```
 
-`allocated` richiede `--direction` e i parametri `timeline` della sessione;
+`allocated` richiede una direzione GPX tramite `direction` o `--direction`
+e i parametri `timeline` della sessione;
 non accetta `--speed`. Aggiungere `--dry-run` verifica configurazione,
 allocazione e generazione senza aprire porte o inviare note.
 

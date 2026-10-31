@@ -3,8 +3,6 @@
   "grouping": "macrosezioni-percorso.json",
   "families": {
     "ascent": {
-      "root": 57,
-      "scale": "minor",
       "assignments": {
         "voice_01": {
           "role": "melody",
@@ -38,8 +36,6 @@
       }
     },
     "descent": {
-      "root": 57,
-      "scale": "minor",
       "assignments": {
         "voice_01": {
           "role": "melody",
@@ -73,8 +69,6 @@
       }
     },
     "level": {
-      "root": 57,
-      "scale": "minor",
       "assignments": {
         "voice_01": {
           "role": "melody",
@@ -107,5 +101,91 @@
         }
       }
     }
+  },
+  "automatic_music": {
+    "palettes": [
+      {
+        "id": "gentle",
+        "from_mean_absolute_slope_ratio": 0,
+        "states": [
+          {
+            "id": "home",
+            "root": 50,
+            "scale": "major",
+            "intensity": 0
+          },
+          {
+            "id": "related",
+            "root": 57,
+            "scale": "mixolydian",
+            "intensity": 0.5
+          },
+          {
+            "id": "colour",
+            "root": 50,
+            "scale": "lydian",
+            "intensity": 1
+          }
+        ]
+      },
+      {
+        "id": "rolling",
+        "from_mean_absolute_slope_ratio": 0.03,
+        "states": [
+          {
+            "id": "home",
+            "root": 55,
+            "scale": "dorian",
+            "intensity": 0
+          },
+          {
+            "id": "related",
+            "root": 50,
+            "scale": "minor",
+            "intensity": 0.5
+          },
+          {
+            "id": "colour",
+            "root": 55,
+            "scale": "mixolydian",
+            "intensity": 1
+          }
+        ]
+      },
+      {
+        "id": "steep",
+        "from_mean_absolute_slope_ratio": 0.04,
+        "states": [
+          {
+            "id": "home",
+            "root": 52,
+            "scale": "minor",
+            "intensity": 0
+          },
+          {
+            "id": "related",
+            "root": 59,
+            "scale": "phrygian",
+            "intensity": 0.5
+          },
+          {
+            "id": "colour",
+            "root": 52,
+            "scale": "dorian",
+            "intensity": 1
+          }
+        ]
+      }
+    ],
+    "switch_margin": 0.15,
+    "motif": {
+      "generators": [
+        "motif"
+      ],
+      "points": 8,
+      "span_degrees": 6
+    },
+    "override": {},
+    "stage_overrides": {}
   }
 }

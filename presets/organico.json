@@ -599,5 +599,6 @@
       "strength": 0.4,
       "on_unavailable": "independent"
     }
-  ]
+  ],
+  "direction": "direzione-viaggio.json"
 }

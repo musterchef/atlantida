@@ -25,6 +25,8 @@ class MotifGenerator:
         self.validate('melody', {})
         self.last_decision = None
         self._origin = None
+        self._development = self._previous_development = None
+        self._last_start = None
         self._texture = TextureGenerator(self.degrees[0])
 
     def validate(self, role, parameters):
@@ -58,7 +60,7 @@ class MotifGenerator:
         if request.role == 'sustained_texture':
             texture = self._texture.stage(replace(request, parameters={
                 'octave': values['octave'], 'velocity': values['velocity']}))
-            return VoicePlan(texture.phrase, (self._origin, texture), texture.decision, texture.gestures)
+            return VoicePlan(texture.phrase, (None, texture, None, None, request.start), texture.decision, texture.gestures)
         intervals = SCALES[request.context.scale]
         root = request.context.root + 12 * values['octave']
         degrees = self.degrees
@@ -67,13 +69,12 @@ class MotifGenerator:
         if request.role == 'melody' and values['development'] > 0:
             if not 0 <= root <= 127:
                 raise ValueError('lo sviluppo richiede una tonica nel registro MIDI')
-            origin = request.start if self._origin is None else self._origin
-            if request.start < origin:
+            if self._last_start is not None and request.start < self._last_start:
                 raise ValueError('lo sviluppo richiede reset prima di una ripartenza precedente')
-            phrase, decision = develop(self.degrees, intervals, root, request, values, origin)
-            period = values['phrase_windows']*request.length_beats
-            span = GestureSpan(origin+decision['cycle']*period, origin+(decision['cycle']+1)*period)
-            return self._plan(request, values, phrase, decision, origin, span)
+            previous = self._previous_development if request.start == self._last_start else self._development
+            phrase, decision, state = develop(self.degrees, intervals, root, request, values, previous)
+            span = GestureSpan(state.period_start, state.period_start+state.period_beats)
+            return self._plan(request, values, phrase, decision, state.period_start, span, state, previous)
         decision = {'method': 'literal_motif', 'summary': 'motivo letterale'}
         notes = []
         count = math.ceil(request.length_beats / values['step_beats'])
@@ -87,17 +88,17 @@ class MotifGenerator:
             pitch = root + intervals[degree % len(intervals)] + 12 * (degree // len(intervals))
             notes.append(Note(beat, pitch, duration, values['velocity']))
         return self._plan(request, values, Phrase(request.length_beats, tuple(notes)), decision,
-                          self._origin, GestureSpan(request.start, request.start+request.length_beats))
+                          None, GestureSpan(request.start, request.start+request.length_beats))
 
-    def _plan(self, request, values, phrase, decision, origin, span):
+    def _plan(self, request, values, phrase, decision, origin, span, state=None, previous=None):
         guided = shape_rhythm(phrase, rhythm_influences(request, values['groove_follow']))
         decision['rhythm'] = {'groove_follow': values['groove_follow'],
                               'historical_sources': [r.spec.source for r in request.relations if r.phrase is not None],
                               'moved_attacks': sum(a.beat != b.beat for a, b in zip(phrase.notes, guided.notes))}
-        return VoicePlan(guided, (origin, None), decision, (span,))
+        return VoicePlan(guided, (origin, None, state, previous, request.start), decision, (span,))
 
     def accept(self, plan):
-        self._origin, texture = plan.state
+        self._origin, texture, self._development, self._previous_development, self._last_start = plan.state
         if texture is not None:
             self._texture.accept(texture)
         self.last_decision = plan.decision
@@ -110,6 +111,8 @@ class MotifGenerator:
     def reset(self):
         """La prima finestra successiva apre un nuovo periodo melodico."""
         self._origin = None
+        self._development = self._previous_development = None
+        self._last_start = None
         self.last_decision = None
         self._texture.reset()
 

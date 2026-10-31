@@ -12,10 +12,18 @@ from desnivel.cli.trip_direction import load_trip_sections
 from desnivel.trip.track import Track
 
 
+def legacy_direction():
+    definition = json.loads(Path('presets/direzione-viaggio.json').read_text())
+    definition.pop('automatic_music')
+    for family in definition['families'].values():
+        family.update(root=57, scale='minor')
+    return definition
+
+
 @pytest.fixture
 def direction(tmp_path):
     definitions = Path('presets')
-    definition = json.loads((definitions/'direzione-viaggio.json').read_text())
+    definition = legacy_direction()
     for family in definition['families'].values():
         for assignment in family['assignments'].values():
             assignment['presence'] = 1  # Le prove musicali isolano sviluppo e interazione.
@@ -56,7 +64,7 @@ def test_boundaries_follow_macrosections_and_preserve_internal_zones(direction):
 
 
 def test_configured_presence_changes_with_gpx_family_and_keeps_manual_multiplier(direction):
-    definition = json.loads(Path('presets/direzione-viaggio.json').read_text())
+    definition = legacy_direction()
     for family, presence in [('ascent', .75), ('level', 1.), ('descent', .45)]:
         definition['families'][family]['assignments']['voice_03']['presence'] = presence
     direction.write_text(json.dumps(definition))
@@ -220,10 +228,10 @@ def test_allocated_dry_run_uses_same_budget_as_report(capsys):
     assert 'Timeline allocated: 696 beat, 174 finestre (12 beat/km).' in capsys.readouterr().out
 
 
-@pytest.mark.parametrize('extra', [[], ['--direction', 'presets/direzione-viaggio.json', '--speed', '200']])
+@pytest.mark.parametrize('extra', [['--manual-sections'], ['--direction', 'presets/direzione-viaggio.json', '--speed', '200']])
 def test_allocated_rejects_missing_direction_or_ambiguous_speed(extra, capsys):
     from desnivel.cli.ensemble import main
     with pytest.raises(SystemExit):
         main(['--gpx', 'gpx/tappa05_Firenze_San_Gimignano.gpx', '--config', 'presets/organico.json',
               '--timing', 'allocated', '--dry-run', *extra])
-    assert 'richiede --direction e non usa --speed' in capsys.readouterr().err
+    assert 'richiede una direzione GPX' in capsys.readouterr().err

@@ -7,7 +7,7 @@ La prova corrente usa quattro file, con responsabilità distinte:
 | File | Cosa contiene | Chi lo legge |
 |---|---|---|
 | `organico.json` | Voci, generatori, impostazioni e preset; sezioni manuali; parametri della timeline in beat | `cli.ensemble`; `cli.analyze_trip --timeline-session` per l'anteprima |
-| `direzione-viaggio.json` | Assetti musicali per le famiglie e riferimenti ai criteri del percorso | `cli.trip_direction`, tramite `--direction` |
+| `direzione-viaggio.json` | Tavolozze e motivo automatici, override, assetti delle famiglie e criteri del percorso | `cli.trip_direction`, tramite `direction` della sessione o `--direction` |
 | `analisi-percorso.json` | Campionamento per distanza, soglie delle fasce e persistenza | `trip.analysis`, tramite i comandi di analisi o di sessione |
 | `macrosezioni-percorso.json` | Appartenenza delle fasce alle famiglie | `trip.sections`, tramite i comandi di analisi o di sessione |
 
@@ -24,6 +24,10 @@ I percorsi `analysis` e `grouping` nella direzione sono relativi al file di
 direzione. I criteri possono essere condivisi fra analisi visuale e ascolto.
 Il riferimento dei campi e delle precedenze è in
 [Configurazione](../doc/CONFIGURAZIONE.md).
+`organico.json` e `dialogo.json` caricano la direzione tramite il campo
+`direction`. Soglie, tavolozze, motivo e override sono descritti in
+[Direzione musicale dal percorso](../doc/DIREZIONE-MUSICALE.md).
+`--manual-sections` mantiene l'ascolto delle sezioni esplicite del file.
 
 `dialogo.json` è una sessione alternativa completa a quattro voci: guida
 percussiva, adesione regolabile di melodia e basso, tessitura coordinata e
