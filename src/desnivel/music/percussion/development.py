@@ -7,15 +7,19 @@ import random
 
 from desnivel.music.phrases import Note, Phrase
 from .generator import PercussionGenerator, ROLES
+from desnivel.music.interactions import VoicePlan, GestureSpan
+from desnivel.music.rhythm import PreparedRhythm, RhythmReference
+from .styles import STYLE_BY_ID, style_events
 
 
-DEFAULTS = {'conceptuality': 1., 'variation': .7, 'displacement_beats': .25, 'velocity_ratio': .85,
+DEFAULTS = {'style': 'none', 'conceptuality': 1., 'variation': .7, 'displacement_beats': .25, 'velocity_ratio': .85,
             'gate_beats': .1, 'seed': 7, 'support_tolerance_beats': .5, 'answer_clearance_beats': .25}
 OPERATIONS = {'statement', 'subtract', 'displace', 'accent', 'silence'}
 
 
 class PercussionPhraseGenerator:
-    def __init__(self, lanes, material, anchor_beats, development, interaction, settings=None, *, standard_material=None):
+    def __init__(self, lanes, material, anchor_beats, development, interaction, settings=None, *, standard_material=None,
+                 style_lanes=None):
         # Riutilizza la validazione dei materiali espliciti e della mappa MIDI.
         parsed = PercussionGenerator(lanes, [material])
         self.name, self.cycle, self.hits = parsed.patterns[0]
@@ -46,6 +50,13 @@ class PercussionPhraseGenerator:
             raise ValueError('ogni canale deve essere assegnato una volta al sostegno o alla risposta')
         self.interaction = deepcopy(interaction)
         self.support_pitches = frozenset(lanes[lane] for lane in support)
+        self.style_lanes = None
+        if style_lanes is not None:
+            if (not isinstance(style_lanes, dict) or set(style_lanes) != {'kick', 'snare', 'hat'}
+                    or any(not isinstance(lane, str) or lane not in lanes for lane in style_lanes.values())
+                    or len(set(style_lanes.values())) != 3):
+                raise ValueError('style_lanes richiede kick, snare e hat su tre lanes distinte')
+            self.style_lanes = {role: lanes[lane] for role, lane in style_lanes.items()}
         if settings is not None and not isinstance(settings, dict):
             raise ValueError('settings deve essere una mappa di parametri')
         self.settings = {**DEFAULTS, **deepcopy(settings or {})}
@@ -61,13 +72,20 @@ class PercussionPhraseGenerator:
     def describe_controls(self, role, parameters):
         """Disponibilità dei controlli secondo materiali e trasformazioni configurati."""
         values = {**self.settings, **parameters}
-        details = {'conceptuality': {'label': 'Standard ↔ sviluppato'}}
+        details = {'conceptuality': {'label': 'Concettualità'}, 'style': {'label': 'Stile'}}
+        if self.style_lanes is None:
+            details['style']['inactive_reason'] = 'Richiede style_lanes nella configurazione'
         if values['conceptuality'] == 0:
             for name in ('variation', 'displacement_beats', 'support_tolerance_beats',
                          'answer_clearance_beats', 'seed'):
+                if name == 'seed' and values['style'] != 'none':
+                    continue
                 details[name] = {'inactive_reason': 'Groove standard: nessuno sviluppo o interazione'}
         elif values['variation'] == 0 or 'displace' not in self.development:
             details['displacement_beats'] = {'inactive_reason': 'Richiede trasformazione displace attiva'}
+        if (values['style'] != 'none' and self.style_lanes is not None
+                and all(self.style_lanes[r] not in self.support_pitches for r in ('snare', 'hat'))):
+            details['support_tolerance_beats'] = {'inactive_reason': 'Lo stile conserva i sostegni strutturali'}
         return details
 
     def validate(self, role, parameters):
@@ -76,13 +94,17 @@ class PercussionPhraseGenerator:
         values = {**self.settings, **parameters}
         if set(values) != set(DEFAULTS):
             raise ValueError('parametri percussivi sconosciuti')
+        if not isinstance(values['style'], str) or values['style'] not in ('none', *STYLE_BY_ID):
+            raise ValueError('stile percussivo sconosciuto')
+        if values['style'] != 'none' and self.style_lanes is None:
+            raise ValueError('style_lanes richiesto per selezionare uno stile')
         for key in ('conceptuality', 'variation', 'displacement_beats', 'velocity_ratio', 'gate_beats',
                     'support_tolerance_beats', 'answer_clearance_beats'):
             value = values[key]
             if (type(value) not in (int, float) or not math.isfinite(value)
                     or not 0 <= value <= 1 or (key in ('velocity_ratio', 'gate_beats') and value == 0)):
                 raise ValueError(f'{key} fuori intervallo')
-        if values['conceptuality'] < 1 and self.standard is None:
+        if values['conceptuality'] < 1 and self.standard is None and values['style'] == 'none':
             raise ValueError('standard_material richiesto per conceptuality inferiore a 1')
         if type(values['seed']) is not int or not 0 <= values['seed'] <= 2147483647:
             raise ValueError('seed deve essere un intero tra 0 e 2147483647')
@@ -171,16 +193,52 @@ class PercussionPhraseGenerator:
                 result.append((beat, pitch, velocity))
         return result
 
-    def __call__(self, request):
+    def prepare_reference(self, request):
+        """Prepara gli appoggi senza leggere le altre voci o avanzare il periodo."""
+        values = self.validate('percussion', request.parameters)
+        start = request.logical_start
+        if start is None:
+            raise ValueError('il riferimento richiede una posizione musicale logica')
+        if values['style'] != 'none':
+            style = STYLE_BY_ID[values['style']]
+            events = style_events(style, self.style_lanes, start, start+request.length_beats, values['seed'])
+            if len(events) > 128:
+                raise ValueError('il riferimento supera 128 attacchi')
+            points = {}
+            for beat, _, velocity, _ in events:
+                points[beat-start] = max(points.get(beat-start, 0), velocity/127)
+            structural = tuple((b-start, p, v) for b, p, v, core in events if core)
+            return PreparedRhythm(RhythmReference(request.length_beats, style.cycle_beats,
+                                                  start % style.cycle_beats, tuple(sorted(points.items()))), structural)
+        _, cycle, hits = self.standard if self.standard is not None else (self.name, self.cycle, self.hits)
+        events = []
+        for offset, pitch, velocity in hits:
+            repetition = max(0, math.ceil((start-offset)/cycle))
+            while offset+repetition*cycle < start+request.length_beats:
+                if len(events) >= 128:
+                    raise ValueError('il riferimento supera 128 attacchi')
+                events.append((offset+repetition*cycle-start, pitch, velocity))
+                repetition += 1
+        points = {}
+        for beat, _, velocity in events:
+            points[beat] = max(points.get(beat, 0), velocity/127)
+        structural = tuple(sorted(event for event in events if event[1] in self.support_pitches))
+        reference = RhythmReference(request.length_beats, cycle, start % cycle, tuple(sorted(points.items())))
+        return PreparedRhythm(reference, structural)
+
+    def stage(self, request):
         values = self.validate(request.role, request.parameters)
         if (not math.isfinite(request.start) or request.start < 0
                 or not math.isfinite(request.length_beats) or request.length_beats <= 0):
             raise ValueError('inizio non negativo e lunghezza positiva richiesti')
         # Ripianificare lo stesso inizio non consuma due volte il materiale.
-        start = self.last_position if request.start == self.last_start else self.position
+        start = (request.logical_start if request.prepared_material is not None else
+                 self.last_position if request.start == self.last_start else self.position)
         end = start+request.length_beats
         if not math.isfinite(end) or end <= start:
             raise ValueError('finestra percussiva non rappresentabile')
+        if values['style'] != 'none':
+            return self._style_plan(request, values, start, end)
         first, last = math.floor(start/self.cycle), math.ceil(end/self.cycle)
         if last-first > 128:
             raise ValueError('la richiesta supera 128 cicli percussivi')
@@ -203,6 +261,16 @@ class PercussionPhraseGenerator:
         if values['conceptuality'] < 1:
             standard = self._standard_events(start, end)
             events = (self._blend(standard, events, start, values) if values['conceptuality'] else sorted(standard))
+        structural = []
+        if request.prepared_material is not None:
+            for beat, pitch, velocity in request.prepared_material:
+                operation = self._cycle(math.floor((start+beat)/self.cycle), values)[0]
+                if values['conceptuality'] == 0 or operation != 'silence':
+                    structural.append((beat, pitch, velocity))
+            merged = {(b, p): v for b, p, v in events}
+            for beat, pitch, velocity in structural:
+                merged[beat, pitch] = max(merged.get((beat, pitch), 0), velocity)
+            events = [(b, p, v) for (b, p), v in sorted(merged.items())]
         if len(events) > 128:
             raise ValueError('la combinazione supera 128 attacchi nella finestra')
         notes, next_attack = [], {}
@@ -212,13 +280,99 @@ class PercussionPhraseGenerator:
             notes.append(Note(beat, pitch, duration, max(1, min(127, round(velocity*values['velocity_ratio'])))))
             next_attack[pitch] = beat
         phrase = Phrase(request.length_beats, tuple(reversed(notes)))
-        self.last_start, self.last_position, self.position = request.start, start, end
-        self.last_decision = {'method': 'percussion_phrase', 'material': self.name,
+        decision = {'method': 'percussion_phrase', 'material': self.name,
+                              'style': 'none', 'style_weights': {},
                               'conceptuality': values['conceptuality'],
                               'standard_material': self.standard[0] if self.standard else None,
                               'logical_start': start, 'cycles': operations,
                               'interaction': interaction,
+                              'structural_hits': len(structural),
                               'summary': f'carattere {values["conceptuality"]:.2f} · {self.name} · ' + ', '.join(o['operation'] for o in operations)
                                          + f' · {interaction["supported_hits"]} sostegni, '
                                          + f'{interaction["omitted_answer_hits"]} risposte omesse · {len(notes)} attacchi'}
-        return phrase
+        origin = request.start-start
+        spans = tuple(GestureSpan(origin+i*self.cycle, origin+(i+1)*self.cycle) for i in range(first, last))
+        return VoicePlan(phrase, (request.start, start, end), decision, spans)
+
+    def _style_plan(self, request, values, start, end):
+        style = STYLE_BY_ID[values['style']]
+        first, last = math.floor(start/self.cycle), math.ceil(end/self.cycle)
+        if last-first > 128:
+            raise ValueError('la richiesta supera 128 cicli percussivi')
+        # Lo sviluppo avviene su cicli completi per conservare fase e selezione
+        # dei complementi anche quando il ciclo attraversa più finestre.
+        regular, developed, cores, operations = [], [], [], []
+        for index in range(first, last):
+            low, high = index*self.cycle, (index+1)*self.cycle
+            material = style_events(style, self.style_lanes, low, high, values['seed'])
+            if len(material) > 128:
+                raise ValueError('il ciclo di stile supera 128 attacchi')
+            operation = self.development[index % len(self.development)] if values['variation'] else 'statement'
+            operations.append({'cycle': index, 'operation': operation})
+            secondary = [i for i, event in enumerate(material) if not event[3]]
+            rng = random.Random((values['seed'] << 32)+index)
+            selected = set(rng.sample(secondary, min(len(secondary), math.ceil(len(secondary)*values['variation']))))
+            direction = rng.choice((-1, 1))
+            for i, (beat, pitch, velocity, core) in enumerate(material):
+                if start <= beat < end:
+                    regular.append((beat-start, pitch, velocity))
+                    if core and (operation != 'silence' or values['conceptuality'] == 0):
+                        cores.append((beat-start, pitch, velocity))
+                if operation == 'silence':
+                    continue
+                if i in selected:
+                    if operation == 'subtract':
+                        continue
+                    if operation == 'displace':
+                        beat = low+(beat-low+direction*values['displacement_beats']) % self.cycle
+                    if operation == 'accent':
+                        velocity = max(1, min(127, velocity+direction*round(64*values['variation'])))
+                if not core and start <= beat < end:
+                    developed.append((beat-start, pitch, velocity))
+        # Solo i complementi partecipano al dialogo: kick e backbeat restano
+        # riconoscibili anche se le sorgenti sono silenziose.
+        if values['conceptuality']:
+            developed, interaction = self._interact(developed, request.dependencies, values)
+        else:
+            interaction = {'supported_hits': 0, 'omitted_answer_hits': 0, 'available_sources': []}
+        developed.extend(cores)
+        if values['conceptuality'] == 0:
+            events = regular
+        elif values['conceptuality'] == 1:
+            events = developed
+        else:
+            events = self._blend(regular, developed, start, values)
+        # Un complemento spostato su un evento strutturale non lo sostituisce.
+        merged = {}
+        for beat, pitch, velocity in events+cores:
+            merged[beat, pitch] = max(merged.get((beat, pitch), 0), velocity)
+        if len(merged) > 128:
+            raise ValueError('la combinazione supera 128 attacchi nella finestra')
+        notes, next_attack = [], {}
+        for (beat, pitch), velocity in sorted(merged.items(), reverse=True):
+            boundary = (math.floor((start+beat)/self.cycle)+1)*self.cycle-start
+            duration = min(values['gate_beats'], request.length_beats-beat,
+                           next_attack.get(pitch, request.length_beats)-beat, boundary-beat)
+            notes.append(Note(beat, pitch, duration, max(1, min(127, round(velocity*values['velocity_ratio'])))))
+            next_attack[pitch] = beat
+        origin = request.start-start
+        spans = tuple(GestureSpan(origin+i*self.cycle, origin+(i+1)*self.cycle) for i in range(first, last))
+        decision = {'method': 'percussion_phrase', 'style': style.id, 'style_label': style.label,
+                    'style_weights': {style.id: 1.}, 'style_cycle_beats': style.cycle_beats,
+                    'meter': list(style.meter),
+                    'style_variants': [{'cycle': i, 'variant': style.variant(i, values['seed'])}
+                                       for i in range(math.floor(start/style.cycle_beats), math.ceil(end/style.cycle_beats))],
+                    'swing_delay_beats': style.swing_delay, 'logical_start': start,
+                    'conceptuality': values['conceptuality'], 'cycles': operations,
+                    'interaction': interaction, 'structural_hits': len(cores),
+                    'summary': f'{style.label} · carattere {values["conceptuality"]:.2f} · {len(notes)} attacchi'}
+        return VoicePlan(Phrase(request.length_beats, tuple(reversed(notes))), (request.start, start, end), decision, spans)
+
+    def accept(self, plan):
+        self.last_start, self.last_position, self.position = plan.state
+        self.last_decision = plan.decision
+
+    def __call__(self, request):
+        plan = self.stage(request)
+        self.accept(plan)
+        return plan.phrase

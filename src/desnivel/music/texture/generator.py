@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from desnivel.music.patterns import SCALES
 from desnivel.music.phrases import Note, Phrase
+from desnivel.music.interactions import VoicePlan, GestureSpan
 
 
 ROLES = ('sustained_texture',)
@@ -37,7 +38,7 @@ class TextureGenerator:
         self.last_start = self.last_reference = None
         self.last_decision = None
 
-    def __call__(self, request):
+    def stage(self, request):
         values = self.validate(request.role, request.parameters)
         if request.context is None:
             raise ValueError('la tessitura richiede tonica e scala')
@@ -76,14 +77,23 @@ class TextureGenerator:
                     pitch = max(candidates, key=lambda p: (weights[p % 12]/peak-abs(p-center)/12,
                                                            -abs(p-center), -p))
         notes = () if pitch is None else (Note(0, pitch, request.length_beats, values['velocity']),)
-        self.previous_pitch, self.previous_end = pitch, request.start+request.length_beats
-        self.last_start, self.last_reference = request.start, reference
-        self.last_decision = {'method': 'sustained_texture', 'follow_source': values['follow_source'],
+        decision = {'method': 'sustained_texture', 'follow_source': values['follow_source'],
                               'source': source, 'reference_pitch': base, 'register': list(register),
                               'pitch': pitch, 'silence_reason': reason,
                               'summary': ('sostegno della sorgente' if values['follow_source'] else 'sostegno di sezione')
                                          + (' · silenzio' if pitch is None else f' · MIDI {pitch}')}
-        return Phrase(request.length_beats, notes)
+        return VoicePlan(Phrase(request.length_beats, notes),
+                         (pitch, request.start+request.length_beats, request.start, reference),
+                         decision, (GestureSpan(request.start, request.start+request.length_beats),))
+
+    def accept(self, plan):
+        self.previous_pitch, self.previous_end, self.last_start, self.last_reference = plan.state
+        self.last_decision = plan.decision
+
+    def __call__(self, request):
+        plan = self.stage(request)
+        self.accept(plan)
+        return plan.phrase
 
     def describe_controls(self, role, parameters):
         return {'follow_source': {'label': 'Segui sorgente'}}

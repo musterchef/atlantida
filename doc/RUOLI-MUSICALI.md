@@ -12,6 +12,9 @@ In [`music/coordinator.py`](../src/desnivel/music/coordinator.py), `Voice` conti
 | `dependencies` | Tupla degli identificativi delle parti richieste dal generatore |
 | `optional_dependencies` | Parti lette se attive nella sezione o fornite come sorgenti; se attive partecipano all’ordinamento delle dipendenze |
 | `supported_roles` | Tupla dei ruoli dichiarati dal generatore |
+| `stage`, `accept` | Preparazione di `VoicePlan` e applicazione dello stato già validato; richieste per il dialogo |
+| `prepare_reference` | Preparazione facoltativa di un riferimento ritmico e del materiale privato del produttore |
+| `rhythmic_roles` | Ruoli compatibili con le influenze ritmiche; tupla vuota senza supporto |
 
 Gli identificativi sono le chiavi della mappa passata a `MusicCoordinator`. Il Coordinator li usa per risolvere le dipendenze e raccogliere i risultati.
 
@@ -32,8 +35,16 @@ Ogni generatore riceve un `PlanningRequest` con questi campi:
 | `dependencies` | Mappa delle frasi delle sole dipendenze dichiarate dalla voce |
 | `role` | Ruolo assegnato alla voce, oppure `None` nelle chiamate senza assegnazioni |
 | `parameters` | Mappa di sola lettura dei parametri assegnati alla voce |
+| `logical_start`, `epoch` | Posizione dall'origine e identità della sequenza di pianificazione; posizione `None` senza dialogo |
+| `rhythm` | Riferimento ritmico immutabile, oppure `None` |
+| `relations` | Influenze storiche risolte per la voce e il ruolo correnti |
+| `prepared_material` | Materiale privato consegnato soltanto alla voce produttrice della guida |
 
 Il Coordinator passa lo stesso intervallo e contesto a tutte le voci. La mappa delle dipendenze consegnata al generatore è di sola lettura. Il risultato di `plan` contiene le frasi delle voci registrate, identificate dalle rispettive chiavi.
+
+Il [dialogo ritmico](DIALOGO-MUSICALE.md) documenta preparazione, accettazione,
+memoria dei gesti, politiche di indisponibilità e reset. Le relazioni
+storiche non aggiungono archi al grafo delle dipendenze correnti.
 
 ## Contesto di sezione
 

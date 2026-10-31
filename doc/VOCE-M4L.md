@@ -132,6 +132,12 @@ Senza `--phrase`, il comando verifica soltanto il collegamento. Più parti posso
 `Control` definisce minimo, massimo e l'eventuale vincolo intero. Ogni preset definisce tutti i controlli esposti dalla voce. Un controllo fuori intervallo è rifiutato; il nuovo stato viene confermato soltanto dopo il completamento di `apply`.
 
 `Control.toggle` identifica uno switch con valori interi 0 e 1.
+`ChoiceControl.choices` definisce coppie `[identificativo, etichetta]`;
+il device mostra un menu e invia l'identificativo testuale. Gli indici
+servono soltanto alla visualizzazione e non sono salvati nei preset.
+Il menu sostituisce il valore numerico quando si sceglie un parametro
+nominale, per esempio **Stile** sulle drums. Richiede il device ricostruito
+con i sorgenti aggiornati.
 `DeviceVoice.describe_controls(role, values)` può fornire etichette
 (`label`) e motivi di inattività (`inactive_reason`) per le chiavi dei
 controlli. Le regole sono definite dai generatori e ricalcolate a ogni
@@ -139,6 +145,13 @@ risposta di stato; il device mantiene chiavi e valori indipendenti dalle
 etichette visualizzate.
 
 `EnsembleSession.set_parameters(voice, values)` applica valori manuali alle prossime frasi della voce. Questi prevalgono sui parametri di sezione e persistono tra sezioni; `clear_parameters(voice)` ripristina i valori delle sezioni. La validazione dei valori è eseguita dal componente che espone i controlli.
+
+`EnsembleSession.set_parameter(voice, name, value)` modifica soltanto
+l'override indicato, conservando gli altri. `DeviceVoice.for_session`
+collega a questa funzione il callback `apply_parameter`: una modifica
+singola non rende manuali i controlli ancora guidati dalle sezioni.
+La selezione di un preset continua a passare tutti i valori a
+`set_parameters`, sostituendo l'insieme degli override della voce.
 
 `DeviceVoice.for_session(session, voice, progress, **controls)` collega il dispositivo alla sessione: `progress` è una funzione del chiamante che restituisce la progressione corrente della tappa. Il collegamento espone i ruoli dichiarati dal generatore, legge il ruolo della sezione e applica la scelta manuale tramite `EnsembleSession.set_role`.
 

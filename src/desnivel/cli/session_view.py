@@ -39,7 +39,8 @@ def render_session(state):
             presence = voice['presence']
             rows.append(f"    presenza: auto {presence['automatic']:.0%} × {presence['multiplier']:g}"
                         f" = {presence['effective']:.0%} effettiva")
-        values = ', '.join(f"{key}={control['value']:g}" for key, control in voice['controls'].items())
+        values = ', '.join(f"{key}="+(str(control['value']) if isinstance(control['value'], str)
+                                    else f"{control['value']:g}") for key, control in voice['controls'].items())
         rows.append(f"    preset: {voice['preset'] or 'nessuno/custom'} | {values}")
     plan = state['decisions']['coordinator']
     if plan is None:

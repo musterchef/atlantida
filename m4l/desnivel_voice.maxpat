@@ -1373,6 +1373,41 @@
           ],
           "text": "prepend value"
         }
+      },
+      {
+        "box": {
+          "id": "parameter_choice",
+          "maxclass": "umenu",
+          "varname": "parameter_choice",
+          "patching_rect": [
+            820,
+            455,
+            250,
+            22
+          ],
+          "presentation": 1,
+          "presentation_rect": [
+            288,
+            102,
+            350,
+            22
+          ],
+          "hidden": 1,
+          "annotation": "Scelta del parametro selezionato; opzioni fornite dal motore Python."
+        }
+      },
+      {
+        "box": {
+          "id": "choice_prefix",
+          "maxclass": "newobj",
+          "patching_rect": [
+            820,
+            485,
+            160,
+            22
+          ],
+          "text": "prepend choice"
+        }
       }
     ],
     "lines": [
@@ -2412,6 +2447,30 @@
         "patchline": {
           "source": [
             "toggle_prefix",
+            0
+          ],
+          "destination": [
+            "interface",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "parameter_choice",
+            0
+          ],
+          "destination": [
+            "choice_prefix",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "choice_prefix",
             0
           ],
           "destination": [

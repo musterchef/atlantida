@@ -89,7 +89,7 @@ def test_notes_are_bounded_and_registered_with_existing_device_controls():
     registered = build_generator(definition())
     assert registered.reset is not None
     assert 'pattern' not in registered.controls
-    assert set(registered.controls) == {'conceptuality', 'variation', 'displacement_beats', 'velocity_ratio', 'gate_beats', 'seed',
+    assert set(registered.controls) == {'style', 'conceptuality', 'variation', 'displacement_beats', 'velocity_ratio', 'gate_beats', 'seed',
                                          'support_tolerance_beats', 'answer_clearance_beats'}
     for start in range(0, 100, 4):
         phrase = registered.generator.generate(request(start, gate_beats=1))
@@ -105,7 +105,7 @@ def test_notes_are_bounded_and_registered_with_existing_device_controls():
 def test_control_applicability_distinguishes_standard_and_developed_material():
     compose = generator()
     standard = compose.describe_controls('percussion', {'conceptuality': 0})
-    assert standard['conceptuality']['label'] == 'Standard ↔ sviluppato'
+    assert standard['conceptuality']['label'] == 'Concettualità'
     assert 'inactive_reason' in standard['seed']
     assert 'inactive_reason' in standard['support_tolerance_beats']
     assert 'velocity_ratio' not in standard and 'gate_beats' not in standard

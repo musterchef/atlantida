@@ -24,6 +24,10 @@ Dalla radice del repository:
 
 Per verificare configurazione e generazione delle sezioni senza aprire porte o inviare note, aggiungere `--dry-run`.
 
+Per la sessione con guida delle drums e influenze reciproche usare
+`--config presets/dialogo.json`. Il [riferimento del dialogo ritmico](DIALOGO-MUSICALE.md)
+descrive adesione delle voci, memoria, configurazione e diagnostica.
+
 `--track` accetta FIT e GPX; `--gpx` resta un alias. Per una prova con FIT:
 
 ```sh

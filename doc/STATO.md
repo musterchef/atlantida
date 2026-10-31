@@ -26,19 +26,26 @@
 - Collegamento delle parti al trasporto di Live e controlli compositivi esposti dal motore Python.
 - Presenza per frase della sezione e moltiplicatore manuale per voce, separati dalla densità e dalla velocity.
 - Controlli pertinenti al ruolo e alla modalità segnalati dal generatore; etichette e switch visualizzati dal device comune senza regole specifiche degli strumenti.
+- Le modifiche ai singoli controlli mantengono manuale soltanto il parametro scelto; gli altri continuano a seguire le sezioni. La selezione di un preset applica invece l'intero insieme dei valori.
 - Tessitura sostenuta in `music/texture/`, con registro, velocity e switch `follow_source`: sostegno del grado di sezione oppure scelta da una frase sorgente. La voce Atmosphere legge facoltativamente la melodia; in modalità coordinata ne segue anche i silenzi.
 - Percussione con materiale, trasformazioni e interazione con le frasi di melodia e basso; combinazione fra groove standard e componente sviluppata tramite `conceptuality`.
+- Dialogo ritmico configurabile: guida prodotta dalle drums, `groove_follow` per melodia e basso, memoria dei gesti completi e influenze ritmiche dalle frasi precedenti. Le drums continuano a reagire a melodia e basso nella finestra corrente. Configurazione operativa in `presets/dialogo.json`; dettagli in [Dialogo ritmico](DIALOGO-MUSICALE.md).
+- Selettore **Stile** per le drums: Nessuno, House classica, Boom bap e Breakbeat house. I profili orientano guida e materiale, conservando struttura, sviluppo e interazione; scelta nominale disponibile sul device e salvabile nei preset. [Stili percussivi](STILI-PERCUSSIVI.md).
 - Vista globale nel terminale e snapshot JSON con avanzamento, collegamenti, ruoli e decisioni effettive di Director e Coordinator.
 - Direzione dalle macrosezioni del GPX con assetti musicali configurati per famiglia; modalità con sezioni manuali disponibile.
 - Prova a quattro voci: melodia, accompagnamento, atmosfera sostenuta e pattern percussivi configurati. Esecuzione delle quattro parti confermata all'ascolto in Live da Marco; organico e comportamenti sono un banco di prova da affinare.
 
 [Sessione multivoce](SESSIONE-MULTIVOCE.md) · [Configurazione](CONFIGURAZIONE.md) · [Passaggio di consegne](PASSAGGIO-CONSEGNE.md)
 
-La verifica automatica del 30 ottobre 2026 comprende 431 test Python
-superati e la suite JavaScript superata. La nuova tessitura e la revisione
-dei controlli sono verificate automaticamente; la relativa prova in Live
-resta da eseguire. Comportamento e procedura di ascolto sono descritti in
-[Tessitura sostenuta](TESSITURA.md).
+La verifica automatica del 31 ottobre 2026 comprende 474 test Python
+superati e la suite JavaScript superata. Il dialogo ritmico è verificato
+anche su 400 finestre consecutive con validazione delle frasi nel bridge;
+la calibrazione all'ascolto in Live resta da eseguire. Sono verificate
+le configurazioni manuale e guidata dalle macrosezioni GPX tramite
+`--dry-run`. Comportamenti e comandi sono descritti in
+[Dialogo ritmico](DIALOGO-MUSICALE.md) e [Tessitura sostenuta](TESSITURA.md).
+I tre profili percussivi sono verificati anche su 100 finestre ciascuno,
+con cambi di stile nella stessa sessione e validazione del bridge MIDI.
 
 ### 5. Analisi e macrosezioni del percorso
 - Classificazione del profilo altimetrico per distanza con soglie e persistenza configurabili.
@@ -54,7 +61,7 @@ resta da eseguire. Comportamento e procedura di ascolto sono descritti in
 - **Proposte di sviluppo**: [plancia grafica globale](proposte/PLANCIA.md) e [catalogo delle voci e ruoli musicali](proposte/RUOLI-MUSICALI.md), separati dalle funzionalità operative.
 - **Quantizzazione metrica su Snake**: allineamento dei cambi di pattern a inizio battuta.
 - **Calibrazione all'ascolto**: affinamento dei pesi armonici del generatore del basso durante le sessioni musicali.
-- **Stili percussivi**: [design del selettore e delle influenze](proposte/STILI-PERCUSSIVI.md), da approvare; nessun controllo di genere implementato.
+- **Stili percussivi e relazioni**: resta da implementare la [combinazione delle influenze di stile](proposte/STILI-PERCUSSIVI.md#influenze-multiple-semantica-proposta-per-il-futuro), oltre alle ulteriori trasformazioni dei [contratti per le relazioni musicali](proposte/RELAZIONI-MUSICALI.md).
 
 Per il dettaglio delle attività aperte, consultare [TODO.md](../TODO.md).
 

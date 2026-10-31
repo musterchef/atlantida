@@ -35,13 +35,31 @@ class Control:
             raise ValueError('uno switch richiede valori interi 0 e 1')
 
 
+@dataclass(frozen=True)
+class ChoiceControl:
+    """Scelta nominale: identificativi persistenti e descrizioni per il device."""
+    choices: tuple[tuple[str, str], ...]
+
+    def __post_init__(self):
+        object.__setattr__(self, 'choices', tuple(tuple(choice) for choice in self.choices))
+        if (not self.choices or any(len(c) != 2 or any(not isinstance(s, str) or not s for s in c)
+                                    for c in self.choices)
+                or len({c[0] for c in self.choices}) != len(self.choices)):
+            raise ValueError('scelte nominali non vuote con identificativi distinti richieste')
+
+    def validate(self, value):
+        if not isinstance(value, str) or value not in {c[0] for c in self.choices}:
+            raise ValueError('scelta del controllo sconosciuta')
+        return value
+
+
 @dataclass
 class DeviceVoice:
     """Controlli realmente esposti dal componente Python associato alla voce."""
 
-    controls: dict[str, Control] = field(default_factory=dict)
-    values: dict[str, float] = field(default_factory=dict)
-    presets: dict[str, dict[str, float]] = field(default_factory=dict)
+    controls: dict[str, Control | ChoiceControl] = field(default_factory=dict)
+    values: dict[str, float | str] = field(default_factory=dict)
+    presets: dict[str, dict[str, float | str]] = field(default_factory=dict)
     apply: Callable[[dict], None] | None = None
     role: str | None = None
     preset: str | None = None
@@ -52,6 +70,9 @@ class DeviceVoice:
     editable_presets: set[str] = field(default_factory=set)
     apply_presence: Callable[[float], None] | None = None
     describe_controls: Callable[[str | None, dict], dict] | None = None
+    preset_defaults: dict = field(default_factory=dict)
+    preset_migrations: dict = field(default_factory=dict)
+    apply_parameter: Callable[[str, float | str], None] | None = None
 
     @classmethod
     def for_session(cls, session, voice: str, progress: Callable[[], float], **controls):
@@ -66,9 +87,14 @@ class DeviceVoice:
             role_state=lambda: session.role_state(voice, progress()),
             apply_role=lambda role: session.set_role(voice, role),
             apply_presence=lambda value: session.set_presence_multiplier(voice, value),
+            apply_parameter=lambda name, value: session.set_parameter(voice, name, value),
             apply=lambda values: session.set_parameters(voice, values), **controls)
 
     def __post_init__(self):
+        if self.preset_defaults.keys()-self.controls.keys():
+            raise ValueError('default di migrazione per controlli sconosciuti')
+        for name, value in self.preset_defaults.items():
+            self.controls[name].validate(value)
         if set(self.controls) != set(self.values):
             raise ValueError('ogni controllo richiede un valore iniziale')
         for name, value in self.values.items():
@@ -109,6 +135,7 @@ class VoiceDeviceBridge:
         return {**roles, 'preset': spec.preset, 'presets': list(spec.presets),
                 'can_save_presets': spec.save_preset is not None,
                 'editable_presets': sorted(spec.editable_presets),
+                'preset_migrations': spec.preset_migrations,
                 'controls': {name: {**asdict(control), 'value': values[name], **details.get(name, {})}
                              for name, control in spec.controls.items()}}
 
@@ -171,13 +198,17 @@ class VoiceDeviceBridge:
                 values = {key: control.validate(current[key]) for key, control in spec.controls.items()}
                 spec.save_preset(name, values, overwrite)
                 spec.presets[name] = values
+                spec.preset_migrations.pop(name, None)
                 spec.editable_presets.add(name)
             elif action == 'parameter':
                 name = message['parameter']
                 value = spec.controls[name].validate(message['value'])
                 current = spec.read_values() if spec.read_values else spec.values
                 values = {**current, name: value}
-                spec.apply(values)
+                if spec.apply_parameter is not None:
+                    spec.apply_parameter(name, value)
+                else:
+                    spec.apply(values)
                 spec.values, spec.preset = values, None
             elif action == 'panic':
                 self.reset(voice)

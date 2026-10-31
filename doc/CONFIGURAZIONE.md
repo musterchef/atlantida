@@ -18,8 +18,27 @@ In `presets/organico.json`:
 | `voices` | Voci della composizione, identificate dal valore da impostare in **Voce** sul dispositivo |
 | `sections` | Assetti musicali con confini manuali; sostituiti dalle macrosezioni quando si usa `--direction` |
 | `timeline` | Parametri dell'allocazione in beat, letti da `analyze_trip --timeline-session` e da `ensemble --timing allocated` |
+| `rhythm_voice` | Voce produttrice della guida ritmica; opzionale, attualmente richiede `percussion_phrase` |
+| `history_beats` | Conservazione della storia e durata massima dei gesti, positiva e finita; predefinita 64 |
+| `relations` | Lista facoltativa delle influenze storiche; campi, limiti e politiche in [Dialogo ritmico](DIALOGO-MUSICALE.md#relazioni-storiche) |
 
 Un beat è una semiminima. `window_beats: 4` non definisce da solo un metro.
+`presets/dialogo.json` attiva guida e scambi ritmici fra le quattro voci.
+Anche `presets/organico.json` abilita `rhythm_voice: "voice_04"`, storia
+di 64 beat e relazione ritmica dalle drums precedenti verso la melodia.
+In entrambe le configurazioni l'adesione iniziale al groove è 0,3 per la
+melodia e 0,7 per il basso. I parametri di sezione e gli override mantengono
+la precedenza su questi valori iniziali.
+Il controllo `groove_follow` di `motif` e `responsive_line` vale inizialmente
+0 e accetta 0…1; richiede `rhythm_voice`. Modella le posizioni degli attacchi
+già composti, conservando materiale e numero delle note. È distinto da
+`rhythm_follow`, che riguarda la frase melodica sorgente del basso.
+Algoritmo, limiti e comportamento nei silenzi in [Dialogo ritmico](DIALOGO-MUSICALE.md).
+`percussion_phrase` espone inoltre `style`, una scelta nominale inizialmente
+`none`. Gli altri valori sono `house_classic`, `boom_bap_90s` e
+`breakbeat_house`; richiedono la mappa `style_lanes` da ruoli `kick`,
+`snare`, `hat` verso tre lanes distinte. Dettagli e ascolto in
+[Stili percussivi](STILI-PERCUSSIVI.md).
 Con `--timing linear` (predefinito) la velocità di replay si sceglie con `--speed`.
 Con `--timing allocated` la durata dipende da `timeline` e dal BPM di Live;
 `--direction` è richiesto e `--speed` non è accettato.
@@ -372,7 +391,7 @@ degli spostamenti e distanze di interazione. I preset `regular`, `hybrid` e
 `conceptual` impostano rispettivamente 0, 0,5 e 1. Il limite resta di 128
 attacchi per finestra; configurazioni che lo superano vengono rifiutate.
 
-Nel device `conceptuality` è etichettato **Standard ↔ sviluppato**; la
+Nel device `conceptuality` è etichettato **Concettualità**; la
 chiave JSON resta invariata. A zero, `variation`, `displacement_beats`,
 `support_tolerance_beats`, `answer_clearance_beats` e `seed` sono segnalati
 come inattivi. Il fattore di velocity e la durata MIDI restano applicati.
@@ -393,9 +412,11 @@ non attivano una voce esclusa dall'organico. `Follow section` ripristina il
 ruolo assegnato; non cancella i parametri manuali.
 
 Il comando **Preset** applica tutti i controlli iniziali completati con i
-valori del preset. Nell'attuale protocollo del dispositivo, modificare un
-singolo **Parameter** invia al motore l'intero insieme dei valori correnti:
-anche questi valori restano manuali nelle sezioni successive.
+valori del preset, rendendoli manuali nelle sezioni successive.
+Modificare un singolo **Parameter** aggiorna soltanto l'override di quel
+controllo, conservando gli altri override espliciti. I controlli non
+modificati continuano a seguire le sezioni. Per esempio, una velocity
+manuale non blocca i cambi di attività e passo melodico del percorso.
 `EnsembleSession.clear_parameters(voice)` elimina gli override di parametri;
 non esiste ancora un comando equivalente nell'interfaccia del dispositivo.
 Riavviare il processo Python ripristina i valori dei file.

@@ -12,6 +12,7 @@ from desnivel.music.arrangement import Assignment
 from desnivel.music.coordinator import MusicCoordinator, Voice, PlanningRequest
 from desnivel.music.director import MusicDirector
 from desnivel.music.phrases import Phrase
+from desnivel.music.interactions import RhythmRelation
 
 
 @dataclass(frozen=True)
@@ -20,6 +21,10 @@ class Generator:
     supported_roles: tuple[str, ...]
     validate: Callable | None = None
     describe: Callable | None = None
+    stage: Callable | None = None
+    accept: Callable | None = None
+    prepare_reference: Callable | None = None
+    rhythmic_roles: tuple[str, ...] = ()
 
 
 class EnsembleSession:
@@ -42,7 +47,9 @@ class EnsembleSession:
             self._generators[name] = generator
             voices[name] = Voice(generator.generate, tuple(spec.get('dependencies', ())),
                                  generator.supported_roles, generator.describe,
-                                 tuple(spec.get('optional_dependencies', ())))
+                                 tuple(spec.get('optional_dependencies', ())),
+                                 generator.stage, generator.accept, generator.prepare_reference,
+                                 generator.rhythmic_roles)
             self._destinations[name] = destinations[spec['destination']]
         self.director = MusicDirector(config['sections'])
         for voice in voices.values():
@@ -69,7 +76,13 @@ class EnsembleSession:
                     raise ValueError('dipendenze mancanti o cicliche nella sezione')
                 pending -= ready
                 available |= ready
-        self.coordinator = MusicCoordinator(voices)
+        relations = tuple(RhythmRelation.from_dict(data) for data in config.get('relations', []))
+        self.coordinator = MusicCoordinator(voices, rhythm_source=config.get('rhythm_voice'),
+                                           relations=relations, history_beats=config.get('history_beats', 64.))
+        for progress in self._section_progress:
+            for name, assignment in self.director.assignments_at(progress).items():
+                if assignment.parameters.get('groove_follow', 0) and self.coordinator.rhythm_source is None:
+                    raise ValueError('groove_follow richiede rhythm_voice nella configurazione')
         self._manual_parameters = {}
         self._presence_multipliers = {}
         self._supported_roles = {name: spec.supported_roles for name, spec in voices.items()}
@@ -87,7 +100,9 @@ class EnsembleSession:
             for name, spec in self.director.assignments_at(progress).items()
         }
         return self.coordinator.plan(
-            start, length_beats, self.director.context_at(progress), assignments=assignments)
+            start, length_beats, self.director.context_at(progress), assignments=assignments,
+            rhythm_parameters=self.parameters_at(self.coordinator.rhythm_source, progress)
+            if self.coordinator.rhythm_source is not None else None)
 
     def set_role(self, voice: str, role: str | None):
         """Valida la scelta manuale prima di comunicarla al Director."""
@@ -146,10 +161,16 @@ class EnsembleSession:
         assignment = self.director.assignments_at(progress).get(voice)
         return {**(assignment.parameters if assignment else {}), **self._manual_parameters.get(voice, {})}
 
+    def set_parameter(self, voice: str, name: str, value):
+        """Modifica un solo override, conservando gli altri e i parametri di sezione."""
+        self.set_parameters(voice, {**self._manual_parameters.get(voice, {}), name: value})
+
     def set_parameters(self, voice: str, parameters: Mapping):
         """Modifiche manuali applicate alle prossime frasi, anche tra sezioni."""
         if voice not in self._destinations:
             raise ValueError('voce non registrata')
+        if parameters.get('groove_follow', 0) and self.coordinator.rhythm_source is None:
+            raise ValueError('groove_follow richiede rhythm_voice nella configurazione')
         validator = self._generators[voice].validate
         if validator:
             for progress in self._section_progress:

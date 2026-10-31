@@ -56,7 +56,7 @@ function receive(){
             }else return;
             lastTransportSerial=m.serial;return;
         }
-        if(m.kind==='error'){reflectRole();reflectPresence();status(m.error);return;}
+        if(m.kind==='error'){reflectRole();reflectPresence();parameter(selectedParameter);status(m.error);return;}
         if(m.kind==='plan'){if(new Date().getTime()-lastReply>3000)return;outlet(1,['planbytes'].concat(utf8bytes(JSON.stringify(m.plan))));return;}
         if(m.kind!=='state' || m.serial<acknowledged)return;
         if(typeof m.session==='string' && m.session!==backendSession){backendSession=m.session;lastTransportSerial=-1;}
@@ -130,23 +130,39 @@ function parameter(index){
     selectedParameter=Number(index);
     var name=parameterNames[selectedParameter];
     if(state && name!==undefined){
-        var c=state.controls[name];ui('parameter_value').message('set',c.value);
-        ui('parameter_slider').message('set',c.maximum===c.minimum?0:Math.round((c.value-c.minimum)/(c.maximum-c.minimum)*1000));
-        ui('parameter_slider').hidden=!!c.toggle;
-        ui('parameter_toggle').hidden=!c.toggle;
-        ui('parameter_toggle').message('set',c.value);
-        ui('range_display').message('set',c.minimum+' .. '+c.maximum+(c.integer?' (integer)':'')+(c.inactive_reason?' · inattivo':''));
+        var c=state.controls[name], choices=c.choices;
+        ui('parameter_choice').hidden=!choices;
+        ui('parameter_value').hidden=!!choices;
+        ui('parameter_slider').hidden=!!choices||!!c.toggle;
+        ui('parameter_toggle').hidden=!!choices||!c.toggle;
+        if(choices){
+            ui('parameter_choice').message('clear');
+            var chosen=-1;
+            for(var i=0;i<choices.length;i++){
+                ui('parameter_choice').message('append',choices[i][1]);
+                if(choices[i][0]===c.value)chosen=i;
+            }
+            ui('parameter_choice').message('set',chosen);
+            ui('range_display').message('set',(chosen>=0?choices[chosen][1]:'Scegli')+(c.inactive_reason?' · inattivo':''));
+        }else{
+            ui('parameter_value').message('set',c.value);
+            ui('parameter_slider').message('set',c.maximum===c.minimum?0:Math.round((c.value-c.minimum)/(c.maximum-c.minimum)*1000));
+            ui('parameter_toggle').message('set',c.value);
+            ui('range_display').message('set',c.minimum+' .. '+c.maximum+(c.integer?' (integer)':'')+(c.inactive_reason?' · inattivo':''));
+        }
         var help=name+(c.label?' — '+c.label:'')+(c.inactive_reason?': '+c.inactive_reason:'');
         ui('parameter_menu').setboxattr('annotation',help);
         ui('parameter_value').setboxattr('annotation',help);
         ui('parameter_slider').setboxattr('annotation',help);
         ui('parameter_toggle').setboxattr('annotation',help);
+        ui('parameter_choice').setboxattr('annotation',help);
     }else ui('range_display').message('set','No controls');
 }
 function slidervalue(v){
     var name=parameterNames[selectedParameter];
     if(!state || name===undefined)return;
     var c=state.controls[name], fraction=Math.max(0,Math.min(1000,Number(v)))/1000;
+    if(c.choices)return;
     var n=c.minimum+fraction*(c.maximum-c.minimum);
     if(c.integer)n=Math.round(n);
     else n=Math.round(n*1000000)/1000000;
@@ -157,10 +173,19 @@ function value(v){
     var name=parameterNames[selectedParameter];
     if(!state || name===undefined)return;
     var c=state.controls[name], n=Number(v);
+    if(c.choices)return;
     if(!isFinite(n)||n<c.minimum||n>c.maximum||(c.integer&&Math.floor(n)!==n)){
         ui('parameter_value').message('set',c.value);status('Value outside allowed range');return;
     }
     request('parameter',{parameter:name,value:n});
+}
+function choice(index){
+    var name=parameterNames[selectedParameter];
+    if(!state || name===undefined)return;
+    var choices=state.controls[name].choices;
+    index=Number(index);
+    if(!choices || !isFinite(index) || Math.floor(index)!==index || !choices[index])return;
+    request('parameter',{parameter:name,value:choices[index][0]});
 }
 function panic(){playerReset();request('panic',{});}
 function notifydeleted(){playerReset();}

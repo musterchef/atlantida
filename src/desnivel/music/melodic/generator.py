@@ -8,10 +8,12 @@ from desnivel.music.patterns import SCALES
 from desnivel.music.phrases import Note, Phrase
 from desnivel.music.melodic.development import develop
 from desnivel.music.texture.generator import TextureGenerator
+from desnivel.music.interactions import VoicePlan, GestureSpan
+from desnivel.music.rhythm import shape_rhythm, rhythm_influences
 
 ROLES = ('melody', 'sustained_texture', 'bass_line')
 DEFAULTS = dict(octave=0, step_beats=1.0, articulation=.8, velocity=85,
-                development=0., activity=.75, phrase_windows=4, seed=0)
+                development=0., activity=.75, phrase_windows=4, seed=0, groove_follow=0.)
 
 
 class MotifGenerator:
@@ -38,7 +40,7 @@ class MotifGenerator:
             raise ValueError('articulation deve essere al massimo 1')
         if type(values['velocity']) is not int or not 1 <= values['velocity'] <= 127:
             raise ValueError('velocity deve essere un intero tra 1 e 127')
-        for name in ('development', 'activity'):
+        for name in ('development', 'activity', 'groove_follow'):
             if type(values[name]) not in (int, float) or not math.isfinite(values[name]) or not 0 <= values[name] <= 1:
                 raise ValueError(f'{name} deve essere in [0, 1]')
         if type(values['phrase_windows']) is not int or not 2 <= values['phrase_windows'] <= 8:
@@ -48,16 +50,15 @@ class MotifGenerator:
         if type(values['octave']) is not int or not -5 <= values['octave'] <= 5:
             raise ValueError('octave deve essere un intero tra -5 e 5')
 
-    def __call__(self, request):
+    def stage(self, request):
         self.validate(request.role, request.parameters)
         if request.context is None:
             raise ValueError('il motivo richiede tonica e scala')
         values = {**self.settings, **request.parameters}
         if request.role == 'sustained_texture':
-            phrase = self._texture(replace(request, parameters={
+            texture = self._texture.stage(replace(request, parameters={
                 'octave': values['octave'], 'velocity': values['velocity']}))
-            self.last_decision = self._texture.last_decision
-            return phrase
+            return VoicePlan(texture.phrase, (self._origin, texture), texture.decision, texture.gestures)
         intervals = SCALES[request.context.scale]
         root = request.context.root + 12 * values['octave']
         degrees = self.degrees
@@ -66,13 +67,14 @@ class MotifGenerator:
         if request.role == 'melody' and values['development'] > 0:
             if not 0 <= root <= 127:
                 raise ValueError('lo sviluppo richiede una tonica nel registro MIDI')
-            if self._origin is None:
-                self._origin = request.start
-            if request.start < self._origin:
+            origin = request.start if self._origin is None else self._origin
+            if request.start < origin:
                 raise ValueError('lo sviluppo richiede reset prima di una ripartenza precedente')
-            phrase, self.last_decision = develop(self.degrees, intervals, root, request, values, self._origin)
-            return phrase
-        self.last_decision = {'method': 'literal_motif', 'summary': 'motivo letterale'}
+            phrase, decision = develop(self.degrees, intervals, root, request, values, origin)
+            period = values['phrase_windows']*request.length_beats
+            span = GestureSpan(origin+decision['cycle']*period, origin+(decision['cycle']+1)*period)
+            return self._plan(request, values, phrase, decision, origin, span)
+        decision = {'method': 'literal_motif', 'summary': 'motivo letterale'}
         notes = []
         count = math.ceil(request.length_beats / values['step_beats'])
         if count > 128:
@@ -84,7 +86,26 @@ class MotifGenerator:
         for beat, degree, duration in positions:
             pitch = root + intervals[degree % len(intervals)] + 12 * (degree // len(intervals))
             notes.append(Note(beat, pitch, duration, values['velocity']))
-        return Phrase(request.length_beats, tuple(notes))
+        return self._plan(request, values, Phrase(request.length_beats, tuple(notes)), decision,
+                          self._origin, GestureSpan(request.start, request.start+request.length_beats))
+
+    def _plan(self, request, values, phrase, decision, origin, span):
+        guided = shape_rhythm(phrase, rhythm_influences(request, values['groove_follow']))
+        decision['rhythm'] = {'groove_follow': values['groove_follow'],
+                              'historical_sources': [r.spec.source for r in request.relations if r.phrase is not None],
+                              'moved_attacks': sum(a.beat != b.beat for a, b in zip(phrase.notes, guided.notes))}
+        return VoicePlan(guided, (origin, None), decision, (span,))
+
+    def accept(self, plan):
+        self._origin, texture = plan.state
+        if texture is not None:
+            self._texture.accept(texture)
+        self.last_decision = plan.decision
+
+    def __call__(self, request):
+        plan = self.stage(request)
+        self.accept(plan)
+        return plan.phrase
 
     def reset(self):
         """La prima finestra successiva apre un nuovo periodo melodico."""

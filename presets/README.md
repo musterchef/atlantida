@@ -12,6 +12,10 @@ La prova corrente usa quattro file, con responsabilità distinte:
 | `macrosezioni-percorso.json` | Appartenenza delle fasce alle famiglie | `trip.sections`, tramite i comandi di analisi o di sessione |
 
 Per modificare una voce o i suoi preset si interviene su `organico.json`.
+L'organico principale abilita la guida delle drums, l'adesione regolabile
+di melodia e basso e l'influenza ritmica dalle drums precedenti verso la
+melodia. Le configurazioni di direzione possono cambiare i parametri
+delle sezioni senza sostituire queste relazioni.
 Per cambiarne il comportamento in salita, discesa o pianura si interviene su
 `direzione-viaggio.json`. I due file di analisi descrivono il percorso e non
 contengono decisioni musicali. Aggiungere una voce non richiede un nuovo JSON.
@@ -20,6 +24,13 @@ I percorsi `analysis` e `grouping` nella direzione sono relativi al file di
 direzione. I criteri possono essere condivisi fra analisi visuale e ascolto.
 Il riferimento dei campi e delle precedenze è in
 [Configurazione](../doc/CONFIGURAZIONE.md).
+
+`dialogo.json` è una sessione alternativa completa a quattro voci: guida
+percussiva, adesione regolabile di melodia e basso, tessitura coordinata e
+influenza ritmica dalle drums precedenti verso la melodia. Si avvia con
+`ensemble --config presets/dialogo.json`, fornendo la traccia con `--track`.
+Configurazione, note MIDI e comando completo in
+[Dialogo ritmico](../doc/DIALOGO-MUSICALE.md#configurazione-dascolto).
 
 ## Altre configurazioni operative
 

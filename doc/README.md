@@ -12,6 +12,8 @@ Guida alla documentazione di **Desnivel**, organizzata per aree tematiche.
 | [Architettura](ARCHITETTURA.md) | Pipeline modulare, flusso dei dati, modelli musicali e organizzazione del codice. |
 | [Sessione multivoce Python](SESSIONE-MULTIVOCE.md) | Comando unico, replay, generatori, dispositivi e stato globale. |
 | [Configurazione](CONFIGURAZIONE.md) | Campi JSON, unità, limiti dei controlli, ruoli e precedenze. |
+| [Dialogo ritmico](DIALOGO-MUSICALE.md) | Guida percussiva, adesione delle voci, memoria dei gesti e influenze storiche operative. |
+| [Stili percussivi](STILI-PERCUSSIVI.md) | Selettore, profili disponibili, mappatura delle parti e confronto in Live. |
 | [Timeline musicale](TIMELINE.md) | Allocazione in beat, manager della posizione, report e ascolto nelle modalità lineare e allocata. |
 | [Voci e contesto musicale](RUOLI-MUSICALI.md) | Strutture esistenti per voci, dipendenze, richieste di pianificazione e contesto di sezione. |
 | [Stato del progetto](STATO.md) | Funzionalità operative verificate e sviluppi aperti. |
@@ -45,7 +47,9 @@ Materiale di progettazione separato dalla documentazione del sistema attuale.
 - [Plancia globale](proposte/PLANCIA.md): informazioni da mostrare e decisioni aperte sull’interfaccia.
 - [Sezioni guidate dal viaggio](proposte/SEZIONI-GUIDATE-DAL-VIAGGIO.md): assetti delle macrosezioni operativi e variazioni interne ancora da definire.
 - [Mappatura temporale](proposte/MAPPATURA-TEMPORALE.md): stato dell'integrazione della timeline e proposta di preavvisi per le transizioni musicali.
-- [Stili percussivi](proposte/STILI-PERCUSSIVI.md): proposta del selettore di stile, profili ritmici e futura combinazione di influenze da 0 a 1.
+- [Evoluzione degli stili percussivi](proposte/STILI-PERCUSSIVI.md): design del catalogo e futura combinazione di influenze da 0 a 1.
+- [Coordinamento ritmico](proposte/COORDINAMENTO-RITMICO.md): direzione architetturale e confini del primo blocco implementato.
+- [Contratti per le relazioni musicali](proposte/RELAZIONI-MUSICALI.md): specifica generale, stato dell'implementazione e relazioni ancora da realizzare.
 
 ---
 

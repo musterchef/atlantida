@@ -5,6 +5,7 @@ from copy import deepcopy
 import math
 
 from desnivel.music.phrases import Note, Phrase
+from desnivel.music.interactions import VoicePlan, GestureSpan
 
 
 DEFAULTS = {'pattern': 0, 'velocity_ratio': 1., 'gate_beats': .1}
@@ -68,7 +69,7 @@ class PercussionGenerator:
                 raise ValueError(f'{name} deve essere in (0, 1]')
         return values
 
-    def __call__(self, request):
+    def stage(self, request):
         values = self.validate(request.role, request.parameters)
         start, length = request.start, request.length_beats
         if (not math.isfinite(start) or start < 0 or not math.isfinite(length) or length <= 0):
@@ -98,6 +99,16 @@ class PercussionGenerator:
             duration = min(values['gate_beats'], length-beat, next_attack.get(pitch, length)-beat)
             notes.append(Note(beat, pitch, duration, max(1, min(127, round(velocity*values['velocity_ratio'])))))
             next_attack[pitch] = beat
-        self.last_decision = {'method': 'percussion_pattern', 'pattern': name,
+        decision = {'method': 'percussion_pattern', 'pattern': name,
                               'summary': f'pattern {name} · {len(notes)} attacchi'}
-        return Phrase(length, tuple(reversed(notes)))
+        spans = tuple(GestureSpan(i*cycle, (i+1)*cycle)
+                      for i in range(math.floor(start/cycle), math.ceil(end/cycle)))
+        return VoicePlan(Phrase(length, tuple(reversed(notes))), decision=decision, gestures=spans)
+
+    def accept(self, plan):
+        self.last_decision = plan.decision
+
+    def __call__(self, request):
+        plan = self.stage(request)
+        self.accept(plan)
+        return plan.phrase

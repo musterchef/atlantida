@@ -1,12 +1,13 @@
 """Registro esplicito dei generatori e dei controlli esposti nella sessione."""
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
-from desnivel.adapters.voice_device import Control
+from desnivel.adapters.voice_device import Control, ChoiceControl
 from desnivel.cli.ensemble import Generator
 from desnivel.music.melodic.generator import MotifGenerator, ROLES
 from desnivel.music.bass.voice import BassVoice
 from desnivel.music.percussion.generator import PercussionGenerator, ROLES as PERCUSSION_ROLES
 from desnivel.music.percussion.development import PercussionPhraseGenerator
+from desnivel.music.percussion.styles import STYLE_OPTIONS
 from desnivel.music.texture.generator import TextureGenerator, ROLES as TEXTURE_ROLES
 
 
@@ -18,6 +19,7 @@ class RegisteredGenerator:
     presets: dict
     reset: object = None
     describe_controls: object = None
+    preset_defaults: dict = field(default_factory=dict)
 
 
 def build_generator(spec):
@@ -27,7 +29,8 @@ def build_generator(spec):
         controls = {'octave': Control(-5, 5, True), 'step_beats': Control(.25, 8),
                     'articulation': Control(.05, 1), 'velocity': Control(1, 127, True),
                     'development': Control(0, 1), 'activity': Control(0, 1),
-                    'phrase_windows': Control(2, 8, True), 'seed': Control(0, 2147483647, True)}
+                    'phrase_windows': Control(2, 8, True), 'seed': Control(0, 2147483647, True),
+                    'groove_follow': Control(0, 1)}
         roles = ROLES
         values = compose.settings
     elif kind == 'responsive_line':
@@ -35,9 +38,9 @@ def build_generator(spec):
         controls = {'density': Control(0, 4), 'syncopation': Control(0, 1),
                     'rhythm_follow': Control(0, 1), 'melody_follow': Control(0, 1),
                     'mobility': Control(0, 1), 'variation': Control(0, 1),
-                    'articulation': Control(.05, 1)}
+                    'articulation': Control(.05, 1), 'groove_follow': Control(0, 1)}
         roles = ('bass_line',)
-        values = asdict(compose.settings)
+        values = {**asdict(compose.settings), 'groove_follow': compose.groove_follow}
     elif kind == 'sustained_texture':
         compose = TextureGenerator(spec.get('degree', 0), spec.get('settings'))
         controls = {'octave': Control(-5, 5, True), 'velocity': Control(1, 127, True),
@@ -47,8 +50,8 @@ def build_generator(spec):
     elif kind == 'percussion_phrase':
         compose = PercussionPhraseGenerator(spec['lanes'], spec['material'], spec['anchor_beats'],
                                            spec['development'], spec['interaction'], spec.get('settings'),
-                                           standard_material=spec.get('standard_material'))
-        controls = {'conceptuality': Control(0, 1), 'variation': Control(0, 1), 'displacement_beats': Control(0, 1),
+                                           standard_material=spec.get('standard_material'), style_lanes=spec.get('style_lanes'))
+        controls = {'style': ChoiceControl(STYLE_OPTIONS), 'conceptuality': Control(0, 1), 'variation': Control(0, 1), 'displacement_beats': Control(0, 1),
                     'velocity_ratio': Control(.05, 1), 'gate_beats': Control(.01, 1),
                     'seed': Control(0, 2147483647, True), 'support_tolerance_beats': Control(0, 1),
                     'answer_clearance_beats': Control(0, 1)}
@@ -77,6 +80,10 @@ def build_generator(spec):
             if name in parameters:
                 control.validate(parameters[name])
     describe = (lambda: compose.last_decision) if kind in ('motif', 'sustained_texture', 'percussion_pattern', 'percussion_phrase') else None
-    return RegisteredGenerator(Generator(compose, roles, validate, describe), controls,
+    rhythmic_roles = ('melody', 'bass_line') if kind == 'motif' else ('bass_line',) if kind == 'responsive_line' else ()
+    return RegisteredGenerator(Generator(compose, roles, validate, describe,
+                                         compose.stage, compose.accept,
+                                         getattr(compose, 'prepare_reference', None), rhythmic_roles), controls,
                                initial, presets, getattr(compose, 'reset', None),
-                               getattr(compose, 'describe_controls', None))
+                               getattr(compose, 'describe_controls', None),
+                               {'groove_follow': 0.} if rhythmic_roles else {'style': 'none'} if kind == 'percussion_phrase' else {})

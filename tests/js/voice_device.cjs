@@ -81,6 +81,28 @@ assert.equal(output.filter(a=>a[0]===0).length,beforeInvalidToggle);
 c.receive(JSON.stringify({...state,serial:4}));
 assert.equal(uiObjects.parameter_slider.hidden,false);
 assert.equal(uiObjects.parameter_toggle.hidden,true);
+// Le scelte nominali restano identificativi testuali anche riordinando il menu.
+const choiceState={...state,serial:4,controls:{style:{label:'Stile',value:'house',
+ choices:[['none','Nessuno'],['house','House classica'],['boom','Boom bap']]}}};
+c.receive(JSON.stringify(choiceState));
+assert.equal(uiObjects.parameter_choice.hidden,false);
+assert.equal(uiObjects.parameter_value.hidden,true);
+assert.equal(uiObjects.parameter_slider.hidden,true);
+assert.equal(uiObjects.parameter_toggle.hidden,true);
+assert.deepStrictEqual(uiMessages.parameter_choice.slice(-2,-1)[0],['set',1]);
+c.choice(2);assert.equal(control(output.at(-1)).parameter,'style');
+assert.equal(control(output.at(-1)).value,'boom');
+const beforeBadChoice=output.filter(a=>a[0]===0).length;
+c.choice(-1);c.choice(99);c.choice(.5);c.value(1);c.slidervalue(500);
+assert.equal(output.filter(a=>a[0]===0).length,beforeBadChoice);
+c.receive(JSON.stringify({...choiceState,controls:{style:{...choiceState.controls.style,
+ choices:[['boom','Boom bap'],['none','Nessuno'],['house','House classica']]}}}));
+c.choice(0);assert.equal(control(output.at(-1)).value,'boom');
+c.receive(JSON.stringify(state)); // seriale vecchio: conserva la selezione corrente.
+assert.equal(uiObjects.parameter_choice.hidden,false);
+c.receive(JSON.stringify({...state,serial:4}));
+assert.equal(uiObjects.parameter_choice.hidden,true);
+assert.equal(uiObjects.parameter_value.hidden,false);
 let count=output.filter(a=>a[0]===0).length;c.value(999);
 assert.equal(output.filter(a=>a[0]===0).length,count);
 let plan={version:1,kind:'plan',voice:'part_a',instance:c.instance,plan:{version:1,reset:true}};

@@ -24,7 +24,8 @@
         "development": 0.7,
         "activity": 0.75,
         "phrase_windows": 4,
-        "seed": 7
+        "seed": 7,
+        "groove_follow": 0.3
       },
       "presets": {
         "spaced": {
@@ -58,7 +59,8 @@
       "settings": {
         "lowest": 28,
         "highest": 47,
-        "seed": 7
+        "seed": 7,
+        "groove_follow": 0.7
       },
       "presets": {
         "sparse": {
@@ -460,6 +462,11 @@
             "velocity": 48
           }
         ]
+      },
+      "style_lanes": {
+        "kick": "low",
+        "snare": "mid",
+        "hat": "high"
       }
     }
   },
@@ -572,5 +579,25 @@
     "beats_per_km": 12,
     "min_windows": 2,
     "distance_exponent": 0.5
-  }
+  },
+  "rhythm_voice": "voice_04",
+  "history_beats": 64,
+  "relations": [
+    {
+      "id": "drums_to_melody",
+      "source": "voice_04",
+      "target": "voice_01",
+      "scope": "history",
+      "aspects": [
+        "rhythm"
+      ],
+      "roles": [
+        "melody"
+      ],
+      "lookback_beats": 32,
+      "fragment_beats": 4,
+      "strength": 0.4,
+      "on_unavailable": "independent"
+    }
+  ]
 }

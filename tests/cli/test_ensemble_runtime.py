@@ -9,11 +9,20 @@ from desnivel.cli.ensemble_runtime import EnsembleRuntime
 from desnivel.trip.track import Track
 
 
+def transport_config():
+    config = json.loads(Path('presets/organico.json').read_text())
+    config.pop('rhythm_voice')
+    config.pop('relations')
+    for name in ('motif', 'accompaniment'):
+        config['generators'][name]['settings']['groove_follow'] = 0
+    return config
+
+
 def setup():
     now, sent = [0.], []
     bridge = VoiceDeviceBridge({}, lambda *args: sent.append(args), clock=lambda: now[0])
     track = Track('test', np.array([0., 10.]), {'cum_dist_m': np.array([0., 100.])})
-    config = json.loads(Path('presets/organico.json').read_text())
+    config = transport_config()
     # Queste prove isolano trasporto e organico variabile con due voci.
     # La configurazione completa a quattro è verificata in test_trip_direction.
     config['voices'] = {name: spec for name, spec in config['voices'].items() if name in ('voice_01', 'voice_02')}
@@ -180,7 +189,7 @@ def test_inactive_reason_and_decisions_match_section_and_executed_plan():
 def allocated_setup():
     runtime, bridge, now, sent, receive = setup()
     # Ricostruisce il runtime con macrosezioni sintetiche e lo stesso trasporto.
-    config = json.loads(Path('presets/organico.json').read_text())
+    config = transport_config()
     config['voices'] = {k: v for k, v in config['voices'].items() if k in ('voice_01', 'voice_02')}
     for i, section in enumerate(config['sections']):
         section['assignments'] = {k: v for k, v in section['assignments'].items() if k in config['voices']}

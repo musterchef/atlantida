@@ -84,11 +84,19 @@ class EnsembleRuntime:
             bridge.voices[name] = DeviceVoice()
             destinations[destination] = bridge.destination(name)
         self.session = EnsembleSession(session_config, {name: spec.generator for name, spec in self.registry.items()}, destinations)
+        if self.session.coordinator.rhythm_source is None and any(
+                spec.values.get('groove_follow', 0) for spec in self.registry.values()):
+            raise ValueError('groove_follow richiede rhythm_voice nella configurazione')
         for name, registered in self.registry.items():
+            def describe_controls(role, parameters, registered=registered):
+                details = registered.describe_controls(role, parameters) if registered.describe_controls else {}
+                if self.session.coordinator.rhythm_source is None and 'groove_follow' in registered.controls:
+                    details['groove_follow'] = {'inactive_reason': 'Richiede rhythm_voice nella configurazione'}
+                return details
             bridge.voices[name] = DeviceVoice.for_session(
                 self.session, name, lambda: self.progress,
                 controls=registered.controls, values=registered.values, presets=registered.presets,
-                describe_controls=registered.describe_controls)
+                describe_controls=describe_controls, preset_defaults=registered.preset_defaults)
         self.state = 'waiting_for_transport'
 
     @property
@@ -119,6 +127,7 @@ class EnsembleRuntime:
             self.next_window = self.timeline.window_index
         self.last_section = None
         self.last_decisions = None
+        self.session.coordinator.reset()
         for registered in self.registry.values():
             if registered.reset:
                 registered.reset()

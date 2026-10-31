@@ -58,3 +58,17 @@ def test_incompatible_library_is_rejected_before_the_session_starts(tmp_path):
     path.write_text(json.dumps({'version': 1, 'voices': {'part': {'custom': {'other': 1}}}}))
     with pytest.raises(ValueError, match='incompatibili'):
         connect_preset_library(VoicePresetLibrary(path), voices())
+
+
+def test_new_neutral_controls_migrate_old_presets_in_memory_with_explicit_metadata(tmp_path):
+    path = tmp_path / 'custom.json'
+    text = json.dumps({'version': 1, 'voices': {'part': {'old': {'amount': .7}}}})
+    path.write_text(text)
+    parts = {'part': DeviceVoice(controls={'amount': Control(0, 1), 'follow': Control(0, 1)},
+                                values={'amount': .4, 'follow': .6}, apply=lambda v: None,
+                                preset_defaults={'follow': 0})}
+    connect_preset_library(VoicePresetLibrary(path), parts)
+    assert parts['part'].presets['old'] == {'amount': .7, 'follow': 0}
+    assert parts['part'].preset_migrations == {'old': {'follow': 0}}
+    assert VoiceDeviceBridge(parts, lambda *args: None).status()['part']['preset_migrations'] == {'old': {'follow': 0}}
+    assert path.read_text() == text

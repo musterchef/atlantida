@@ -1,8 +1,12 @@
 # Stili percussivi
 
-Stato: proposta di design del 30 ottobre 2026, da approvare. Non implementata.
-La prima prova prevede un selettore di stile; la combinazione di influenze
-da 0 a 1 è un requisito futuro, distinto dalla prima implementazione.
+Stato: selezione nominale implementata con i profili House classica,
+Boom bap e Breakbeat house. Configurazione e comportamento effettivi sono
+descritti in [Selezione dello stile percussivo](../STILI-PERCUSSIVI.md).
+Questo documento conserva il design del catalogo e la proposta ancora
+non implementata della combinazione di influenze da 0 a 1.
+Memoria dei gesti, relazioni fra voci e accettazione dei piani sono definite
+nei [contratti per le relazioni musicali](RELAZIONI-MUSICALI.md).
 
 ## Obiettivo
 
@@ -29,12 +33,11 @@ completa di House o Hip-hop.
 4. Combina il risultato con `standard_material` attraverso `conceptuality`.
 5. Applica fattore di velocity, durate MIDI e limiti della frase.
 
-Il materiale corrente dura 32 beat; il groove standard ne dura quattro.
-La posizione logica avanza fra richieste e non riparte a ogni finestra.
-Gli attacchi protetti lo sono durante le trasformazioni locali, ma
-l'interazione può ancora spostarli o eliminarli. Non esiste un selettore
-di genere. Il registro dei controlli e il device ammettono valori numerici
-e switch, ma non ancora scelte nominali generiche.
+Con `style: none`, il materiale di `organico.json` dura 32 beat e il groove
+standard quattro. La posizione logica avanza fra richieste. Con uno stile
+attivo, il suo vocabolario alimenta entrambi i rami e la guida ritmica;
+casse e backbeat strutturali restano protetti dall'interazione. Il
+registro e il device supportano scelte nominali tramite `ChoiceControl`.
 
 Sostituire soltanto `standard_material` non soddisfa l'obiettivo: con
 `conceptuality = 1` quel ramo non contribuisce al risultato. Inoltre una
@@ -67,7 +70,7 @@ lo sviluppo può usare. Non è previsto scegliere a caso un nuovo loop a
 ogni finestra: il materiale mantiene la propria fase e la sequenza di
 sviluppo conserva la responsabilità delle trasformazioni.
 
-Per la prima prova si propongono tre profili in 4/4, con cicli di una o due
+Per la prima implementazione si propongono tre profili in 4/4, con cicli di una o due
 battute e almeno due varianti semplici per profilo:
 
 | Profilo proposto | Caratteri da specificare e confrontare |
@@ -76,14 +79,14 @@ battute e almeno due varianti semplici per profilo:
 | Boom bap anni Novanta | Relazione sincopata fra cassa e backbeat, accenti e swing documentato |
 | Breakbeat house | Cassa spezzata, relazione con rullante/clap e articolazione dei piatti |
 
-Questa selezione è per il confronto iniziale, non è un catalogo approvato.
+Questi tre profili sono disponibili nel catalogo iniziale per l'ascolto.
 Le fonti propongono esempi concreti, non valori universali per tutti i
 brani del genere. I primi due profili permettono inoltre di verificare
 che la differenza non dipenda soltanto dal numero dei colpi.
 
 Il metro è una proprietà del profilo percussivo, non una deduzione da
 `window_beats`. Una finestra rimane un intervallo di pianificazione.
-La prima prova d'ascolto usa Live in 4/4; non introduce cambi di metro
+La verifica musicale iniziale usa Live in 4/4; non introduce cambi di metro
 globali o adeguamenti automatici del BPM.
 
 ## Inserimento nel generatore
@@ -113,7 +116,7 @@ o diradarli per lasciare spazio alla melodia. `variation` agisce sui
 complementi; `displacement_beats` resta l'ampiezza degli spostamenti
 previsti dalla sequenza di sviluppo.
 
-Questa è una modifica musicale da approvare: con uno stile attivo alcune
+Il coordinamento definito prevede che con uno stile attivo alcune
 figure diventano autonome dalle sorgenti, per conservarne l'identità.
 La presenza della voce e l'operazione esplicita `silence` continuano a
 poter sospendere l'intera parte. Sul ramo regolare il comportamento di
@@ -132,14 +135,16 @@ materiale attuale assegnandogli soltanto un'etichetta.
 
 ## Controlli e integrazione
 
-Prima prova: un solo controllo nuovo, **Stile**, con scelta nominale e
+Per la selezione del genere si aggiunge il controllo **Stile**, con scelta nominale e
 valore iniziale **nessuno**. Il catalogo usa identificativi testuali
 stabili, mai indici dipendenti dall'ordine di un menu.
 
 Il device richiede una scelta enumerata generica definita da Python.
 Il JavaScript presenta le opzioni e trasmette l'identificativo; nomi e
 regole dei generi restano nel modulo percussivo e nei suoi dati.
-Il ruolo rimane `percussion`, distinto dallo stile.
+Il ruolo rimane `percussion`, distinto dallo stile. I controlli di adesione
+ritmica delle altre voci appartengono ai loro generatori, secondo il
+contratto di [coordinamento](COORDINAMENTO-RITMICO.md).
 
 La scelta deve entrare nelle assegnazioni, negli override manuali e nei
 preset, conservando le precedenze della sessione. L'aggiunta del controllo
@@ -162,7 +167,7 @@ esatta di note appartenenti a un genere.
 La rappresentazione musicale interna prevista è una mappa di pesi per
 identificativo. La prima interfaccia nominale corrisponde a un unico
 peso 1; **nessuno** corrisponde alla mappa vuota. L'interfaccia con più
-pesi non viene implementata nella prima prova.
+pesi non viene implementata nella prima versione.
 
 Indicando con `S` la somma dei pesi:
 
@@ -191,9 +196,9 @@ un'alternanza di battute etichettate con generi diversi.
 La scelta dei gruppi e delle varianti deve essere riproducibile con seed,
 posizione logica e pesi. Timing incompatibili e conflitti fra figure
 richiedono regole di compatibilità esplicite: la definizione concreta del
-miscelatore resta da approvare e non è necessaria alla prima prova.
+miscelatore resta da definire e non è necessaria alla prima versione.
 
-## Verifica della prova
+## Criteri di verifica
 
 - Con **nessuno**, identità del risultato rispetto al generatore corrente,
   comprese le combinazioni dei controlli e i silenzi delle dipendenze.
@@ -220,6 +225,7 @@ Desnivel; non sono ricavate come prescrizioni dalle fonti.
 | Fonte | Informazione utile e impiego |
 |---|---|
 | [LANDR — Drum programming](https://blog.landr.com/drum-programming/) | Raccolta iniziale di esempi per House, Techno, Trap, Hip-hop e DnB; distingue programmazione, dinamica, timbro e arrangiamento. Utile per orientare il confronto fra famiglie. |
+| [Drum Patterns — presentazione](https://drum-patterns.com/about/) | Libreria condivisa di pattern e loop; le griglie, le categorie e le varianti osservate nel sito sono esempi da confrontare per costruire il vocabolario dei profili. Le etichette dei contributi non sono una definizione normativa dei generi. |
 | [Roland — Creating beats for dance styles](https://www.roland.com/uk/blog/creating-beats-dance-styles-dj-808/) | Dimostrazioni e sequenze per stili dance, con dettagli su suoni e shuffle. Riferimento operativo per la House classica e per separare pattern e scelta del kit. |
 | [Attack — Breakbeat House](https://www.attackmagazine.com/technique/beat-dissected/breakbeat-house-beats/) | Tutorial originale con costruzione del groove, parti percussive, accenti e indicazioni di swing. Riferimento per un profilo circoscritto e le sue varianti. |
 | [BandLab — How to make a boom bap beat](https://blog.bandlab.com/how-to-make-a-boom-bap-beat-on-bandlab/) | Tutorial originale con progetto di riferimento, programmazione delle parti, dinamica e scostamenti dalla griglia. Base operativa per il profilo boom bap, da confrontare con altri esempi. |
@@ -231,4 +237,4 @@ Desnivel; non sono ricavate come prescrizioni dalle fonti.
 
 Prima di inserire un profilo operativo occorrono esempi completi verificati,
 una descrizione dei tratti effettivamente modellati e un confronto all'ascolto.
-La prima prova non richiede addestramento di modelli o raccolta automatica di pattern.
+La prima implementazione non richiede addestramento di modelli o raccolta automatica di pattern.
